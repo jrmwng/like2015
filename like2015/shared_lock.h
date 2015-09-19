@@ -6,11 +6,11 @@
 #include <functional>
 
 template <std::uint8_t uCount16>
-struct __declspec(align(16)) shared_lock_t
+struct __declspec(align(16)) shared_lock
 {
 	__m128i axmm[uCount16];
 
-	shared_lock_t(void)
+	shared_lock(void)
 	{
 		std::fill(std::begin(axmm), std::end(axmm), _mm_setzero_si128());
 	}
