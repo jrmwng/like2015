@@ -1,7 +1,6 @@
 #pragma once
 
 #include <atomic>
-#include <memory>
 
 namespace like2015
 {
@@ -12,40 +11,33 @@ namespace like2015
 
 	struct shared_ptr_count
 	{
-		typedef long count_type;
+		typedef intptr_t count_type;
 		std::atomic<count_type> lRefCount;
 
 		enum
 		{
 			SHARED_PTR_COUNT_BASE = 1,
 			SHARED_PTR_COUNT_THIS = SHARED_PTR_COUNT_BASE,
-			SHARED_PTR_COUNT_THAT_SHIFT = sizeof(count_type) * 4,
+			SHARED_PTR_COUNT_THAT_SHIFT = 12 + sizeof(count_type), // 16 for long, 20 for long long
 			SHARED_PTR_COUNT_THAT = (1 << SHARED_PTR_COUNT_THAT_SHIFT),
 			SHARED_PTR_COUNT_BOTH = SHARED_PTR_COUNT_THIS + SHARED_PTR_COUNT_THAT,
 			SHARED_PTR_COUNT_INIT = SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_BOTH,
-			SHARED_PTR_COUNT_MASK = 0xFFFF,
 		};
 
 		shared_ptr_count(void)
 			: lRefCount(SHARED_PTR_COUNT_INIT)
 		{}
-		virtual ~shared_ptr_count(void)
-		{}
 
-		void delete_this(void)
-		{
-			delete this;
-		}
-		virtual void delete_that(void)
-		{}
+		virtual void delete_this(void) = 0;
+		virtual void delete_that(void) = 0;
 
 		long use_count(void) const
 		{
-			return (lRefCount >> SHARED_PTR_COUNT_THAT_SHIFT);
+			return static_cast<long>(lRefCount >> SHARED_PTR_COUNT_THAT_SHIFT);
 		}
 		bool unique(void) const
 		{
-			return lRefCount == SHARED_PTR_COUNT_INIT;
+			return lRefCount == SHARED_PTR_COUNT_INIT; // unique without weak_ptr
 		}
 		bool expired(void) const
 		{
@@ -58,11 +50,12 @@ namespace like2015
 
 			if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_THAT)
 			{
-				delete_that();
+				delete_that(); // assume nothrow for simplicity
 
 				if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
 					||
-					lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE) < SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS)
+					lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE) < SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
+					)
 				{
 					delete_this();
 				}
@@ -121,21 +114,36 @@ namespace like2015
 			}
 		}
 	};
+	template <typename T>
+	struct shared_ptr_align
+	{
+		char ac[alignof(T) +sizeof(T)];
+		T * get(void) { return reinterpret_cast<T*>((reinterpret_cast<uintptr_t>(ac) + (alignof(T) -1)) & ~(alignof(T) -1)); }
+	};
 	template <typename T, typename TDeleter = void>
 	struct shared_ptr_count_t
-		: shared_ptr_count
+		: shared_ptr_align<TDeleter> // TODO: aligned by allocator instead
+		, shared_ptr_count
 	{
 		T * const m_pt;
-		TDeleter m_tDeleter;
+
 		shared_ptr_count_t(T *pt, TDeleter && tDeleter)
 			: m_pt(pt)
-			, m_tDeleter(std::forward<TDeleter>(tDeleter))
-		{}
-		virtual ~shared_ptr_count_t(void)
-		{}
+		{
+			::new (get()) TDeleter(std::forward<TDeleter>(tDeleter));
+		}
+		~shared_ptr_count_t(void)
+		{
+			get()->~TDeleter();
+		}
+
+		virtual void delete_this(void)
+		{
+			delete this;
+		}
 		virtual void delete_that(void)
 		{
-			m_tDeleter(m_pt);
+			(*(get()))(m_pt);
 		}
 	};
 	template <typename T>
@@ -147,9 +155,11 @@ namespace like2015
 		shared_ptr_count_t(T *pt)
 			: m_pt(pt)
 		{}
-		virtual ~shared_ptr_count_t(void)
-		{}
 
+		virtual void delete_this(void)
+		{
+			delete this;
+		}
 		virtual void delete_that(void)
 		{
 			delete m_pt;
@@ -157,16 +167,23 @@ namespace like2015
 	};
 	template <typename T>
 	struct make_shared_ptr_count_t
-		: shared_ptr_count
+		: shared_ptr_align<T> // TODO: aligned by allocator instead
+		, shared_ptr_count
 	{
-		T m_t;
 		template<class... TArgs>
 		make_shared_ptr_count_t(TArgs &&... _Args)
-			: m_t(std::forward<TArgs>(_Args)...)
-		{}
-		virtual ~make_shared_ptr_count_t(void)
-		{}
-		T * get(void) { return std::addressof(m_t); }
+		{
+			::new (get()) T(std::forward<TArgs>(_Args)...);
+		}
+
+		virtual void delete_this(void)
+		{
+			delete this;
+		}
+		virtual void delete_that(void)
+		{
+			get()->~T();
+		}
 	};
 	template <typename T>
 	class shared_ptr_base
