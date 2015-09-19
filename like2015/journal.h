@@ -56,7 +56,7 @@ public:
 		{
 			for (unsigned i = 0; i < uSize; i++)
 			{
-				__movsb(pBuffer, apData[i], auSize[i]);
+				std::copy(apData[i], apData[i] + auSize[i], pBuffer);
 				pBuffer += auSize[i];
 			}
 		}
