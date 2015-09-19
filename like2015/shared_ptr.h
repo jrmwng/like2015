@@ -1,5 +1,6 @@
 #pragma once
 
+#include <intrin.h>
 #include <atomic>
 
 namespace like2015
