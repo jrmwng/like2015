@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)journal.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)shared_lock.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)shared_ptr.h" />
   </ItemGroup>
 </Project>
