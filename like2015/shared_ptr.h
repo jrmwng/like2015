@@ -3,7 +3,7 @@
 #include <intrin.h>
 #include <atomic>
 
-namespace like2015
+namespace like
 {
 	template <typename T>
 	class shared_ptr;
