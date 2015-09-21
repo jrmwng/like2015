@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <numeric>
 #include <functional>
+#include "atomic.h"
 
 namespace like
 {
@@ -18,13 +19,13 @@ namespace like
 			std::fill(std::begin(axmm), std::end(axmm), _mm_setzero_si128());
 		}
 
-		void read_begin(uint8_t uIndex)
+		void read_begin(uint8_t uIndex) volatile
 		{
-			axmm->m128i_u8[uIndex] = 0x80; // TODO: atomic semantics
+			atomic_store(&(axmm->m128i_u8[uIndex]), 0x80);
 		}
-		void read_end(uint8_t uIndex)
+		void read_end(uint8_t uIndex) volatile
 		{
-			axmm->m128i_u8[uIndex] = 0; // TODO: atomic semantics
+			atomic_store(&(axmm->m128i_u8[uIndex]), 0);
 		}
 		void read_sync(void)
 		{
