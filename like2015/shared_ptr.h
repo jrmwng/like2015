@@ -90,21 +90,21 @@ namespace like
 			__m128i b16BIN0 = xmm;
 			__m128i b16BIN1 = unpack_bin(b16BIN0);
 			__m128i w8SAD2 = _mm_sad_epu8(b16BIN1, _mm_setzero_si128());
-			return w8SAD2.m128i_i32[0] - 0x80 * 8;
+			return w8SAD2.m128i_i32[0] - 0x80 * sizeof(uintptr_t);
 		}
 		bool unique(void) const
 		{
 			__m128i b16BIN0 = xmm;
 			__m128i b16BIN1 = unpack_bin(b16BIN0);
 			__m128i w8SAD2 = _mm_sad_epu8(b16BIN1, _mm_setzero_si128());
-			return w8SAD2.m128i_i32[0] == 0x80 * 8 && w8SAD2.m128i_i32[2] == 0x80 * 8;
+			return w8SAD2.m128i_i32[0] == 0x80 * sizeof(uintptr_t) && w8SAD2.m128i_i32[2] == 0x80 * sizeof(uintptr_t);
 		}
 		bool expired(void) const
 		{
 			__m128i b16BIN0 = xmm;
 			__m128i b16BIN1 = unpack_bin(b16BIN0);
 			__m128i w8SAD2 = _mm_sad_epu8(b16BIN1, _mm_setzero_si128());
-			return w8SAD2.m128i_i32[0] == 0x80 * 8;
+			return w8SAD2.m128i_i32[0] == 0x80 * sizeof(uintptr_t);
 		}
 
 		void acquire_shared(unsigned uLockIndex)
@@ -175,11 +175,11 @@ namespace like
 				w8SAD2 = _mm_sad_epu8(b16BIN1b, _mm_setzero_si128());
 			} while (!atomic_cas<sizeof(uintptr_t)*2>(xmm.m128i_i8, b16BIN1a.m128i_i8, b16BIN0.m128i_i8));
 
-			if (w8SAD2.m128i_i32[0] == 0x80 * 8 + 1) // delete_that() if it is the last shared_ptr
+			if (w8SAD2.m128i_i32[0] == 0x80 * sizeof(uintptr_t) + 1) // delete_that() if it is the last shared_ptr
 			{
 				delete_that();
 
-				if (w8SAD2.m128i_i32[2] == 0x80 * 8 + 1) // delete_this() if it is the last weak_ptr
+				if (w8SAD2.m128i_i32[2] == 0x80 * sizeof(uintptr_t) + 1) // delete_this() if it is the last weak_ptr
 				{
 					delete_this();
 				}
@@ -208,9 +208,9 @@ namespace like
 				b16BIN1a = _mm_add_epi8(b16BIN0, b16Delta);
 				b16BIN1b = unpack_bin(b16BIN0);
 				w8SAD2 = _mm_sad_epu8(b16BIN1b, _mm_setzero_si128());
-			} while (w8SAD2.m128i_i32[2] > 0x80 * 8 && !atomic_cas<sizeof(uintptr_t)*2>(xmm.m128i_i8, b16BIN1a.m128i_i8, b16BIN0.m128i_i8));
+			} while (w8SAD2.m128i_i32[2] > 0x80 * sizeof(uintptr_t) && !atomic_cas<sizeof(uintptr_t)*2>(xmm.m128i_i8, b16BIN1a.m128i_i8, b16BIN0.m128i_i8));
 
-			return w8SAD2.m128i_i32[2] > 0x80 * 8;
+			return w8SAD2.m128i_i32[2] > 0x80 * sizeof(uintptr_t);
 		}
 		bool try_shared(void)
 		{
@@ -237,9 +237,9 @@ namespace like
 				b16BIN1a = _mm_add_epi8(b16BIN0, b16Delta);
 				b16BIN1b = unpack_bin(b16BIN0);
 				w8SAD2 = _mm_sad_epu8(b16BIN1b, _mm_setzero_si128());
-			} while (w8SAD2.m128i_i32[0] > 0x80 * 8 && !atomic_cas<sizeof(uintptr_t)>(xmm.m128i_i8, b16BIN1a.m128i_i8, b16BIN0.m128i_i8));
+			} while (w8SAD2.m128i_i32[0] > 0x80 * sizeof(uintptr_t) && !atomic_cas<sizeof(uintptr_t)>(xmm.m128i_i8, b16BIN1a.m128i_i8, b16BIN0.m128i_i8));
 
-			if (w8SAD2.m128i_i32[0] > 0x80 * 8)
+			if (w8SAD2.m128i_i32[0] > 0x80 * sizeof(uintptr_t))
 			{
 				return true;
 			}
