@@ -226,14 +226,7 @@ namespace like
 		}
 		bool convert_weak_into_shared(unsigned uLockIndex)
 		{
-			__m128i b16Delta;
-			{
-#ifdef _M_X64
-				b16Delta = _mm_cvtsi64x_si128(1LL << (uLockIndex * 8));
-#else
-				b16Delta = _mm_cvtsi32_si128(1 << (uLockIndex * 8));
-#endif
-			}
+			__m128i const b16Delta = _mm_sll_epi64(_mm_cvtsi32_si128(1), _mm_cvtsi32_si128(uLockIndex));
 			__m128i b16BIN0;
 			__m128i b16BIN1a;
 			__m128i b16BIN1b;
@@ -523,7 +516,7 @@ namespace like
 			: base_type(nullptr, nullptr)
 		{}
 		shared_ptr(make_shared_ptr_count_t<T,TLock> *p)
-			: base_type(p != nullptr ? /*p->get()*/reinterpret_cast<T*>(p) : nullptr, p)
+			: base_type(p != nullptr ? p->get() : nullptr, p)
 		{}
 		shared_ptr(T *pt)
 			: base_type(pt, new shared_ptr_count_t<T,TLock>(pt))
