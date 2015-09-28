@@ -386,6 +386,11 @@ namespace like
 
 		T * const m_pt;
 
+		shared_ptr_count_t(T *pt, TDeleter const & tDeleter)
+			: m_pt(pt)
+		{
+			::new (get()) TDeleter(tDeleter);
+		}
 		shared_ptr_count_t(T *pt, TDeleter && tDeleter)
 			: m_pt(pt)
 		{
@@ -522,8 +527,12 @@ namespace like
 			: base_type(pt, new shared_ptr_count_t<T,TLock>(pt))
 		{}
 		template <typename TDeleter>
+		shared_ptr(T *pt, TDeleter const & tDeleter)
+			: base_type(pt, new shared_ptr_count_t<T,TLock,TDeleter>(pt, tDeleter))
+		{}
+		template <typename TDeleter>
 		shared_ptr(T *pt, TDeleter && tDeleter)
-			: base_type(pt, new shared_ptr_count_t<T,TLock,TDeleter>(pt, std::forward<TDeleter>(tDeleter)))
+			: base_type(pt, new shared_ptr_count_t<T, TLock, TDeleter>(pt, std::forward<TDeleter>(tDeleter)))
 		{}
 		shared_ptr(shared_ptr<T,TLock> const & spThat)
 			: base_type(spThat.m_pt, spThat.m_pLock)
