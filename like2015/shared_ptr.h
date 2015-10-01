@@ -97,7 +97,7 @@ namespace like
 			__m128i b16BIN0 = xmm;
 			__m128i b16BIN1 = unpack_bin(b16BIN0);
 			__m128i w8SAD2 = _mm_sad_epu8(b16BIN1, _mm_setzero_si128());
-			return w8SAD2.m128i_i32[0] == 0x80 * sizeof(uintptr_t) && w8SAD2.m128i_i32[2] == 0x80 * sizeof(uintptr_t);
+			return w8SAD2.m128i_i32[0] == 0x80 * sizeof(uintptr_t) + 1 && w8SAD2.m128i_i32[2] == 0x80 * sizeof(uintptr_t) + 1;
 		}
 		bool expired(void) const
 		{
@@ -382,7 +382,7 @@ namespace like
 			_aligned_free(p);
 		}
 
-		TDeleter * get(void) { return reinterpret_cast<TDeleter*>(this); }
+		TDeleter * get(void) { return reinterpret_cast<TDeleter*>(static_cast<std::array<char,sizeof(TDeleter)>*>(this)); }
 
 		T * const m_pt;
 
@@ -452,7 +452,7 @@ namespace like
 			_aligned_free(p);
 		}
 
-		T * get(void) { return reinterpret_cast<T*>(this); }
+		T * get(void) { return reinterpret_cast<T*>(static_cast<std::array<char,sizeof(T)>*>(this)); }
 
 		template<class... TArgs>
 		make_shared_ptr_count_t(TArgs &&... _Args)
