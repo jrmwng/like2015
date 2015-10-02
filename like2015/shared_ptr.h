@@ -18,11 +18,17 @@ namespace like
 
 		static __m128i g_xmmLockPool;
 		static thread_local unsigned g_uLockIndex;
+		static thread_local __m128i g_xmmDelta;
 
 		static bool acquire(void)
 		{
 			static unsigned g_uTryIndex = 0;
 
+			if (g_uLockIndex > 0)
+			{
+				g_uLockIndex += sizeof(uintptr_t);
+				return true;
+			}
 			unsigned uIndex0 = g_uTryIndex;
 			unsigned uIndex1;
 			{
@@ -30,7 +36,7 @@ namespace like
 				{
 					if (g_xmmLockPool.m128i_u8[uIndex1 % sizeof(uintptr_t)] != 0)
 					{
-						if (atomic_exchange<unsigned char>(g_xmmLockPool.m128i_u8, 0) != 0)
+						if (atomic_exchange<unsigned char>(&g_xmmLockPool.m128i_u8[uIndex1 % sizeof(uintptr_t)], 0) != 0)
 						{
 							g_uTryIndex = uIndex1 + 1;
 							break;
@@ -43,6 +49,7 @@ namespace like
 			if (uIndex1 - uIndex0 < sizeof(uintptr_t))
 			{
 				g_uLockIndex = uIndex1 % sizeof(uintptr_t);
+				g_xmmDelta = _mm_cmpeq_epi16(_mm_set1_epi16(uIndex1 % sizeof(uintptr_t)), _mm_set_epi16(7, 6, 5, 4, 3, 2, 1, 0));
 				return true;
 			}
 			else
@@ -52,165 +59,133 @@ namespace like
 		{
 			_mm_sfence();
 
+			if (g_uLockIndex >= sizeof(uintptr_t))
+			{
+				g_uLockIndex -= sizeof(uintptr_t);
+				g_xmmDelta = _mm_cvtsi32_si128(0xFFFF);
+				return;
+			}
+
 			unsigned uIndex = std::exchange(g_uLockIndex, 0);
-			g_xmmLockPool.m128i_u8[uIndex] = ~0;
+
+			if (0 < uIndex && uIndex < sizeof(uintptr_t))
+				g_xmmLockPool.m128i_u8[uIndex] = ~0;
 		}
 
 		shared_ptr_lock(void)
-			: xmm(_mm_set1_epi32(0x80808080))
-		{
-			xmm.m128i_i8[0]++;
-			xmm.m128i_i8[sizeof(uintptr_t)]++;
-		}
+			: xmm(_mm_set_epi32(0x80808080, 0x80808080, 0x80808080, 0x80808181))
+		{}
 
 		virtual void delete_this(void) { __debugbreak(); }
 		virtual void delete_that(void) { __debugbreak(); }
 
-		static __m128i unpack_bin(__m128i const & b16BIN0)
-		{
-			if (sizeof(uintptr_t) == 4)
-				return _mm_unpacklo_epi8(b16BIN0, _mm_setzero_si128());
-			else
-				return b16BIN0;
-		}
-
 		long use_count(void) const
 		{
-			__m128i b16BIN0 = xmm;
-			__m128i b16BIN1 = unpack_bin(b16BIN0);
-			__m128i w8SAD2 = _mm_sad_epu8(b16BIN1, _mm_setzero_si128());
-			return w8SAD2.m128i_i32[0] - 0x80 * sizeof(uintptr_t);
+			__m128i const w8BIN0 = xmm;
+			__m128i const w8BIN1s = _mm_srli_epi16(w8BIN0, 8);
+			__m128i const w8BIN2s = _mm_packus_epi16(w8BIN1s, _mm_setzero_si128());
+			__m128i const w8SAD3s = _mm_sad_epu8(w8BIN2s, _mm_setzero_si128());
+			int const nSAD4s = _mm_cvtsi128_si32(w8SAD3s);
+			return nSAD4s - 0x80 * sizeof(uintptr_t);
 		}
 		bool unique(void) const
 		{
-			__m128i b16BIN0 = xmm;
-			__m128i b16BIN1 = unpack_bin(b16BIN0);
-			__m128i w8SAD2 = _mm_sad_epu8(b16BIN1, _mm_setzero_si128());
-			return w8SAD2.m128i_i32[0] == 0x80 * sizeof(uintptr_t) + 1 && w8SAD2.m128i_i32[2] == 0x80 * sizeof(uintptr_t) + 1;
+			__m128i const w8BIN0 = xmm;
+			__m128i const w8BIN1s = _mm_srli_epi16(w8BIN0, 8);
+			__m128i const w8BIN1w = _mm_slli_epi16(w8BIN0, 8);
+			__m128i const w8BIN2s = _mm_packus_epi16(w8BIN1s, _mm_setzero_si128());
+			__m128i const w8SAD2w = _mm_sad_epu8(w8BIN1w, _mm_setzero_si128());
+			__m128i const w8SAD3s = _mm_sad_epu8(w8BIN2s, _mm_setzero_si128());
+			__m128i const w8SAD3w = _mm_srli_si128(w8SAD2w, 8);
+			int const nSAD3w = _mm_cvtsi128_si32(w8SAD2w);
+			int const nSAD4s = _mm_cvtsi128_si32(w8SAD3s);
+			int const nSAD4w = _mm_cvtsi128_si32(w8SAD3w);
+			return nSAD4s == 0x80 * sizeof(uintptr_t) + 1 && nSAD3w + nSAD4w == 0x80 * sizeof(uintptr_t) + 1;
 		}
 		bool expired(void) const
 		{
-			__m128i b16BIN0 = xmm;
-			__m128i b16BIN1 = unpack_bin(b16BIN0);
-			__m128i w8SAD2 = _mm_sad_epu8(b16BIN1, _mm_setzero_si128());
-			return w8SAD2.m128i_i32[0] == 0x80 * sizeof(uintptr_t);
+			__m128i const w8BIN0 = xmm;
+			__m128i const w8BIN1s = _mm_srli_epi16(w8BIN0, 8);
+			__m128i const w8BIN2s = _mm_packus_epi16(w8BIN1s, _mm_setzero_si128());
+			__m128i const w8SAD3s = _mm_sad_epu8(w8BIN2s, _mm_setzero_si128());
+			int const nSAD4s = _mm_cvtsi128_si32(w8SAD3s);
+			return nSAD4s == 0x80 * sizeof(uintptr_t);
 		}
 
 		void acquire_shared(void)
 		{
-			unsigned const uLockIndex = g_uLockIndex;
+			unsigned const uLockIndex = g_uLockIndex % sizeof(uintptr_t);
 
-			if (0 < uLockIndex && uLockIndex < sizeof(uintptr_t))
+			if (0 < uLockIndex)
 			{
-				xmm.m128i_i8[uLockIndex]++;
-				xmm.m128i_i8[uLockIndex + sizeof(uintptr_t)]++;
+				xmm.m128i_i16[uLockIndex] += 0x101;
 			}
 			else
 			{
-				__m128i b16Delta;
-				{
-					if (sizeof(uintptr_t) == 4)
-						b16Delta = _mm_set_epi32(0, 0, 1 << (uLockIndex * 8), 1 << (uLockIndex * 8));
-					else
-						b16Delta = _mm_set_epi64x(1LL << (uLockIndex * 8), 1LL << (uLockIndex * 8));
-				}
-				__m128i b16BIN0;
-				__m128i b16BIN1a;
-				__m128i b16BIN1b;
-				__m128i w8SAD2;
-				do
-				{
-					b16BIN0 = xmm;
-					b16BIN1a = _mm_add_epi8(b16BIN0, b16Delta);
-					b16BIN1b = unpack_bin(b16BIN0);
-					w8SAD2 = _mm_sad_epu8(b16BIN1b, _mm_setzero_si128());
-				} while (!atomic_cas<sizeof(uintptr_t) * 2>(xmm.m128i_i8, b16BIN1a.m128i_i8, b16BIN0.m128i_i8));
+				_InterlockedExchangeAdd16(&xmm.m128i_i16[uLockIndex], 0x101);
 			}
 		}
 		void acquire_weak(void)
 		{
-			unsigned const uLockIndex = g_uLockIndex;
+			unsigned const uLockIndex = g_uLockIndex % sizeof(uintptr_t);
 
-			if (0 < uLockIndex && uLockIndex < sizeof(uintptr_t))
+			if (0 < uLockIndex)
 			{
-				xmm.m128i_i8[uLockIndex + sizeof(uintptr_t)]++;
+				xmm.m128i_i8[uLockIndex + uLockIndex]++;
 			}
 			else
 			{
-				__m128i b16Delta;
-				{
-					if (sizeof(uintptr_t) == 4)
-						b16Delta = _mm_set_epi32(0, 0, 1 << (uLockIndex * 8), 0);
-					else
-						b16Delta = _mm_set_epi64x(1LL << (uLockIndex * 8), 0);
-				}
-				__m128i b16BIN0;
-				__m128i b16BIN1a;
-				__m128i b16BIN1b;
-				__m128i w8SAD2;
-				do
-				{
-					b16BIN0 = xmm;
-					b16BIN1a = _mm_add_epi8(b16BIN0, b16Delta);
-					b16BIN1b = unpack_bin(b16BIN0);
-					w8SAD2 = _mm_sad_epu8(b16BIN1b, _mm_setzero_si128());
-				} while (!atomic_cas<sizeof(uintptr_t)>(xmm.m128i_i8 + sizeof(uintptr_t), b16BIN1a.m128i_i8 + sizeof(uintptr_t), b16BIN0.m128i_i8 + sizeof(uintptr_t)));
+				_InterlockedExchangeAdd8(&xmm.m128i_i8[uLockIndex + uLockIndex], 1);
 			}
 		}
 		void release_weak(void)
 		{
-			unsigned const uLockIndex = g_uLockIndex;
-			__m128i b16Delta;
-			{
-				if (sizeof(uintptr_t) == 4)
-					b16Delta = _mm_set_epi32(0, 0, 1 << (uLockIndex * 8), 0);
-				else
-					b16Delta = _mm_set_epi64x(1LL << (uLockIndex * 8), 0);
-			}
-			__m128i b16BIN0;
-			__m128i b16BIN1a;
-			__m128i b16BIN1b;
-			__m128i w8SAD2;
+			__m128i const w8Delta = _mm_srli_epi16(g_xmmDelta, 8);
+			__m128i w8BIN0;
+			__m128i w8BIN1;
 			do
 			{
-				b16BIN0 = xmm;
-				b16BIN1a = _mm_sub_epi8(b16BIN0, b16Delta);
-				b16BIN1b = unpack_bin(b16BIN0);
-				w8SAD2 = _mm_sad_epu8(b16BIN1b, _mm_setzero_si128());
-			} while (!atomic_cas<sizeof(uintptr_t)>(xmm.m128i_i8 + sizeof(uintptr_t), b16BIN1a.m128i_i8 + sizeof(uintptr_t), b16BIN0.m128i_i8 + sizeof(uintptr_t)));
+				w8BIN0 = xmm;
+				w8BIN1 = _mm_add_epi8(w8BIN0, w8Delta);
+			} while (!atomic_cas<sizeof(uintptr_t)*2>(xmm.m128i_i8, w8BIN1.m128i_i8, w8BIN0.m128i_i8));
 
-			if (w8SAD2.m128i_i32[2] == 0x80 * sizeof(uintptr_t) + 1) // delete_this() if it is the last weak_ptr
+			__m128i const b16BIN1w = _mm_slli_epi16(w8BIN0, 8);
+			__m128i const l4SAD2w = _mm_sad_epu8(b16BIN1w, _mm_setzero_si128());
+			__m128i const l4SAD3w = _mm_srli_si128(l4SAD2w, 8);
+			int const nSAD3w = _mm_cvtsi128_si32(l4SAD2w);
+			int const nSAD4w = _mm_cvtsi128_si32(l4SAD3w);
+
+			if (nSAD3w + nSAD4w == 0x80 * sizeof(uintptr_t) + 1)
 			{
 				delete_this();
 			}
 		}
 		void release_shared(void)
 		{
-			unsigned const uLockIndex = g_uLockIndex;
-			__m128i b16Delta;
-			{
-				if (sizeof(uintptr_t) == 4)
-					b16Delta = _mm_set_epi32(0, 0, 1 << (uLockIndex * 8), 1 << (uLockIndex * 8));
-				else
-					b16Delta = _mm_set_epi64x(1LL << (uLockIndex * 8), 1LL << (uLockIndex * 8));
-			}
-			__m128i b16BIN0;
-			__m128i b16BIN1a;
-			__m128i b16BIN1b;
-			__m128i w8SAD2;
+			__m128i const w8Delta = g_xmmDelta;
+			__m128i w8BIN0;
+			__m128i w8BIN1;
 			do
 			{
-				b16BIN0 = xmm;
-				b16BIN1a = _mm_sub_epi8(b16BIN0, b16Delta);
-				b16BIN1b = unpack_bin(b16BIN0);
-				w8SAD2 = _mm_sad_epu8(b16BIN1b, _mm_setzero_si128());
-			} while (!atomic_cas<sizeof(uintptr_t)*2>(xmm.m128i_i8, b16BIN1a.m128i_i8, b16BIN0.m128i_i8));
+				w8BIN0 = xmm;
+				w8BIN1 = _mm_add_epi8(w8BIN0, w8Delta);
+			} while (!atomic_cas<sizeof(uintptr_t) * 2>(xmm.m128i_i8, w8BIN1.m128i_i8, w8BIN0.m128i_i8));
 
-			if (w8SAD2.m128i_i32[0] == 0x80 * sizeof(uintptr_t) + 1) // delete_that() if it is the last shared_ptr
+			__m128i const b16BIN1s = _mm_srli_epi16(w8BIN0, 8);
+			__m128i const b16BIN1w = _mm_slli_epi16(w8BIN0, 8);
+			__m128i const b16BIN2s = _mm_packus_epi16(b16BIN1s, _mm_setzero_si128());
+			__m128i const l4SAD2w = _mm_sad_epu8(b16BIN1w, _mm_setzero_si128());
+			__m128i const l4SAD3s = _mm_sad_epu8(b16BIN2s, _mm_setzero_si128());
+			__m128i const l4SAD3w = _mm_srli_si128(l4SAD2w, 8);
+			int const nSAD3w = _mm_cvtsi128_si32(l4SAD2w);
+			int const nSAD4s = _mm_cvtsi128_si32(l4SAD3s);
+			int const nSAD4w = _mm_cvtsi128_si32(l4SAD3w);
+
+			if (nSAD4s == 0x80 * sizeof(uintptr_t) + 1) // delete_that() if it is the last shared_ptr
 			{
 				delete_that();
 
-				if (w8SAD2.m128i_i32[2] == 0x80 * sizeof(uintptr_t) + 1) // delete_this() if it is the last weak_ptr
+				if (nSAD3w + nSAD4w == 0x80 * sizeof(uintptr_t) + 1) // delete_this() if it is the last weak_ptr
 				{
 					delete_this();
 				}
@@ -218,58 +193,52 @@ namespace like
 		}
 		bool try_shared(void)
 		{
-			unsigned const uLockIndex = g_uLockIndex;
-			__m128i b16Delta;
-			{
-				if (sizeof(uintptr_t) == 4)
-					b16Delta = _mm_set_epi32(0, 0, 1 << (uLockIndex * 8), 1 << (uLockIndex * 8));
-				else
-					b16Delta = _mm_set_epi64x(1LL << (uLockIndex * 8), 1LL << (uLockIndex * 8));
-			}
-			__m128i b16BIN0;
-			__m128i b16BIN1a;
-			__m128i b16BIN1b;
-			__m128i w8SAD2;
+			__m128i const w8Delta = g_xmmDelta;
+			__m128i w8BIN0;
+			__m128i w8BIN1;
+			int nSAD4s;
 			do
 			{
-				b16BIN0 = xmm;
-				b16BIN1a = _mm_add_epi8(b16BIN0, b16Delta);
-				b16BIN1b = unpack_bin(b16BIN0);
-				w8SAD2 = _mm_sad_epu8(b16BIN1b, _mm_setzero_si128());
-			} while (w8SAD2.m128i_i32[2] > 0x80 * sizeof(uintptr_t) && !atomic_cas<sizeof(uintptr_t)*2>(xmm.m128i_i8, b16BIN1a.m128i_i8, b16BIN0.m128i_i8));
+				w8BIN0 = xmm;
+				w8BIN1 = _mm_sub_epi8(w8BIN0, w8Delta);
+				__m128i const b16BIN1s = _mm_srli_epi16(w8BIN0, 8);
+				__m128i const b16BIN2 = _mm_packus_epi16(b16BIN1s, _mm_setzero_si128());
+				__m128i const l4SAD3 = _mm_sad_epu8(b16BIN2, _mm_setzero_si128());
+				nSAD4s = _mm_cvtsi128_si32(l4SAD3);
+			} while (nSAD4s > 0x80 * sizeof(uintptr_t) && !atomic_cas<sizeof(uintptr_t) * 2>(xmm.m128i_i8, w8BIN1.m128i_i8, w8BIN0.m128i_i8));
 
-			return w8SAD2.m128i_i32[2] > 0x80 * sizeof(uintptr_t);
+			return nSAD4s > 0x80 * sizeof(uintptr_t);
 		}
 		void convert_shared_into_weak(void)
 		{
-			unsigned const uLockIndex = g_uLockIndex;
+			unsigned const uLockIndex = g_uLockIndex % sizeof(uintptr_t);
 
-			if (0 < uLockIndex && uLockIndex < sizeof(uintptr_t))
+			if (0 < uLockIndex)
 			{
-				xmm.m128i_i8[uLockIndex]--;
+				xmm.m128i_i8[uLockIndex + uLockIndex + 1]--;
 			}
 			else
 			{
-				_InterlockedExchangeAdd8(&xmm.m128i_i8[uLockIndex], -1);
+				_InterlockedExchangeAdd8(&xmm.m128i_i8[uLockIndex + uLockIndex + 1], -1);
 			}
 		}
 		bool convert_weak_into_shared(void)
 		{
-			unsigned const uLockIndex = g_uLockIndex;
-			__m128i const b16Delta = _mm_sll_epi64(_mm_cvtsi32_si128(1), _mm_cvtsi32_si128(uLockIndex));
-			__m128i b16BIN0;
-			__m128i b16BIN1a;
-			__m128i b16BIN1b;
-			__m128i w8SAD2;
+			__m128i const w8Delta = _mm_slli_epi16(g_xmmDelta, 8);
+			__m128i w8BIN0;
+			__m128i w8BIN1;
+			int nSAD4s;
 			do
 			{
-				b16BIN0 = xmm;
-				b16BIN1a = _mm_add_epi8(b16BIN0, b16Delta);
-				b16BIN1b = unpack_bin(b16BIN0);
-				w8SAD2 = _mm_sad_epu8(b16BIN1b, _mm_setzero_si128());
-			} while (w8SAD2.m128i_i32[0] > 0x80 * sizeof(uintptr_t) && !atomic_cas<sizeof(uintptr_t)>(xmm.m128i_i8, b16BIN1a.m128i_i8, b16BIN0.m128i_i8));
+				w8BIN0 = xmm;
+				w8BIN1 = _mm_sub_epi8(w8BIN0, w8Delta);
+				__m128i const b16BIN1s = _mm_srli_epi16(w8BIN0, 8);
+				__m128i const b16BIN2 = _mm_packus_epi16(b16BIN1s, _mm_setzero_si128());
+				__m128i const l4SAD3 = _mm_sad_epu8(b16BIN2, _mm_setzero_si128());
+				nSAD4s = _mm_cvtsi128_si32(l4SAD3);
+			} while (nSAD4s > 0x80 * sizeof(uintptr_t) && !atomic_cas<sizeof(uintptr_t) * 2>(xmm.m128i_i8, w8BIN1.m128i_i8, w8BIN0.m128i_i8));
 
-			if (w8SAD2.m128i_i32[0] > 0x80 * sizeof(uintptr_t))
+			if (nSAD4s > 0x80 * sizeof(uintptr_t))
 			{
 				return true;
 			}
@@ -280,8 +249,9 @@ namespace like
 			}
 		}
 	};
-	__m128i shared_ptr_lock::g_xmmLockPool = _mm_cmplt_epi8(_mm_set_epi32(0x0F0E0D0C, 0x0B0A0908, 0x07060504, 0x030201FF), _mm_set1_epi8(sizeof(uintptr_t)));
+	__m128i shared_ptr_lock::g_xmmLockPool = _mm_cmplt_epi8(_mm_set_epi32(0x0F0E0D0C, 0x0B0A0908, 0x07060504, 0x0302017F), _mm_set1_epi8(sizeof(uintptr_t)));
 	thread_local unsigned shared_ptr_lock::g_uLockIndex = 0;
+	thread_local __m128i shared_ptr_lock::g_xmmDelta = _mm_cvtsi32_si128(0xFFFF);
 
 	struct shared_ptr_count
 	{
@@ -320,7 +290,7 @@ namespace like
 
 		void release_shared(void)
 		{
-			count_type lRefCount0 = lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH);
+			count_type lRefCount0 = lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH, std::memory_order_release);
 
 			if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_THAT)
 			{
@@ -328,7 +298,7 @@ namespace like
 
 				if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
 					||
-					lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE) < SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
+					lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE, std::memory_order_release) < SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
 					)
 				{
 					delete_this();
@@ -337,25 +307,25 @@ namespace like
 		}
 		void release_weak(void)
 		{
-			count_type lRefCount0 = lRefCount.fetch_sub(SHARED_PTR_COUNT_THIS);
+			count_type lRefCount0 = lRefCount.fetch_sub(SHARED_PTR_COUNT_THIS, std::memory_order_release);
 
 			if (lRefCount0 < SHARED_PTR_COUNT_THIS + SHARED_PTR_COUNT_BASE)
 				delete_this();
 		}
 		void acquire_weak(void)
 		{
-			lRefCount.fetch_add(SHARED_PTR_COUNT_THIS);
+			lRefCount.fetch_add(SHARED_PTR_COUNT_THIS, std::memory_order_acquire);
 		}
 		void acquire_shared(void)
 		{
-			lRefCount.fetch_add(SHARED_PTR_COUNT_BOTH);
+			lRefCount.fetch_add(SHARED_PTR_COUNT_BOTH, std::memory_order_acquire);
 		}
 		bool try_shared(void)
 		{
 			count_type lRefCount0;
 			count_type lRefCount1;
 			{
-				for (lRefCount0 = lRefCount; lRefCount0 >= SHARED_PTR_COUNT_THAT && !lRefCount.compare_exchange_weak(lRefCount0, lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH); lRefCount0 = lRefCount)
+				for (lRefCount0 = lRefCount; lRefCount0 >= SHARED_PTR_COUNT_THAT && !lRefCount.compare_exchange_weak(lRefCount0, lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH, std::memory_order_acquire); lRefCount0 = lRefCount)
 				{
 					_mm_pause();
 				}
@@ -364,7 +334,7 @@ namespace like
 		}
 		void convert_shared_into_weak(void)
 		{
-			count_type lRefCount0 = lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS);
+			count_type lRefCount0 = lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS, std::memory_order_release);
 
 			if (lRefCount0 < (SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS) + SHARED_PTR_COUNT_THAT)
 				delete_that();
@@ -374,7 +344,7 @@ namespace like
 			count_type lRefCount0;
 			count_type lRefCount1;
 			{
-				for (lRefCount0 = lRefCount; lRefCount0 >= SHARED_PTR_COUNT_THAT && !lRefCount.compare_exchange_weak(lRefCount0, lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS); lRefCount0 = lRefCount)
+				for (lRefCount0 = lRefCount; lRefCount0 >= SHARED_PTR_COUNT_THAT && !lRefCount.compare_exchange_weak(lRefCount0, lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS, std::memory_order_acquire); lRefCount0 = lRefCount)
 				{
 					_mm_pause();
 				}
@@ -657,6 +627,15 @@ namespace like
 		T * get(void) const { return m_pt; }
 		operator bool(void) const { return m_pt != nullptr; }
 
+		long use_count(void) const
+		{
+			return (m_pLock != nullptr) ? m_pLock->use_count() : 0;
+		}
+		bool unique(void) const
+		{
+			return (m_pLock != nullptr) ? m_pLock->unique() : false;
+		}
+
 		void swap(this_type & that)
 		{
 			std::swap(m_pt, that.m_pt);
@@ -667,6 +646,19 @@ namespace like
 		{
 			swap(this_type(std::forward<TArgs>(_Args)...));
 		}
+
+		template <typename T1>
+		typename this_type & operator = (T1 const & t1)
+		{
+			swap(this_type(t1));
+			return *this;
+		}
+		template <typename T1>
+		typename this_type & operator = (T1 && t1)
+		{
+			swap(this_type(std::forward<T1>(t1)));
+			return *this;
+		}
 	};
 	template <typename T, typename TLock = shared_ptr_count>
 	class weak_ptr
@@ -675,6 +667,9 @@ namespace like
 		typedef weak_ptr_base<T,TLock> base_type;
 		typedef weak_ptr<T,TLock> this_type;
 	public:
+		weak_ptr(void)
+			: base_type(nullptr, nullptr)
+		{}
 		weak_ptr(weak_ptr<T,TLock> const & wpThat)
 			: base_type(wpThat.m_pt, wpThat.m_pLock)
 		{
@@ -766,6 +761,19 @@ namespace like
 		void reset(TArgs &&... _Args)
 		{
 			swap(this_type(std::forward<TArgs>(_Args)...));
+		}
+
+		template <typename T1>
+		typename this_type & operator = (T1 const & t1)
+		{
+			swap(this_type(t1));
+			return *this;
+		}
+		template <typename T1>
+		typename this_type & operator = (T1 && t1)
+		{
+			swap(this_type(std::forward<T1>(t1)));
+			return *this;
 		}
 	};
 	template<typename T, typename TLock = shared_ptr_count, class... TArgs>
