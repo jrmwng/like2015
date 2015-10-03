@@ -19,13 +19,13 @@ namespace like
 			std::fill(std::begin(axmm), std::end(axmm), _mm_setzero_si128());
 		}
 
-		void read_begin(uint8_t uIndex) volatile
+		void read_begin(unsigned uIndex) volatile
 		{
-			atomic_store(&(axmm->m128i_u8[uIndex]), 0x80);
+			atomic_store<uint8_t>(&(axmm->m128i_u8[uIndex]), 0x80);
 		}
-		void read_end(uint8_t uIndex) volatile
+		void read_end(unsigned uIndex) volatile
 		{
-			atomic_store(&(axmm->m128i_u8[uIndex]), 0);
+			atomic_store<uint8_t>(&(axmm->m128i_u8[uIndex]), 0);
 		}
 		void read_sync(void)
 		{
