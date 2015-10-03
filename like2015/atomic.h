@@ -6,6 +6,11 @@
 namespace like
 {
 	template <unsigned uSize>
+	void atomic_lock_load(void const volatile *pv, void *p);
+	template <unsigned uSize>
+	void atomic_lock_store(void volatile *pv, void const *p);
+
+	template <unsigned uSize>
 	void atomic_load(void const volatile *pv, void *p);
 	template <unsigned uSize>
 	void atomic_store(void volatile *pv, void const *p);
@@ -15,11 +20,25 @@ namespace like
 	bool atomic_cas(void volatile *pv, void *p, void const *pCMP);
 
 	template <>
+	void atomic_lock_load<1>(void const volatile *pv, void *p)
+	{
+		char const volatile *pvb = reinterpret_cast<char const volatile*>(pv);
+		char *pb = reinterpret_cast<char*>(p);
+		*pb = _InterlockedCompareExchange8(pvb, 0, 0);
+	}
+	template <>
 	void atomic_load<1>(void const volatile *pv, void *p)
 	{
 		char const volatile *pvb = reinterpret_cast<char const volatile*>(pv);
 		char *pb = reinterpret_cast<char*>(p);
 		*pb = *pvb;
+	}
+	template <>
+	void atomic_lock_store<1>(void volatile *pv, void const *p)
+	{
+		char volatile *pvb = reinterpret_cast<char volatile*>(pv);
+		char const *pb = reinterpret_cast<char const*>(p);
+		_InterlockedExchange8(pvb, *pb);
 	}
 	template <>
 	void atomic_store<1>(void volatile *pv, void const *p)
@@ -53,11 +72,25 @@ namespace like
 		}
 	}
 	template <>
+	void atomic_lock_load<2>(void const volatile *pv, void *p)
+	{
+		short const volatile *pvw = reinterpret_cast<short const volatile*>(pv);
+		short *pw = reinterpret_cast<short*>(p);
+		*pw = _InterlockedCompareExchange16(pvw, 0, 0);
+	}
+	template <>
 	void atomic_load<2>(void const volatile *pv, void *p)
 	{
 		short const volatile *pvw = reinterpret_cast<short const volatile*>(pv);
 		short *pw = reinterpret_cast<short*>(p);
 		*pw = *pvw;
+	}
+	template <>
+	void atomic_lock_store<2>(void volatile *pv, void const *p)
+	{
+		short volatile *pvw = reinterpret_cast<short volatile*>(pv);
+		short const *pw = reinterpret_cast<short const*>(p);
+		_InterlockedExchange16(pvw, *pw);
 	}
 	template <>
 	void atomic_store<2>(void volatile *pv, void const *p)
@@ -91,11 +124,25 @@ namespace like
 		}
 	}
 	template <>
+	void atomic_lock_load<4>(void const volatile *pv, void *p)
+	{
+		long const volatile *pvl = reinterpret_cast<long const volatile*>(pv);
+		long *pl = reinterpret_cast<long*>(p);
+		*pl = _InterlockedCompareExchange(pvl, 0, 0);
+	}
+	template <>
 	void atomic_load<4>(void const volatile *pv, void *p)
 	{
 		long const volatile *pvl = reinterpret_cast<long const volatile*>(pv);
 		long *pl = reinterpret_cast<long*>(p);
 		*pl = *pvl;
+	}
+	template <>
+	void atomic_lock_store<4>(void volatile *pv, void const *p)
+	{
+		long volatile *pvl = reinterpret_cast<long volatile*>(pv);
+		long const *pl = reinterpret_cast<long const*>(p);
+		_InterlockedExchange(pvl, *pl);
 	}
 	template <>
 	void atomic_store<4>(void volatile *pv, void const *p)
@@ -147,11 +194,25 @@ namespace like
 	}
 #ifdef _M_X64
 	template <>
+	void atomic_lock_load<8>(void const volatile *pv, void *p)
+	{
+		long long const volatile *pvxl = reinterpret_cast<long long const volatile*>(p);
+		long long *pxl = reinterpret_cast<long long*>(p);
+		*pxl = _InterlockedCompareExchange64(pvxl, 0, 0);
+	}
+	template <>
 	void atomic_load<8>(void const volatile *pv, void *p)
 	{
 		long long const volatile *pvxl = reinterpret_cast<long long const volatile*>(p);
 		long long *pxl = reinterpret_cast<long long*>(p);
 		*pxl = *pvxl;
+	}
+	template <>
+	void atomic_lock_store<8>(void volatile *pv, void const *p)
+	{
+		long long volatile *pvxl = reinterpret_cast<long long volatile*>(pv);
+		long long const *pxl = reinterpret_cast<long long const*>(p);
+		_InterlockedExchange64(pvxl, *pxl);
 	}
 	template <>
 	void atomic_store<8>(void volatile *pv, void const *p)
@@ -168,14 +229,19 @@ namespace like
 		*pxl = _InterlockedExchange64(pvxl, *pxl);
 	}
 	template <>
-	void atomic_load<16>(void const volatile *pv, void *p)
+	void atomic_lock_load<16>(void const volatile *pv, void *p)
 	{
 		long long const volatile *pvxl = reinterpret_cast<long long const volatile*>(pv);
 		long long *pxl = reinterpret_cast<long long*>(p);
 		_InterlockedCompareExchange128(const_cast<long long volatile*>(pvxl), pxl[1], pxl[0], pxl);
 	}
 	template <>
-	void atomic_store<16>(void volatile *pv, void const *p)
+	void atomic_load<16>(void const volatile *pv, void *p)
+	{
+		atomic_lock_load<16>(pv, p);
+	}
+	template <>
+	void atomic_lock_store<16>(void volatile *pv, void const *p)
 	{
 		long long volatile *pvxl = reinterpret_cast<long long volatile*>(pv);
 		long long const *pxl = reinterpret_cast<long long const*>(p);
@@ -185,6 +251,11 @@ namespace like
 			axl[0] = pvxl[0];
 			axl[1] = pvxl[1];
 		} while (_InterlockedCompareExchange128(pvxl, pxl[1], pxl[0], axl) == 0);
+	}
+	template <>
+	void atomic_store<16>(void volatile *pv, void const *p)
+	{
+		atomic_lock_store<16>(pv, p);
 	}
 	template <>
 	void atomic_swap<16>(void volatile *pv, void *p)
@@ -222,14 +293,19 @@ namespace like
 	}
 #else
 	template <>
-	void atomic_load<8>(void const volatile *pv, void *p)
+	void atomic_lock_load<8>(void const volatile *pv, void *p)
 	{
 		long long const volatile *pvxl = reinterpret_cast<long long const volatile*>(pv);
 		long long *pxl = reinterpret_cast<long long*>(p);
 		*pxl = _InterlockedCompareExchange64(const_cast<long long volatile*>(pvxl), 0, 0);
 	}
 	template <>
-	void atomic_store<8>(void volatile *pv, void const *p)
+	void atomic_load<8>(void const volatile *pv, void *p)
+	{
+		atomic_lock_load<8>(pv, p);
+	}
+	template <>
+	void atomic_lock_store<8>(void volatile *pv, void const *p)
 	{
 		long long volatile *pvxl = reinterpret_cast<long long volatile*>(pv);
 		long long const *pxl = reinterpret_cast<long long const*>(p);
@@ -238,6 +314,11 @@ namespace like
 		{
 			xl = *pvxl;
 		} while (_InterlockedCompareExchange64(pvxl, *pxl, xl) != xl);
+	}
+	template <>
+	void atomic_store<8>(void volatile *pv, void const *p)
+	{
+		atomic_lock_store<8>(pv, p);
 	}
 	template <>
 	void atomic_swap<8>(void volatile *pv, void *p)
@@ -254,6 +335,15 @@ namespace like
 #endif
 
 	template <typename T>
+	T atomic_lock_load(T const volatile *pvt)
+	{
+		char ac[sizeof(T)];
+		{
+			atomic_lock_load<sizeof(T)>(pvt, ac);
+		}
+		return reinterpret_cast<T const&>(ac);
+	}
+	template <typename T>
 	T atomic_load(T const volatile *pvt)
 	{
 		char ac[sizeof(T)];
@@ -261,6 +351,14 @@ namespace like
 			atomic_load<sizeof(T)>(pvt, ac);
 		}
 		return reinterpret_cast<T const&>(ac);
+	}
+	template <typename T>
+	void atomic_lock_store(T volatile *pvt, T t)
+	{
+		if (std::is_pod<T>::value)
+			atomic_lock_store<sizeof(T)>(pvt, std::addressof(t));
+		else
+			atomic_swap<sizeof(T)>(pvt, std::addressof(t));
 	}
 	template <typename T>
 	void atomic_store(T volatile *pvt, T t)
@@ -275,6 +373,11 @@ namespace like
 	{
 		atomic_swap<sizeof(T)>(pvt, std::addressof(t));
 		return std::forward<T>(t);
+	}
+	template <typename T, typename U>
+	T atomic_exchange(T volatile *pvt, U u)
+	{
+		return std::move(atomic_exchange(pvt, T(u)));
 	}
 	template <typename T>
 	void atomic_swap(T volatile *pvt, T & t)
