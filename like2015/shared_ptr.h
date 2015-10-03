@@ -523,6 +523,18 @@ namespace like
 		shared_ptr(T *pt)
 			: base_type(pt, new shared_ptr_count_t<T,TLock>(pt))
 		{}
+		shared_ptr(shared_ptr<T, TLock> const & spThat)
+			: base_type(spThat.m_pt, spThat.m_pLock)
+		{
+			if (m_pLock != nullptr)
+				m_pLock->acquire_shared();
+		}
+		shared_ptr(shared_ptr<T, TLock> && spThat)
+			: base_type(spThat.m_pt, spThat.m_pLock)
+		{
+			spThat.m_pt = nullptr;
+			spThat.m_pLock = nullptr;
+		}
 		template <typename TDeleter>
 		shared_ptr(T *pt, TDeleter const & tDeleter)
 			: base_type(pt, new shared_ptr_count_t<T,TLock,TDeleter>(pt, tDeleter))
@@ -531,12 +543,6 @@ namespace like
 		shared_ptr(T *pt, TDeleter && tDeleter)
 			: base_type(pt, new shared_ptr_count_t<T, TLock, TDeleter>(pt, std::forward<TDeleter>(tDeleter)))
 		{}
-		shared_ptr(shared_ptr<T,TLock> const & spThat)
-			: base_type(spThat.m_pt, spThat.m_pLock)
-		{
-			if (m_pLock != nullptr)
-				m_pLock->acquire_shared();
-		}
 		template <typename U>
 		shared_ptr(shared_ptr<U,TLock> const & spThat)
 			: base_type(spThat.m_pt, spThat.m_pLock)
@@ -675,6 +681,12 @@ namespace like
 		{
 			if (m_pLock != nullptr)
 				m_pLock->acquire_weak();
+		}
+		weak_ptr(weak_ptr<T, TLock> && wpThat)
+			: base_type(wpThat.m_pt, wpThat.m_pLock)
+		{
+			wpThat.m_pt = nullptr;
+			wpThat.m_pLock = nullptr;
 		}
 		template <typename U>
 		weak_ptr(weak_ptr<U,TLock> const & wpThat)
