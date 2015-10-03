@@ -673,10 +673,20 @@ namespace like
 			swap(this_type(std::forward<TArgs>(_Args)...));
 		}
 
+		typename this_type & operator = (typename this_type const & that)
+		{
+			swap(this_type(that));
+			return *this;
+		}
 		template <typename T1>
 		typename this_type & operator = (T1 const & t1)
 		{
 			swap(this_type(t1));
+			return *this;
+		}
+		typename this_type & operator = (typename this_type && that)
+		{
+			swap(this_type(std::forward<typename this_type>(that)));
 			return *this;
 		}
 		template <typename T1>
@@ -860,4 +870,14 @@ namespace like
 			return std::move(shared_ptr<T volatile, TLock>(*this));
 		}
 	};
+}
+
+#include "shared_obj.h"
+
+namespace like
+{
+	template <typename T, typename TLock = shared_ptr_count>
+	using atomic_shared_ptr = shared_obj<shared_ptr<T, TLock>>;
+	template <typename T, typename TLock = shared_ptr_count>
+	using atomic_weak_ptr = shared_obj<weak_ptr<T, TLock>>;
 }
