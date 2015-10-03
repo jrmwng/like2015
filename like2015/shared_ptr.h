@@ -685,6 +685,15 @@ namespace like
 			swap(this_type(std::forward<T1>(t1)));
 			return *this;
 		}
+
+		bool operator == (typename this_type const & that) const
+		{
+			return m_pt == that.m_pt;
+		}
+		bool operator != (typename this_type const & that) const
+		{
+			return m_pt != that.m_pt;
+		}
 	};
 	template <typename T, typename TLock = shared_ptr_count>
 	class weak_ptr
@@ -806,6 +815,15 @@ namespace like
 		{
 			swap(this_type(std::forward<T1>(t1)));
 			return *this;
+		}
+
+		bool operator == (typename this_type const & that) const
+		{
+			return m_pt == that.m_pt;
+		}
+		bool operator != (typename this_type const & that) const
+		{
+			return m_pt != that.m_pt;
 		}
 	};
 
