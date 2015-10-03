@@ -11,6 +11,8 @@ namespace like
 	class shared_ptr;
 	template <typename T, typename TLock>
 	class weak_ptr;
+	template <typename T, typename TLock>
+	class enable_shared_from_this;
 
 	struct __declspec(align(16)) shared_ptr_lock
 	{
@@ -359,15 +361,9 @@ namespace like
 		}
 	};
 
-	//template <typename T>
-	//struct shared_ptr_align
-	//{
-	//	char ac[alignof(T) +sizeof(T)];
-	//	T * get(void) { return reinterpret_cast<T*>((reinterpret_cast<uintptr_t>(ac) + (alignof(T) -1)) & ~(alignof(T) -1)); }
-	//};
 	template <typename T, typename TLock, typename TDeleter = void>
 	struct shared_ptr_count_t
-		: std::array<char,sizeof(TDeleter)> //shared_ptr_align<TDeleter> // TODO: aligned by allocator instead
+		: std::array<char,sizeof(TDeleter)>
 		, TLock
 	{
 		void * operator new (size_t uByteCount)
@@ -379,23 +375,23 @@ namespace like
 			_aligned_free(p);
 		}
 
-		TDeleter * get(void) { return reinterpret_cast<TDeleter*>(static_cast<std::array<char,sizeof(TDeleter)>*>(this)); }
+		TDeleter * get_deleter(void) { return reinterpret_cast<TDeleter*>(static_cast<std::array<char,sizeof(TDeleter)>*>(this)); }
 
 		T * const m_pt;
 
 		shared_ptr_count_t(T *pt, TDeleter const & tDeleter)
 			: m_pt(pt)
 		{
-			::new (get()) TDeleter(tDeleter);
+			::new (get_deleter()) TDeleter(tDeleter);
 		}
 		shared_ptr_count_t(T *pt, TDeleter && tDeleter)
 			: m_pt(pt)
 		{
-			::new (get()) TDeleter(std::forward<TDeleter>(tDeleter));
+			::new (get_deleter()) TDeleter(std::forward<TDeleter>(tDeleter));
 		}
 		~shared_ptr_count_t(void)
 		{
-			get()->~TDeleter();
+			get_deleter()->~TDeleter();
 		}
 
 		virtual void delete_this(void)
@@ -404,7 +400,7 @@ namespace like
 		}
 		virtual void delete_that(void)
 		{
-			(*get())(m_pt);
+			(*get_deleter())(m_pt);
 		}
 	};
 	template <typename T, typename TLock>
@@ -437,7 +433,7 @@ namespace like
 	};
 	template <typename T, typename TLock>
 	struct make_shared_ptr_count_t
-		: std::array<char,sizeof(T)>//shared_ptr_align<T> // TODO: aligned by allocator instead
+		: std::array<char,sizeof(T)>
 		, TLock
 	{
 		void * operator new (size_t uByteCount)
@@ -449,12 +445,12 @@ namespace like
 			_aligned_free(p);
 		}
 
-		T * get(void) { return reinterpret_cast<T*>(static_cast<std::array<char,sizeof(T)>*>(this)); }
+		T * get_that(void) { return reinterpret_cast<T*>(static_cast<std::array<char,sizeof(T)>*>(this)); }
 
 		template<class... TArgs>
 		make_shared_ptr_count_t(TArgs &&... _Args)
 		{
-			::new (get()) T(std::forward<TArgs>(_Args)...);
+			::new (get_that()) T(std::forward<TArgs>(_Args)...);
 		}
 
 		virtual void delete_this(void)
@@ -463,9 +459,10 @@ namespace like
 		}
 		virtual void delete_that(void)
 		{
-			get()->~T();
+			get_that()->~T();
 		}
 	};
+
 	template <typename T, typename TLock>
 	class shared_ptr_base
 	{
@@ -479,21 +476,6 @@ namespace like
 			: m_pt(pt)
 			, m_pLock(pLock)
 		{}
-
-		long use_count(void) const
-		{
-			if (m_pLock != nullptr)
-				return (m_pLock->use_count());
-			else
-				return 0;
-		}
-		bool unique(void) const
-		{
-			if (m_pLock != nullptr)
-				return m_pLock->unique();
-			else
-				return false;
-		}
 	};
 	template <typename T, typename TLock>
 	class weak_ptr_base
@@ -506,6 +488,27 @@ namespace like
 			: base_type(std::forward<TArgs>(_Args)...)
 		{}
 	};
+	template <typename T, typename TLock>
+	class enable_shared_from_this_base
+		: public weak_ptr_base<T, TLock>
+	{
+		typedef weak_ptr_base<T, TLock> base_type;
+
+		friend class shared_ptr<T, TLock>;
+	protected:
+		template<class... TArgs>
+		enable_shared_from_this_base(TArgs &&... _Args)
+			: base_type(std::forward<TArgs>(_Args)...)
+		{}
+
+		void enable_shared(T *pt, TLock *pLock)
+		{
+			m_pt = pt;
+			m_pLock = pLock;
+
+			pLock->acquire_weak();
+		}
+	};
 
 	template <typename T, typename TLock = shared_ptr_count>
 	class shared_ptr
@@ -513,16 +516,29 @@ namespace like
 	{
 		typedef shared_ptr_base<T,TLock> base_type;
 		typedef shared_ptr<T,TLock> this_type;
+
+		template <typename TEnableShared>
+		typename std::enable_if<std::is_base_of<TEnableShared, T>::value, void>::type enable_shared(void)
+		{
+			static_cast<TEnableShared*>(m_pt)->enable_shared(m_pt, m_pLock);
+		}
+		template <typename TEnableShared>
+		typename std::enable_if<!std::is_base_of<TEnableShared, T>::value, void>::type enable_shared(void)
+		{}
 	public:
 		shared_ptr(void)
 			: base_type(nullptr, nullptr)
 		{}
 		shared_ptr(make_shared_ptr_count_t<T,TLock> *p)
-			: base_type(p != nullptr ? p->get() : nullptr, p)
-		{}
+			: base_type(p != nullptr ? p->get_that() : nullptr, p)
+		{
+			enable_shared<enable_shared_from_this_base<T, TLock>>();
+		}
 		shared_ptr(T *pt)
 			: base_type(pt, new shared_ptr_count_t<T,TLock>(pt))
-		{}
+		{
+			enable_shared<enable_shared_from_this_base<T, TLock>>();
+		}
 		shared_ptr(shared_ptr<T, TLock> const & spThat)
 			: base_type(spThat.m_pt, spThat.m_pLock)
 		{
@@ -538,11 +554,15 @@ namespace like
 		template <typename TDeleter>
 		shared_ptr(T *pt, TDeleter const & tDeleter)
 			: base_type(pt, new shared_ptr_count_t<T,TLock,TDeleter>(pt, tDeleter))
-		{}
+		{
+			enable_shared<enable_shared_from_this_base<T, TLock>>();
+		}
 		template <typename TDeleter>
 		shared_ptr(T *pt, TDeleter && tDeleter)
 			: base_type(pt, new shared_ptr_count_t<T, TLock, TDeleter>(pt, std::forward<TDeleter>(tDeleter)))
-		{}
+		{
+			enable_shared<enable_shared_from_this_base<T, TLock>>();
+		}
 		template <typename U>
 		shared_ptr(shared_ptr<U,TLock> const & spThat)
 			: base_type(spThat.m_pt, spThat.m_pLock)
@@ -788,9 +808,38 @@ namespace like
 			return *this;
 		}
 	};
+
 	template<typename T, typename TLock = shared_ptr_count, class... TArgs>
 	shared_ptr<T,TLock> make_shared(TArgs &&... _Args)
 	{
 		return std::move(shared_ptr<T,TLock>(new make_shared_ptr_count_t<T,TLock>(std::forward<TArgs>(_Args)...)));
 	}
+
+	template <typename T, typename TLock = shared_ptr_count>
+	class enable_shared_from_this
+		: public enable_shared_from_this_base<T, TLock>
+	{
+		typedef  enable_shared_from_this_base<T, TLock> base_type;
+	public:
+		enable_shared_from_this(void)
+			: base_type(nullptr, nullptr)
+		{}
+		~enable_shared_from_this(void)
+		{
+			if (m_pLock != nullptr)
+				m_pLock->release_weak();
+		}
+		shared_ptr<T, TLock> shared_from_this(void)
+		{
+			return std::move(shared_ptr<T, TLock>(*this));
+		}
+		shared_ptr<T const, TLock> shared_from_this(void) const
+		{
+			return std::move(shared_ptr<T const, TLock>(*this));
+		}
+		shared_ptr<T volatile, TLock> shared_from_this(void) volatile
+		{
+			return std::move(shared_ptr<T volatile, TLock>(*this));
+		}
+	};
 }
