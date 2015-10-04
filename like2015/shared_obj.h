@@ -38,8 +38,11 @@ namespace like
 
 			if (uStatus == _XBEGIN_STARTED)
 			{
-				if (xmmShared.m128i_u8[0] == 0x81) // read-set: xmmShared.m128i_u8[0]
-					return 0;
+				register int const nShared = _mm_movemask_epi8(xmmShared); // read-set: xmmShared
+				register int const nStatic = _mm_movemask_epi8(xmmStatic); // read-set: xmmShared, xmmStatic
+
+				if (nShared == 1 && nStatic == 0)
+					return 0; // only if no outstanding non-transaction
 				else
 					_xabort(0xFF);
 			}
