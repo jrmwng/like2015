@@ -6,6 +6,12 @@
 #include <numeric>
 #include "atomic.h"
 
+#ifndef TSX
+#ifdef __AVX2__
+#define TSX
+#endif
+#endif
+
 namespace like
 {
 	struct shared_obj_lock
@@ -21,12 +27,24 @@ namespace like
 		__m128i xmmStatic;
 
 		shared_obj_lock(void)
-			: xmmShared(_mm_setzero_si128())
+			: xmmShared(_mm_cvtsi32_si128(0x81))
 			, xmmStatic(_mm_setzero_si128())
 		{}
 
 		unsigned read_begin(void)
 		{
+#ifdef TSX
+			register unsigned const uStatus = _xbegin();
+
+			if (uStatus == _XBEGIN_STARTED)
+			{
+				if (xmmShared.m128i_u8[0] == 0x81) // read-set: xmmShared.m128i_u8[0]
+					return 0;
+				else
+					_xabort(0xFF);
+			}
+#endif
+
 			unsigned uIndex = g_uIndex;
 
 			if (uIndex >= SHARED_OBJ_LOCK_SIZE)
@@ -40,11 +58,13 @@ namespace like
 				{
 					for (unsigned i = 0; i < SHARED_OBJ_LOCK_SIZE; i++, uIndex++)
 					{
-						if (xmmShared.m128i_u8[uIndex % SHARED_OBJ_LOCK_SIZE] == 0 &&
-							atomic_exchange(&static_cast<__m128i volatile&>(xmmShared).m128i_u8[uIndex % SHARED_OBJ_LOCK_SIZE], 0x80) == 0)
+						if (xmmShared.m128i_u8[uIndex % SHARED_OBJ_LOCK_SIZE] == 0)
 						{
-							g_uIndex = uIndex % SHARED_OBJ_LOCK_SIZE;
-							return uIndex % SHARED_OBJ_LOCK_SIZE;
+							if (atomic_exchange(&static_cast<__m128i volatile&>(xmmShared).m128i_u8[uIndex % SHARED_OBJ_LOCK_SIZE], 0x80) == 0)
+							{
+								g_uIndex = uIndex % SHARED_OBJ_LOCK_SIZE;
+								return uIndex % SHARED_OBJ_LOCK_SIZE;
+							}
 						}
 					}
 					_mm_pause();
@@ -53,10 +73,19 @@ namespace like
 		}
 		void read_end(unsigned uIndex)
 		{
-			if (uIndex >= SHARED_OBJ_LOCK_SIZE)
-				atomic_store<uint8_t>(&(xmmStatic.m128i_u8[uIndex % SHARED_OBJ_LOCK_SIZE]), 0);
+#ifdef TSX
+			if (uIndex == 0)
+			{
+				_xend();
+			}
 			else
-				atomic_store<uint8_t>(&(xmmShared.m128i_u8[uIndex % SHARED_OBJ_LOCK_SIZE]), 0);
+#endif
+			{
+				if (uIndex >= SHARED_OBJ_LOCK_SIZE)
+					atomic_store<uint8_t>(&(xmmStatic.m128i_u8[uIndex % SHARED_OBJ_LOCK_SIZE]), 0);
+				else
+					atomic_store<uint8_t>(&(xmmShared.m128i_u8[uIndex % SHARED_OBJ_LOCK_SIZE]), 0);
+			}
 		}
 		void read_sync(void)
 		{
