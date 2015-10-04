@@ -3,7 +3,9 @@
 #include <intrin.h>
 #include <type_traits>
 
-#define TSX // TODO
+#ifdef __AVX2__
+#define TSX
+#endif
 
 namespace like
 {
@@ -17,7 +19,43 @@ namespace like
 	bool atomic_lock_cas(void volatile *pv, void *p, void const *pCMP);
 
 	template <typename T>
-	void atomic_swap(T volatile *pvt, T *pt)
+	void atomic_tsx_load(T const volatile *pvt, T *pt)
+	{
+#ifdef TSX
+		register unsigned const uStatus = _xbegin();
+
+		if (uStatus == _XBEGIN_STARTED)
+		{
+			register T const t = *const_cast<T const*>(pvt); // read-set: pvt[0]
+			_xend();
+			*pt = t;
+		}
+		else
+#endif
+		{
+			atomic_lock_load<sizeof(T)>(pvt, pt);
+		}
+	}
+	template <typename T>
+	void atomic_tsx_store(T volatile *pvt, T const *pt)
+	{
+#ifdef TSX
+		register T const t = *pt;
+		register unsigned const uStatus = _xbegin();
+
+		if (uStatus == _XBEGIN_STARTED)
+		{
+			*const_cast<T*>(pvt) = t; // write-set: pvt[0]
+			_xend();
+		}
+		else
+#endif
+		{
+			atomic_lock_store<sizeof(T)>(pvt, pt);
+		}
+	}
+	template <typename T>
+	void atomic_tsx_swap(T volatile *pvt, T *pt)
 	{
 #ifdef TSX
 		register T const t0 = *pt;
@@ -25,19 +63,19 @@ namespace like
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
-			register T const t1 = *const_cast<T*>(pvt);
-			*const_cast<T*>(pvt) = t0;
+			register T const t1 = *const_cast<T*>(pvt); // read-set: pvt[0]
+			*const_cast<T*>(pvt) = t0; // write-set: pvt[0]
 			_xend();
 			*pt = t1;
 		}
 		else
-#endif // TSX
+#endif
 		{
 			atomic_lock_swap<sizeof(T)>(pvt, pt);
 		}
 	}
 	template <typename T>
-	bool atomic_cas(T volatile *pvt, T *pt, T const *ptCMP)
+	bool atomic_tsx_cas(T volatile *pvt, T *pt, T const *ptCMP)
 	{
 #ifdef TSX
 		register T const tCMP = *reinterpret_cast<T const*>(ptCMP);
@@ -46,10 +84,10 @@ namespace like
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
-			register T const t1 = *const_cast<T*>(pvt); // read pvt
-			if (memcmp(const_cast<T const*>(pvt), ptCMP, sizeof(T)) == 0)
+			register T const t1 = *const_cast<T*>(pvt); // read-set: pvt
+			if (t1 == tCMP)
 			{
-				*const_cast<T*>(pvt) = t0; // write pvt
+				*const_cast<T*>(pvt) = t0; // write-set: pvt
 				_xend();
 				*pt = t1;
 				return true;
@@ -116,7 +154,7 @@ namespace like
 	{
 		char volatile *pvb = reinterpret_cast<char volatile*>(pv);
 		char *pb = reinterpret_cast<char*>(p);
-		atomic_swap(pvb, pb);
+		atomic_tsx_swap(pvb, pb);
 	}
 	template <>
 	bool atomic_lock_cas<1>(void volatile *pv, void *p, void const *pCMP)
@@ -142,7 +180,7 @@ namespace like
 		char volatile *pvb = reinterpret_cast<char volatile*>(pv);
 		char *pb = reinterpret_cast<char*>(p);
 		char const *pbCMP = reinterpret_cast<char const*>(pCMP);
-		return atomic_cas(pvb, pb, pbCMP);
+		return atomic_tsx_cas(pvb, pb, pbCMP);
 	}
 
 	template <>
@@ -185,7 +223,7 @@ namespace like
 	{
 		short volatile *pvw = reinterpret_cast<short volatile*>(pv);
 		short *pw = reinterpret_cast<short*>(p);
-		atomic_swap(pvw, pw);
+		atomic_tsx_swap(pvw, pw);
 	}
 	template <>
 	bool atomic_lock_cas<2>(void volatile *pv, void *p, void const *pCMP)
@@ -210,7 +248,7 @@ namespace like
 		short volatile *pvw = reinterpret_cast<short volatile*>(pv);
 		short *pw = reinterpret_cast<short*>(p);
 		short const *pwCMP = reinterpret_cast<short const*>(pCMP);
-		return atomic_cas(pvw, pw, pwCMP);
+		return atomic_tsx_cas(pvw, pw, pwCMP);
 	}
 
 	template <>
@@ -253,7 +291,7 @@ namespace like
 	{
 		long volatile *pvl = reinterpret_cast<long volatile*>(pv);
 		long *pl = reinterpret_cast<long*>(p);
-		atomic_swap(pvl, pl);
+		atomic_tsx_swap(pvl, pl);
 	}
 	template <>
 	bool atomic_lock_cas<4>(void volatile *pv, void *p, void const *pCMP)
@@ -278,7 +316,7 @@ namespace like
 		long volatile *pvl = reinterpret_cast<long volatile*>(pv);
 		long *pl = reinterpret_cast<long*>(p);
 		long const *plCMP = reinterpret_cast<long const*>(pCMP);
-		return atomic_cas(pvl, pl, plCMP);
+		return atomic_tsx_cas(pvl, pl, plCMP);
 	}
 
 	template <>
@@ -304,7 +342,7 @@ namespace like
 		long long volatile *pvxl = reinterpret_cast<long long volatile*>(pv);
 		long long *pxl = reinterpret_cast<long long*>(p);
 		long long const *pxlCMP = reinterpret_cast<long long const*>(pCMP);
-		return atomic_cas(pvxl, pxl, pxlCMP);
+		return atomic_tsx_cas(pvxl, pxl, pxlCMP);
 	}
 #ifdef _M_X64
 	template <>
@@ -347,7 +385,7 @@ namespace like
 	{
 		long long volatile *pvxl = reinterpret_cast<long long volatile*>(pv);
 		long long *pxl = reinterpret_cast<long long*>(p);
-		atomic_swap(pvxl, pxl);
+		atomic_tsx_swap(pvxl, pxl);
 	}
 	template <>
 	void atomic_lock_load<16>(void const volatile *pv, void *p)
@@ -359,25 +397,9 @@ namespace like
 	template <>
 	void atomic_load<16>(void const volatile *pv, void *p)
 	{
-#ifdef TSX
-		long long const volatile *pvxl = reinterpret_cast<long long const volatile*>(pv);
-		long long *pxl = reinterpret_cast<long long*>(p);
-
-		unsigned uStatus = _xbegin();
-
-		if (uStatus == _XBEGIN_STARTED)
-		{
-			long long const xl0 = pvxl[0];
-			long long const xl1 = pvxl[1];
-			_xend();
-			pxl[0] = xl0;
-			pxl[1] = xl1;
-		}
-		else
-#endif // TSX
-		{
-			atomic_lock_load<16>(pv, p);
-		}
+		std::pair<long long, long long> const volatile *pvst = reinterpret_cast<std::pair<long long, long long> const volatile*>(pv);
+		std::pair<long long, long long> *pst = reinterpret_cast<std::pair<long long, long long>*>(p);
+		atomic_tsx_load(pvst, pst);
 	}
 	template <>
 	void atomic_lock_store<16>(void volatile *pv, void const *p)
@@ -398,23 +420,9 @@ namespace like
 	template <>
 	void atomic_store<16>(void volatile *pv, void const *p)
 	{
-		long long volatile *pvxl = reinterpret_cast<long long volatile*>(pv);
-		long long const *pxl = reinterpret_cast<long long const*>(p);
-
-		register long long const xl0 = pxl[0];
-		register long long const xl1 = pxl[1];
-		register unsigned const uStatus = _xbegin();
-
-		if (uStatus == _XBEGIN_STARTED)
-		{
-			pvxl[0] = xl0;
-			pvxl[1] = xl1;
-			_xend();
-		}
-		else
-		{
-			atomic_lock_store<16>(pv, p);
-		}
+		std::pair<long long, long long> volatile *pvst = reinterpret_cast<std::pair<long long, long long> volatile*>(pv);
+		std::pair<long long, long long> const *pst = reinterpret_cast<std::pair<long long, long long> const*>(p);
+		atomic_tsx_store(pvst, pst);
 	}
 	template <>
 	void atomic_lock_swap<16>(void volatile *pv, void *p)
@@ -435,7 +443,7 @@ namespace like
 	{
 		std::pair<long long, long long> volatile *pvst = reinterpret_cast<std::pair<long long, long long> volatile*>(pv);
 		std::pair<long long, long long> *pst = reinterpret_cast<std::pair<long long, long long>*>(p);
-		atomic_swap(pvst, pst);
+		atomic_tsx_swap(pvst, pst);
 	}
 	template <>
 	bool atomic_lock_cas<16>(void volatile *pv, void *p, void const *pCMP)
@@ -463,7 +471,7 @@ namespace like
 		std::pair<long long, long long> volatile *pvst = reinterpret_cast<std::pair<long long, long long> volatile*>(pv);
 		std::pair<long long, long long> *pst = reinterpret_cast<std::pair<long long, long long>*>(p);
 		std::pair<long long, long long> const *pstCMP = reinterpret_cast<std::pair<long long, long long> const*>(pCMP);
-		return atomic_cas(pvst, pst, pstCMP);
+		return atomic_tsx_cas(pvst, pst, pstCMP);
 	}
 #else
 	template <>
@@ -476,23 +484,29 @@ namespace like
 	template <>
 	void atomic_load<8>(void const volatile *pv, void *p)
 	{
-		atomic_lock_load<8>(pv, p);
+		long long const volatile *pvxl = reinterpret_cast<long long const volatile*>(pv);
+		long long *pxl = reinterpret_cast<long long*>(p);
+		atomic_tsx_load(pvxl, pxl);
 	}
 	template <>
 	void atomic_lock_store<8>(void volatile *pv, void const *p)
 	{
 		long long volatile *pvxl = reinterpret_cast<long long volatile*>(pv);
 		long long const *pxl = reinterpret_cast<long long const*>(p);
-		long long xl;
+
+		long long const xl0 = *pxl;
+		long long xl1;
 		do
 		{
-			xl = *pvxl;
-		} while (_InterlockedCompareExchange64(pvxl, *pxl, xl) != xl);
+			xl1 = *pvxl;
+		} while (_InterlockedCompareExchange64(pvxl, xl0, xl1) != xl1);
 	}
 	template <>
 	void atomic_store<8>(void volatile *pv, void const *p)
 	{
-		atomic_lock_store<8>(pv, p);
+		long long volatile *pvxl = reinterpret_cast<long long volatile*>(pv);
+		long long const *pxl = reinterpret_cast<long long const*>(p);
+		atomic_tsx_store(pvxl, pxl);
 	}
 	template <>
 	void atomic_lock_swap<8>(void volatile *pv, void *p)
@@ -511,7 +525,7 @@ namespace like
 	{
 		long long volatile *pvxl = reinterpret_cast<long long volatile*>(pv);
 		long long *pxl = reinterpret_cast<long long*>(p);
-		atomic_swap(pvxl, pxl);
+		atomic_tsx_swap(pvxl, pxl);
 	}
 #endif
 
@@ -557,7 +571,7 @@ namespace like
 	T atomic_exchange(T volatile *pvt, T t)
 	{
 		atomic_swap<sizeof(T)>(pvt, std::addressof(t));
-		return std::forward<T>(t);
+		return std::move(t);
 	}
 	template <typename T, typename U>
 	T atomic_exchange(T volatile *pvt, U u)
@@ -565,27 +579,17 @@ namespace like
 		return std::move(atomic_exchange(pvt, T(u)));
 	}
 	template <typename T>
-	typename std::enable_if<std::is_pod<T>::value, void>::type atomic_swap(T volatile *pvt, T & t)
-	{
-		atomic_swap<T>(pvt, std::addressof(t));
-	}
-	template <typename T>
-	typename std::enable_if<!std::is_pod<T>::value, void>::type atomic_swap(T volatile *pvt, T & t)
+	void atomic_swap(T volatile *pvt, T & t)
 	{
 		atomic_swap<sizeof(T)>(pvt, std::addressof(t));
 	}
 	template <typename T>
-	typename std::enable_if<std::is_pod<T>::value, bool>::type atomic_cas(T volatile *pvt, T & t, T const & tCMP)
-	{
-		return atomic_cas<T>(pvt, std::addressof(t), std::addressof(tCMP));
-	}
-	template <typename T>
-	typename std::enable_if<!std::is_pod<T>::value, bool>::type atomic_cas(T volatile *pvt, T & t, T const & tCMP)
+	bool atomic_cas(T volatile *pvt, T & t, T const & tCMP)
 	{
 		return atomic_cas<sizeof(T)>(pvt, std::addressof(t), std::addressof(tCMP));
 	}
 	template <typename T, typename U>
-	typename std::enable_if<sizeof(T)==sizeof(U),bool>::type atomic_cas(T volatile *pvt, T & t, U const & uCMP)
+	typename std::enable_if<sizeof(T) == sizeof(U), bool>::type atomic_cas(T volatile *pvt, T & t, U const & uCMP)
 	{
 		return atomic_cas<sizeof(T)>(pvt, std::addressof(t), std::addressof(uCMP));
 	}
