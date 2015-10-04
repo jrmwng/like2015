@@ -3,8 +3,10 @@
 #include <intrin.h>
 #include <type_traits>
 
+#ifndef TSX
 #ifdef __AVX2__
 #define TSX
+#endif
 #endif
 
 namespace like
