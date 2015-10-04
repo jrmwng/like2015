@@ -14,9 +14,9 @@ namespace like
 	template <typename T, typename TLock>
 	class enable_shared_from_this;
 
-	struct __declspec(align(16)) shared_ptr_lock
+	struct alignas(16) shared_ptr_lock
 	{
-		__declspec(align(16)) __m128i xmm;
+		__m128i xmm;
 
 		static __m128i g_xmmLockPool;
 		static thread_local unsigned g_uLockIndex;
