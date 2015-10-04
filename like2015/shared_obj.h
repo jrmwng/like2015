@@ -14,7 +14,7 @@
 
 namespace like
 {
-	struct shared_obj_lock
+	struct alignas(32) shared_obj_lock
 	{
 		static thread_local unsigned g_uIndex;
 
