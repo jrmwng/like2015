@@ -14,8 +14,11 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)atomic.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)journal.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)shared_lock.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)shared_obj.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)shared_ptr.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)xmm_traits.h" />
   </ItemGroup>
 </Project>
