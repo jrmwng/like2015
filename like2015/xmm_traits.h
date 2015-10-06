@@ -1,5 +1,7 @@
 #pragma once
 
+// author: wong wang leong, jeremy @ 2015
+
 #include <intrin.h>
 #include <stdint.h>
 #include <utility>
@@ -29,6 +31,7 @@ struct xmm_traits
 	typedef __m128i l4_type;
 	typedef __m128i uxl2_type;
 	typedef __m128i xl2_type;
+	typedef __m128i xmm1_type;
 
 	typedef std::pair<ub16_type, ub16_type> ub32_type;
 	typedef std::pair<b16_type, b16_type> b32_type;
@@ -38,52 +41,114 @@ struct xmm_traits
 	typedef std::pair<l4_type, l4_type> l8_type;
 	typedef std::pair<uxl2_type, uxl2_type> uxl4_type;
 	typedef std::pair<xl2_type, xl2_type> xl4_type;
+	typedef std::pair<xmm1_type, xmm1_type> xmm2_type;
 
 	template <typename T>
-	typename std::enable_if<std::is_integral<T>::value, __m128i>::type xmm1_input(T const *pt)
+	static typename std::enable_if<std::is_integral<T>::value, __m128i>::type xmm1_headmask(int n)
 	{
-		if (reinterpret_cast<uintptr_t>(pt) & (16 - 1))
+		__m128i const axmm[2]{ _mm_setzero_si128(), _mm_set1_epi32(~0) };
+		return _mm_loadu_si128(reinterpret_cast<__m128i const*>(axmm[0].m128i_i8 + (n & (16 / sizeof(T) - 1)) * sizeof(T)));
+	}
+	template <typename T>
+	static typename std::enable_if<std::is_integral<T>::value, __m128i>::type xmm1_tailmask(int n)
+	{
+		__m128i const axmm[2]{ _mm_set1_epi32(~0), _mm_setzero_si128() };
+		return _mm_loadu_si128(reinterpret_cast<__m128i const*>(axmm[1].m128i_i8 - (n & (16 / sizeof(T) - 1)) * sizeof(T)));
+	}
+
+	template <typename T, bool bAlign = false>
+	static typename std::enable_if<std::is_integral<T>::value, typename xmm1_type>::type xmm1_load(T const *pt)
+	{
+		if ((!bAlign) && reinterpret_cast<uintptr_t>(pt) & (16 - 1))
 			return _mm_loadu_si128(reinterpret_cast<__m128i const*>(pt));
 		else
 			return _mm_load_si128(reinterpret_cast<__m128i const*>(pt));
 	}
-	typename ub16_type ub16_input(ub1_type const *pub) { return xmm1_input(pub); }
-	typename b16_type b16_input(b1_type const *pb) { return xmm1_input(pb); }
-	typename uw8_type uw8_input(uw1_type const *puw) { return xmm1_input(puw); }
-	typename w8_type w8_input(w1_type const *pw) { return xmm1_input(pw); }
-	typename ul4_type ul4_input(ul1_type const *pul) { return xmm1_input(pul); }
-	typename l4_type l4_input(l1_type const *pl) { return xmm1_input(pl); }
-	typename uxl2_type uxl2_input(uxl1_type const *puxl) { return xmm1_input(puxl); }
-	typename xl2_type xl2_input(xl1_type const *pxl) { return xmm1_input(pxl); }
-
-	template <typename T>
-	typename std::enable_if<std::is_integral<T>::value, __m128i>::type xmm1_tailmask(int n)
+	template <typename T, bool bAlign = false>
+	static typename std::enable_if<std::is_integral<T>::value, typename xmm2_type>::type xmm2_load(T const *pt)
 	{
-		__m128i const axmm[2]{ _mm_cmpeq_epi8(_mm_setzero_si128(), _mm_setzero_si128()), _mm_setzero_si128() };
-		return _mm_loadu_si128(reinterpret_cast<__m128i const*>(axmm[1].m128i_i8 - (n & (16 / sizeof(T) - 1)) * sizeof(T)));
+		if ((!bAlign) && reinterpret_cast<uintptr_t>(pt) & (16 - 1))
+		{
+			__m128i const xmm1A = _mm_loadu_si128(reinterpret_cast<__m128i const*>(pt) + 0);
+			__m128i const xmm1B = _mm_loadu_si128(reinterpret_cast<__m128i const*>(pt) + 1);
+			return xmm2_type(xmm1A, xmm1B);
+		}
+		else
+		{
+			__m128i const xmm1A = _mm_load_si128(reinterpret_cast<__m128i const*>(pt) + 0);
+			__m128i const xmm1B = _mm_load_si128(reinterpret_cast<__m128i const*>(pt) + 1);
+			return xmm2_type(xmm1A, xmm1B);
+		}
 	}
 
-	template <typename T>
-	typename std::enable_if<std::is_integral<T>::value, void>::type xmm1_output(T *pt, int n, __m128i const & xmm, __m128i const & xmmMask)
+	template <typename T, bool bAlign = false>
+	static typename std::enable_if<std::is_integral<T>::value, void>::type xmm1_store(T *pt, typename xmm1_type const & xmm)
+	{
+		if ((!bAlign) && reinterpret_cast<uintptr_t>(pt) & (16 - 1))
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(pt), xmm);
+		else
+			_mm_store_si128(reinterpret_cast<__m128i*>(pt), xmm);
+	}
+	template <typename T, bool bAlign = false>
+	static typename std::enable_if<std::is_integral<T>::value, void>::type xmm1_store(T *pt, typename xmm1_type const & xmm1, int n, __m128i const & xmmMask)
 	{
 		if (n >= 16 / sizeof(T))
 		{
-			if (reinterpret_cast<uintptr_t>(pt) & (16 - 1))
-				_mm_storeu_si128(reinterpret_cast<__m128i*>(pt), xmm);
-			else
-				_mm_store_si128(reinterpret_cast<__m128i*>(pt), xmm);
+			xmm1_store<T, bAlign>(pt, xmm1);
 		}
 		else // if (n & (16 - 1))
 		{
-			_mm_maskmoveu_si128(xmm, xmmMask, reinterpret_cast<char*>(pt));
+			_mm_maskmoveu_si128(xmm1, xmmMask, reinterpret_cast<char*>(pt));
 		}
 	}
-	void ub16_output(ub1_type *pub, int n, ub16_type const & ub16, __m128i const & xmmMask) { xmm1_output(pub, n, ub16, xmmMask); }
-	void b16_output(ub1_type *pub, int n, b16_type const & b16, __m128i const & xmmMask) { xmm1_output(pub, n, b16, xmmMask); }
-	void uw8_output(ub1_type *pub, int n, uw8_type const & uw8, __m128i const & xmmMask) { xmm1_output(pub, n, uw8, xmmMask); }
-	void w8_output(ub1_type *pub, int n, w8_type const & w8, __m128i const & xmmMask) { xmm1_output(pub, n, w8, xmmMask); }
-	void ul4_output(ub1_type *pub, int n, ul4_type const & ul4, __m128i const & xmmMask) { xmm1_output(pub, n, ul4, xmmMask); }
-	void l4_output(ub1_type *pub, int n, l4_type const & l4, __m128i const & xmmMask) { xmm1_output(pub, n, l4, xmmMask); }
-	void uxl2_output(ub1_type *pub, int n, uxl2_type const & uxl2, __m128i const & xmmMask) { xmm1_output(pub, n, uxl2, xmmMask); }
-	void xl2_output(ub1_type *pub, int n, xl2_type const & xl2, __m128i const & xmmMask) { xmm1_output(pub, n, xl2, xmmMask); }
+	template <typename T, bool bAlign = false>
+	static typename std::enable_if<std::is_integral<T>::value, void>::type xmm2_store(T *pt, typename xmm2_type const & xmm2)
+	{
+		if ((!bAlign) && reinterpret_cast<uintptr_t>(pt) & (16 - 1))
+		{
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(pt) + 0, xmm2.first);
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(pt) + 1, xmm2.second);
+		}
+		else
+		{
+			_mm_store_si128(reinterpret_cast<__m128i*>(pt) + 0, xmm2.first);
+			_mm_store_si128(reinterpret_cast<__m128i*>(pt) + 1, xmm2.second);
+		}
+	}
+	template <typename T, bool bAlign = false>
+	static typename std::enable_if<std::is_integral<T>::value, void>::type xmm2_store(T *pt, typename xmm2_type const & xmm2, int n, __m128i const & xmmMask)
+	{
+		__m128i xmmD = xmm2.first;
+
+		if (n >= 16 / sizeof(T))
+		{
+			xmmD = xmm2.second;
+
+			if ((!bAlign) && reinterpret_cast<uintptr_t>(pt) & (16 - 1))
+			{
+				_mm_storeu_si128(reinterpret_cast<__m128i*>(pt) + 0, xmm2.first);
+
+				if (n >= 32 / sizeof(T))
+				{
+					_mm_storeu_si128(reinterpret_cast<__m128i*>(pt) + 1, xmm2.second);
+					return;
+				}
+			}
+			else
+			{
+				_mm_store_si128(reinterpret_cast<__m128i*>(pt) + 0, xmm2.first);
+
+				if (n >= 32 / sizeof(T))
+				{
+					_mm_store_si128(reinterpret_cast<__m128i*>(pt) + 1, xmm2.second);
+					return;
+				}
+			}
+		}
+
+		if (n & (16 / sizeof(T) - 1))
+		{
+			_mm_maskmoveu_si128(xmmD, xmmMask, reinterpret_cast<char*>(pt) + (n & (16 / sizeof(T))));
+		}
+	}
 };
