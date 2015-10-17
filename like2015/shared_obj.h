@@ -154,7 +154,7 @@ namespace like
 		void load(TFunc tFunc) const
 		{
 #ifdef TSX
-			register unsigned uStatus = _xbegin();
+			register unsigned const uStatus = _xbegin();
 
 			if (uStatus == _XBEGIN_STARTED)
 			{
@@ -189,12 +189,13 @@ namespace like
 
 		void swap(TObj & that)
 		{
-#ifdef TSX
-			register unsigned uStatus = _xbegin();
+#if 0 // this is an invalid TSX application, because *this could be read by another thread before the memory transaction
+			register unsigned const uStatus = _xbegin();
 
 			if (uStatus == _XBEGIN_STARTED)
 			{
 				std::swap<TObj>(*this, that);
+				_xend();
 				return;
 			}
 #endif
@@ -207,13 +208,13 @@ namespace like
 		template <typename TCompare>
 		typename std::enable_if<sizeof(TObj) == sizeof(TCompare), bool>::type cas(TObj & that, TCompare const & tCompare)
 		{
-#ifdef TSX
-			register unsigned uStatus = _xbegin();
+#if 0 // this is an invalid TSX application, because *this could be read by another thread before the memory transaction
+			register unsigned const uStatus = _xbegin();
 
 			if (uStatus == _XBEGIN_STARTED)
 			{
 				// TODO: CMPXCHG
-				register bool bRET = atomic_lock_cas(static_cast<TObj volatile*>(this), that, tCompare);
+				register bool const bRET = atomic_lock_cas(static_cast<TObj volatile*>(this), that, tCompare);
 				_xend();
 				return bRET;
 			}
