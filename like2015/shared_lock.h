@@ -1,5 +1,7 @@
 #pragma once
 
+/* Author: jrmwng @ 2015 */
+
 #include <intrin.h>
 #include <stdint.h>
 #include <algorithm>
