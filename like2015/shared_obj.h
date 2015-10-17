@@ -1,5 +1,7 @@
 #pragma once
 
+/* Author: jrmwng */
+
 #include <intrin.h>
 #include <stdint.h>
 #include <algorithm>
@@ -135,7 +137,7 @@ namespace like
 	thread_local unsigned shared_obj_lock::g_uIndex = 0;
 	__m128i shared_obj_lock::g_xmmLock = _mm_setzero_si128();
 
-	template <typename TObj>
+	template <typename TObj, typename TSync = std::identity<TObj>>
 	class shared_obj
 		: public TObj
 	{
@@ -151,7 +153,7 @@ namespace like
 		template <typename TFunc>
 		void load(TFunc tFunc) const
 		{
-			unsigned uKey = m_Lock.read_begin();
+			unsigned const uKey = m_Lock.read_begin();
 
 			char ac[sizeof(TObj)];
 			{
@@ -179,7 +181,7 @@ namespace like
 		{
 			atomic_swap(static_cast<TObj volatile*>(this), std::addressof(that));
 			
-			if (that) // TODO
+			if (TSync()(that))
 				m_Lock.read_sync();
 		}
 
@@ -188,7 +190,7 @@ namespace like
 		{
 			if (atomic_cas(static_cast<TObj volatile*>(this), that, tCompare))
 			{
-				if (that) // TODO
+				if (TSync()(that))
 					m_Lock.read_sync();
 				return true;
 			}
