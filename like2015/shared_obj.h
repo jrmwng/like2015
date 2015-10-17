@@ -1,6 +1,6 @@
 #pragma once
 
-/* Author: jrmwng */
+/* Author: jrmwng @ 2015 */
 
 #include <intrin.h>
 #include <stdint.h>
