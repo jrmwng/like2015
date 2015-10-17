@@ -153,6 +153,16 @@ namespace like
 		template <typename TFunc>
 		void load(TFunc tFunc) const
 		{
+#ifdef TSX
+			register unsigned uStatus = _xbegin();
+
+			if (uStatus == _XBEGIN_STARTED)
+			{
+				tFunc(*static_cast<TObj const*>(this));
+				_xend();
+				return;
+			}
+#endif
 			unsigned const uKey = m_Lock.read_begin();
 
 			char ac[sizeof(TObj)];
@@ -167,7 +177,7 @@ namespace like
 
 		TObj load(void) const
 		{
-			TObj tObj;
+			register TObj tObj;
 			{
 				load([&](TObj const & that)
 				{
@@ -179,16 +189,36 @@ namespace like
 
 		void swap(TObj & that)
 		{
-			atomic_swap(static_cast<TObj volatile*>(this), std::addressof(that));
-			
+#ifdef TSX
+			register unsigned uStatus = _xbegin();
+
+			if (uStatus == _XBEGIN_STARTED)
+			{
+				std::swap<TObj>(*this, that);
+				return;
+			}
+#endif
+			atomic_lock_swap(static_cast<TObj volatile*>(this), std::addressof(that));
+
 			if (TSync()(that))
 				m_Lock.read_sync();
 		}
 
 		template <typename TCompare>
-		typename std::enable_if<sizeof(TObj)==sizeof(TCompare),bool>::type cas(TObj & that, TCompare const & tCompare)
+		typename std::enable_if<sizeof(TObj) == sizeof(TCompare), bool>::type cas(TObj & that, TCompare const & tCompare)
 		{
-			if (atomic_cas(static_cast<TObj volatile*>(this), that, tCompare))
+#ifdef TSX
+			register unsigned uStatus = _xbegin();
+
+			if (uStatus == _XBEGIN_STARTED)
+			{
+				// TODO: CMPXCHG
+				register bool bRET = atomic_lock_cas(static_cast<TObj volatile*>(this), that, tCompare);
+				_xend();
+				return bRET;
+			}
+#endif
+			if (atomic_lock_cas(static_cast<TObj volatile*>(this), that, tCompare))
 			{
 				if (TSync()(that))
 					m_Lock.read_sync();
