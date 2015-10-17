@@ -1,6 +1,6 @@
 #pragma once
 
-// author: wong wang leong, jeremy @ 2015
+/* Author: jrmwng @ 2015 */
 
 #include <intrin.h>
 #include <stdint.h>
