@@ -19,6 +19,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)shared_lock.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)shared_obj.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)shared_ptr.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)tsx.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)xmm_traits.h" />
   </ItemGroup>
 </Project>
