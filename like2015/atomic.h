@@ -1,5 +1,7 @@
 #pragma once
 
+/* Author: jrmwng */
+
 #include <intrin.h>
 #include <type_traits>
 
@@ -86,10 +88,10 @@ namespace like
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
-			register T const t1 = *const_cast<T*>(pvt); // read-set: pvt
+			register T const t1 = *const_cast<T*>(pvt); // read-set: pvt[0]
 			if (t1 == tCMP)
 			{
-				*const_cast<T*>(pvt) = t0; // write-set: pvt
+				*const_cast<T*>(pvt) = t0; // write-set: pvt[0]
 				_xend();
 				*pt = t1;
 				return true;
