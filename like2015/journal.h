@@ -1,5 +1,7 @@
 #pragma once
 
+/* Author: jrmwng @ 2015 */
+
 #include <intrin.h>
 #include <numeric>
 #include <utility>
@@ -34,9 +36,19 @@ namespace like
 		unsigned char * const m_pBufferEnd;
 		unsigned char *       m_pBuffer;
 	public:
+		journal(unsigned char *pBufferBegin, unsigned char *pBufferEnd)
+			: m_pBufferBegin(pBufferBegin)
+			, m_pBufferEnd(pBufferEnd)
+			, m_pBuffer(pBufferBegin)
+		{}
 		unsigned char * record_begin(size_t uByteCount)
 		{
-			return m_pBuffer;
+			unsigned char *pBuffer = m_pBuffer;
+			{
+				if (pBuffer + uByteCount >= m_pBufferEnd)
+					return nullptr;
+			}
+			return pBuffer;
 		}
 		ptrdiff_t record_end(unsigned char *pRecord, size_t uByteCount)
 		{
@@ -46,11 +58,11 @@ namespace like
 		template <unsigned uSize>
 		ptrdiff_t record_batch(unsigned char const *(const & apData)[uSize], size_t(const & auSize)[uSize])
 		{
-			size_t uTotalSize = std::accumulate(std::cbegin(auSize), std::cend(auSize), 0U);
+			size_t const uTotalSize = sizeof(unsigned) + std::accumulate(std::cbegin(auSize), std::cend(auSize), 0U);
 
-			unsigned char *pRecord = record_begin(uTotalSize);
+			unsigned char * const pRecord = record_begin(uTotalSize);
 			{
-				if (pRecord + uTotalSize > m_pBufferEnd)
+				if (pRecord == nullptr)
 					return -1;
 			}
 
