@@ -39,18 +39,18 @@ namespace like
 	{
 		return std::exchange(g_pHeap, pHeap);
 	}
-	template <typename TF>
-	typename std::enable_if<std::is_void<typename TF::result_type>::value, void>::type heap_threadlocal(heap *pHeap, TF const & tF)
+	template <typename TR, typename TF>
+	typename std::enable_if<std::is_void<TR>::value, void>::type heap_threadlocal(heap *pHeap, TF const & tF)
 	{
 		std::swap(g_pHeap, pHeap);
 		tF();
 		g_pHeap = pHeap;
 	}
-	template <typename TF>
-	typename std::enable_if<!std::is_void<typename TF::result_type>::value, typename TF::result_type>::type heap_threadlocal(heap *pHeap, TF const & tF)
+	template <typename TR, typename TF>
+	typename std::enable_if<!std::is_void<TR>::value, TR>::type heap_threadlocal(heap *pHeap, TF const & tF)
 	{
 		std::swap(g_pHeap, pHeap);
-		typename TF::result_type tR(std::move(tF()));
+		TR tR(std::move(tF()));
 		g_pHeap = pHeap;
 		return std::move(tR);
 	}
