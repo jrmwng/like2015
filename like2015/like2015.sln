@@ -7,26 +7,62 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "like2015", "like2015.vcxite
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "like2015test", "..\like2015test\like2015test.vcxproj", "{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "App1", "..\App1\App1.vcxproj", "{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sudoku", "..\sudoku\sudoku.vcxproj", "{B23F1569-966B-426F-B0BE-57A6BFAA082F}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		like2015.vcxitems*{398e0e0b-fdec-45f7-94d9-7b5bf99d1826}*SharedItemsImports = 4
 		like2015.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release|ARM = Release|ARM
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Debug|ARM.ActiveCfg = Debug|Win32
 		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Debug|x64.ActiveCfg = Debug|x64
 		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Debug|x64.Build.0 = Debug|x64
 		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Debug|x86.ActiveCfg = Debug|Win32
 		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Debug|x86.Build.0 = Debug|Win32
+		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Release|ARM.ActiveCfg = Release|Win32
 		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Release|x64.ActiveCfg = Release|x64
 		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Release|x64.Build.0 = Release|x64
 		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Release|x86.ActiveCfg = Release|Win32
 		{398E0E0B-FDEC-45F7-94D9-7B5BF99D1826}.Release|x86.Build.0 = Release|Win32
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Debug|ARM.ActiveCfg = Debug|ARM
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Debug|ARM.Build.0 = Debug|ARM
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Debug|ARM.Deploy.0 = Debug|ARM
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Debug|x64.ActiveCfg = Debug|x64
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Debug|x64.Build.0 = Debug|x64
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Debug|x64.Deploy.0 = Debug|x64
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Debug|x86.ActiveCfg = Debug|Win32
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Debug|x86.Build.0 = Debug|Win32
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Debug|x86.Deploy.0 = Debug|Win32
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Release|ARM.ActiveCfg = Release|ARM
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Release|ARM.Build.0 = Release|ARM
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Release|ARM.Deploy.0 = Release|ARM
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Release|x64.ActiveCfg = Release|x64
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Release|x64.Build.0 = Release|x64
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Release|x64.Deploy.0 = Release|x64
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Release|x86.ActiveCfg = Release|Win32
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Release|x86.Build.0 = Release|Win32
+		{0102DB1B-ACF4-4479-BC22-1F42169FE9B8}.Release|x86.Deploy.0 = Release|Win32
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Debug|ARM.ActiveCfg = Debug|Win32
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Debug|x64.ActiveCfg = Debug|x64
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Debug|x64.Build.0 = Debug|x64
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Debug|x86.ActiveCfg = Debug|Win32
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Debug|x86.Build.0 = Debug|Win32
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Release|ARM.ActiveCfg = Release|Win32
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Release|x64.ActiveCfg = Release|x64
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Release|x64.Build.0 = Release|x64
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Release|x86.ActiveCfg = Release|Win32
+		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
