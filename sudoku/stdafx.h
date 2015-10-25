@@ -18,3 +18,4 @@
 #include <iostream>
 #include <functional>
 #include <numeric>
+#include <memory>
