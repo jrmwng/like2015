@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="sudoku.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
