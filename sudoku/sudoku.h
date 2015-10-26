@@ -70,30 +70,75 @@ namespace like
 				{
 					auto const & stGroup = astGroup[ulGroupIndex0];
 
-					for (long lNumberSet0 = 1; lNumberSet0 < (1 << TT::SUDOKU_CANDIDATE_COUNT) - 1; lNumberSet0++)
+					if (TT::SUDOKU_CANDIDATE_COUNT == 9)
 					{
-						long lCandidateSet0 = 0;
+						__m128i axmmCandidateSet[3];
 						{
-							long lNumberSet1 = lNumberSet0;
-
-							for (unsigned long ulNumberIndex1; _BitScanForward(&ulNumberIndex1, lNumberSet1); _bittestandreset(&lNumberSet1, ulNumberIndex1))
+							for (unsigned i = 0, j = 0; i < 3; i++, j += 3)
 							{
-								auto const & stNumber = astNumber[stGroup.alNumberIndex[ulNumberIndex1]];
+								__m128i const xmmCandidateSet0 = _mm_unpacklo_epi16(_mm_setzero_si128(), _mm_shufflelo_epi16(_mm_cvtsi32_si128(astNumber[stGroup.alNumberIndex[j + 0]].lCandidateSet), 0));
+								__m128i const xmmCandidateSet1 = _mm_unpacklo_epi32(_mm_setzero_si128(), _mm_shufflelo_epi16(_mm_cvtsi32_si128(astNumber[stGroup.alNumberIndex[j + 1]].lCandidateSet), 0));
+								__m128i const xmmCandidateSet2 = _mm_unpacklo_epi64(_mm_setzero_si128(), _mm_shufflelo_epi16(_mm_cvtsi32_si128(astNumber[stGroup.alNumberIndex[j + 2]].lCandidateSet), 0));
 
-								lCandidateSet0 |= stNumber.lCandidateSet;
+								axmmCandidateSet[i] = _mm_or_si128(_mm_or_si128(xmmCandidateSet0, xmmCandidateSet1), xmmCandidateSet2);
 							}
 						}
-						if (__popcnt(lCandidateSet0) == __popcnt(lNumberSet0)) // the only condition of inference
-						{
-							long lNumberSet2 = (~lNumberSet0) & ((1 << TT::SUDOKU_CANDIDATE_COUNT) - 1);
-							for (unsigned long ulNumberIndex2; _BitScanForward(&ulNumberIndex2, lNumberSet2); _bittestandreset(&lNumberSet2, ulNumberIndex2))
-							{
-								auto & stNumber = astNumber[stGroup.alNumberIndex[ulNumberIndex2]];
 
-								if (stNumber.lCandidateSet & lCandidateSet0)
+						for (long lNumberSet0 = 0; lNumberSet0 < (1 << TT::SUDOKU_CANDIDATE_COUNT); lNumberSet0 += 8)
+						{
+							long const lCandidateSet0 = axmmCandidateSet[1].m128i_i16[(lNumberSet0 >> 3) & 7] | axmmCandidateSet[2].m128i_i16[(lNumberSet0 >> 6) & 7];
+
+							if (__popcnt(lCandidateSet0) <= __popcnt(lNumberSet0) && __popcnt(lNumberSet0) <= __popcnt(lCandidateSet0) + 3)
+							{
+								for (long lNumberSet1 = 0; lNumberSet1 < 8; lNumberSet1++)
 								{
-									lGroupSet1 |= stNumber.lGroupSet;
-									stNumber.lCandidateSet &= ~lCandidateSet0;
+									long const lCandidateSet1 = lCandidateSet0 | axmmCandidateSet[0].m128i_i16[lNumberSet1];
+
+									if (__popcnt(lCandidateSet1) == __popcnt(lNumberSet0 + lNumberSet1))
+									{
+										long lNumberSet2 = (~(lNumberSet0 + lNumberSet1)) & ((1 << TT::SUDOKU_CANDIDATE_COUNT) - 1);
+										for (unsigned long ulNumberIndex2; _BitScanForward(&ulNumberIndex2, lNumberSet2); _bittestandreset(&lNumberSet2, ulNumberIndex2))
+										{
+											auto & stNumber = astNumber[stGroup.alNumberIndex[ulNumberIndex2]];
+
+											if (stNumber.lCandidateSet & lCandidateSet1)
+											{
+												lGroupSet1 |= stNumber.lGroupSet;
+												stNumber.lCandidateSet &= ~lCandidateSet1;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					else // general case follows
+					{
+						for (long lNumberSet0 = 1; lNumberSet0 < (1 << TT::SUDOKU_CANDIDATE_COUNT) - 1; lNumberSet0++)
+						{
+							long lCandidateSet0 = 0;
+							{
+								long lNumberSet1 = lNumberSet0;
+
+								for (unsigned long ulNumberIndex1; _BitScanForward(&ulNumberIndex1, lNumberSet1); _bittestandreset(&lNumberSet1, ulNumberIndex1))
+								{
+									auto const & stNumber = astNumber[stGroup.alNumberIndex[ulNumberIndex1]];
+
+									lCandidateSet0 |= stNumber.lCandidateSet;
+								}
+							}
+							if (__popcnt(lCandidateSet0) == __popcnt(lNumberSet0)) // the only condition of inference
+							{
+								long lNumberSet2 = (~lNumberSet0) & ((1 << TT::SUDOKU_CANDIDATE_COUNT) - 1);
+								for (unsigned long ulNumberIndex2; _BitScanForward(&ulNumberIndex2, lNumberSet2); _bittestandreset(&lNumberSet2, ulNumberIndex2))
+								{
+									auto & stNumber = astNumber[stGroup.alNumberIndex[ulNumberIndex2]];
+
+									if (stNumber.lCandidateSet & lCandidateSet0)
+									{
+										lGroupSet1 |= stNumber.lGroupSet;
+										stNumber.lCandidateSet &= ~lCandidateSet0;
+									}
 								}
 							}
 						}
