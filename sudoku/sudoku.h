@@ -72,39 +72,71 @@ namespace like
 
 					if (TT::SUDOKU_CANDIDATE_COUNT == 9)
 					{
-						__m128i axmmCandidateSet[3];
+						__m128i xmmCandidateSet0;
+						__m128i xmmCandidateSet1;
+						__m128i xmmCandidateSet2;
 						{
-							for (unsigned i = 0, j = 0; i < 3; i++, j += 3)
+							__m128i axmmCandidateSet[3];
 							{
-								__m128i const xmmCandidateSet0 = _mm_unpacklo_epi16(_mm_setzero_si128(), _mm_shufflelo_epi16(_mm_cvtsi32_si128(astNumber[stGroup.alNumberIndex[j + 0]].lCandidateSet), 0));
-								__m128i const xmmCandidateSet1 = _mm_unpacklo_epi32(_mm_setzero_si128(), _mm_shufflelo_epi16(_mm_cvtsi32_si128(astNumber[stGroup.alNumberIndex[j + 1]].lCandidateSet), 0));
-								__m128i const xmmCandidateSet2 = _mm_unpacklo_epi64(_mm_setzero_si128(), _mm_shufflelo_epi16(_mm_cvtsi32_si128(astNumber[stGroup.alNumberIndex[j + 2]].lCandidateSet), 0));
+								for (unsigned i = 0, j = 0; i < 3; i++, j += 3)
+								{
+									__m128i const xmmCandidateSet0 = _mm_unpacklo_epi16(_mm_setzero_si128(), _mm_shufflelo_epi16(_mm_cvtsi32_si128(astNumber[stGroup.alNumberIndex[j + 0]].lCandidateSet), 0));
+									__m128i const xmmCandidateSet1 = _mm_unpacklo_epi32(_mm_setzero_si128(), _mm_shufflelo_epi16(_mm_cvtsi32_si128(astNumber[stGroup.alNumberIndex[j + 1]].lCandidateSet), 0));
+									__m128i const xmmCandidateSet2 = _mm_unpacklo_epi64(_mm_setzero_si128(), _mm_shufflelo_epi16(_mm_cvtsi32_si128(astNumber[stGroup.alNumberIndex[j + 2]].lCandidateSet), 0));
 
-								axmmCandidateSet[i] = _mm_or_si128(_mm_or_si128(xmmCandidateSet0, xmmCandidateSet1), xmmCandidateSet2);
+									axmmCandidateSet[i] = _mm_or_si128(_mm_or_si128(xmmCandidateSet0, xmmCandidateSet1), xmmCandidateSet2);
+								}
 							}
+							xmmCandidateSet0 = axmmCandidateSet[0];
+							xmmCandidateSet1 = axmmCandidateSet[1];
+							xmmCandidateSet2 = axmmCandidateSet[2];
 						}
 
-						for (long lNumberSet0 = 0; lNumberSet0 < (1 << TT::SUDOKU_CANDIDATE_COUNT); lNumberSet0 += 8)
+						for (long lNumberSet2 = 0; lNumberSet2 < (1 << TT::SUDOKU_CANDIDATE_COUNT); lNumberSet2 += (1 << 6), xmmCandidateSet2 = _mm_alignr_epi8(xmmCandidateSet2, xmmCandidateSet2, 2))
 						{
-							long const lCandidateSet0 = axmmCandidateSet[1].m128i_i16[(lNumberSet0 >> 3) & 7] | axmmCandidateSet[2].m128i_i16[(lNumberSet0 >> 6) & 7];
+							long const lCandidateSet2 = _mm_extract_epi16(xmmCandidateSet2, 0);
+							unsigned const uMinCntNumber2 = __popcnt(lNumberSet2);
+							unsigned const uMaxCntNumber2 = __popcnt(lNumberSet2) + 6;
+							unsigned const uMinCntCandidate2 = __popcnt(lCandidateSet2);
+							unsigned const uMaxCntCandidate2 = __popcnt(lCandidateSet2 | _mm_extract_epi16(_mm_or_si128(xmmCandidateSet1, xmmCandidateSet0), 7));
 
-							if (__popcnt(lCandidateSet0) <= __popcnt(lNumberSet0) && __popcnt(lNumberSet0) <= __popcnt(lCandidateSet0) + 3)
+							if (uMinCntCandidate2 <= uMaxCntNumber2 &&
+								uMinCntNumber2 <= uMaxCntCandidate2)
 							{
-								for (long lNumberSet1 = 0; lNumberSet1 < 8; lNumberSet1++)
+								for (long lNumberSet1 = lNumberSet2; lNumberSet1 < lNumberSet2 + (1 << 6); lNumberSet1 += (1 << 3), xmmCandidateSet1 = _mm_alignr_epi8(xmmCandidateSet1, xmmCandidateSet1, 2))
 								{
-									long const lCandidateSet1 = lCandidateSet0 | axmmCandidateSet[0].m128i_i16[lNumberSet1];
+									long const lCandidateSet1 = lCandidateSet2 | _mm_extract_epi16(xmmCandidateSet1, 0);
+									unsigned const uMinCntNumber1 = __popcnt(lNumberSet1);
+									unsigned const uMaxCntNumber1 = __popcnt(lNumberSet1) + 3;
+									unsigned const uMinCntCandidate1 = __popcnt(lCandidateSet1);
+									unsigned const uMaxCntCandidate1 = __popcnt(lCandidateSet1 | _mm_extract_epi16(xmmCandidateSet0, 7));
 
-									if (__popcnt(lCandidateSet1) == __popcnt(lNumberSet0 + lNumberSet1))
+									if (uMinCntCandidate1 <= uMaxCntNumber1 &&
+										uMinCntNumber1 <= uMaxCntCandidate1)
 									{
-										long lNumberSet2 = (~(lNumberSet0 + lNumberSet1)) & ((1 << TT::SUDOKU_CANDIDATE_COUNT) - 1);
-										for (unsigned long ulNumberIndex2; _BitScanForward(&ulNumberIndex2, lNumberSet2); _bittestandreset(&lNumberSet2, ulNumberIndex2))
+										for (long lNumberSet0 = lNumberSet1; lNumberSet0 < lNumberSet1 + (1 << 3); lNumberSet0++, xmmCandidateSet0 = _mm_alignr_epi8(xmmCandidateSet0, xmmCandidateSet0, 2))
 										{
-											auto & stNumber = astNumber[stGroup.alNumberIndex[ulNumberIndex2]];
+											long const lCandidateSet0 = lCandidateSet1 | _mm_extract_epi16(xmmCandidateSet0, 0);
+											unsigned const uPopCntNumber0 = __popcnt(lNumberSet0);
+											unsigned const uPopCntCandidate0 = __popcnt(lCandidateSet0);
 
-											if (stNumber.lCandidateSet & lCandidateSet1)
+											long lNumberNot0 = (~lNumberSet0) & ((1 << 9) - 1);
+
+											if (uPopCntCandidate0 == uPopCntNumber0)
 											{
-												lGroupSet1 |= stNumber.lGroupSet;
-												stNumber.lCandidateSet &= ~lCandidateSet1;
+												for (unsigned long ulNumberIndex0 = 0; lNumberNot0; ulNumberIndex0++, lNumberNot0 >>= 1)
+												{
+													if (lNumberNot0 & 1)
+													{
+														auto & stNumber = astNumber[stGroup.alNumberIndex[ulNumberIndex0]];
+
+														if (stNumber.lCandidateSet & lCandidateSet0)
+														{
+															lGroupSet1 |= stNumber.lGroupSet;
+															stNumber.lCandidateSet &= ~lCandidateSet0;
+														}
+													}
+												}
 											}
 										}
 									}
