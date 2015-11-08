@@ -1,5 +1,5 @@
 # like2015
-like c++ template, see wiki page for description...
+like c++ template, see [like2015 wiki page](https://github.com/jrmwng/like2015/wiki) for description...
 
     namespace like
     {
