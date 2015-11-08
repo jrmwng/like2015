@@ -18,4 +18,4 @@ Please start from [shared_ptr.h](https://github.com/jrmwng/like2015/blob/master/
 
 ## Sudoku solver in 0.3ms
 
-Please start from [sudoku](https://github.com/jrmwng/like2015/blob/master/sudoku), though only 1 Sudoku technique is used in 1 function call
+Please start from [sudoku](https://github.com/jrmwng/like2015/blob/master/sudoku)
