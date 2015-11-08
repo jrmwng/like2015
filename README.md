@@ -2,7 +2,9 @@
 
 like c++ template, see [like2015 wiki page](https://github.com/jrmwng/like2015/wiki) for description...
 
-## Smart pointers
+## Smart pointers with lock-free performance
+
+Please start from [shared_ptr.h](https://github.com/jrmwng/like2015/blob/master/like2015/shared_ptr.h)
 
     namespace like
     {
@@ -14,4 +16,4 @@ like c++ template, see [like2015 wiki page](https://github.com/jrmwng/like2015/w
 
 ## Sudoku solver using pre-emptive set techique
 
-[`like::sudoku_t<sudoku_9x9_traits>`](https://github.com/jrmwng/like2015/blob/master/sudoku/sudoku.h)
+Please start from [sudoku](https://github.com/jrmwng/like2015/blob/master/sudoku)
