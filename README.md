@@ -14,6 +14,8 @@ Please start from [shared_ptr.h](https://github.com/jrmwng/like2015/blob/master/
       template <typename T> atomic_weak_ptr<T>;
     }
 
-## Sudoku solver using pre-emptive set techique
+`like::atomic_shared_ptr<T>` could be your good friend in lock-free programming, if you are friend with it.
 
-Please start from [sudoku](https://github.com/jrmwng/like2015/blob/master/sudoku)
+## Sudoku solver in 0.3ms
+
+Please start from [sudoku](https://github.com/jrmwng/like2015/blob/master/sudoku), though only 1 Sudoku technique is used
