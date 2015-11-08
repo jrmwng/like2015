@@ -1,12 +1,10 @@
 # like2015
-like c++ template
+like c++ template, see wiki page for description...
 
-<pre>
-namespace like
-{
-  template &lt;typename T&gt; shared_ptr&lt;T&gt;;
-  template &lt;typename T&gt; weak_ptr&lt;T&gt;;
-  template &lt;typename T&gt; atomic_shared_ptr&lt;T&gt;;
-  template &lt;typename T&gt; atomic_weak_ptr&lt;T&gt;;
-}
-</pre>
+  namespace like
+  {
+    template <typename T> shared_ptr<T>;
+    template <typename T> weak_ptr<T>;
+    template <typename T> atomic_shared_ptr<T>;
+    template <typename T> atomic_weak_ptr<T>;
+  }
