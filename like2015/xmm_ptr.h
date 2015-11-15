@@ -17,6 +17,31 @@ namespace like
 		xmm_ptr_c11(__m128i const & that)
 			: xmm(that)
 		{}
+
+		void operator += (xmm_ptr_c11 const & that)
+		{
+#ifdef _M_X64
+			xmm = _mm_add_epi64(xmm, that.xmm);
+#else
+			xmm = _mm_add_epi32(xmm, that.xmm);
+#endif
+		}
+		void operator -= (xmm_ptr_c11 const & that)
+		{
+#ifdef _M_X64
+			xmm = _mm_sub_epi64(xmm, that.xmm);
+#else
+			xmm = _mm_sub_epi32(xmm, that.xmm);
+#endif
+		}
+		void operator *= (intptr_t n) // scalar multiplication only
+		{
+#ifdef _M_X64
+			xmm = _mm_mul_epi32(xmm, _mm_set1_epi64x(n));
+#else
+			xmm = _mm_mullo_epi32(xmm, _mm_set1_epi32(n));
+#endif
+		}
 	};
 	
 	template <unsigned uIndex, typename TA>
@@ -28,15 +53,19 @@ namespace like
 		xmm_ptr_c11(__m128i const & that)
 			: base_type(that)
 		{}
-		xmm_ptr_c11(intptr_t n)
+		xmm_ptr_c11(intptr_t n) // for pointer arithmetic
 #ifdef _M_X64
-			: base_type(_mm_cvtsi64_si128(n))
+			: base_type(_mm_cvtsi64_si128(n * sizeof(TA)))
 #else
-			: base_type(_mm_cvtsi32_si128(n))
+			: base_type(_mm_cvtsi32_si128(n * sizeof(TA)))
 #endif
 		{}
 		xmm_ptr_c11(TA *ptA)
-			: base_type(xmm_ptr_c11(reinterpret_cast<intptr_t>(ptA)).xmm)
+#ifdef _M_X64
+			: base_type(_mm_cvtsi64_si128(reinterpret_cast<intptr_t>(ptA)))
+#else
+			: base_type(_mm_cvtsi32_si128(reinterpret_cast<intptr_t>(ptA)))
+#endif
 		{}
 	};
 
@@ -73,6 +102,22 @@ namespace like
 			: base_type(t1, t2)
 			, next_type(t3...)
 		{}
+
+		void operator += (xmm_ptr_c11 const & that)
+		{
+			base_type::operator += (that);
+			next_type::operator += (that);
+		}
+		void operator -= (xmm_ptr_c11 const & that)
+		{
+			base_type::operator -= (that);
+			next_type::operator -= (that);
+		}
+		void operator *= (intptr_t n)
+		{
+			base_type::operator *= (n);
+			next_type::operator *= (n);
+		}
 	};
 #else
 	template <unsigned uIndex, typename TA, typename TB, typename TC>
@@ -116,6 +161,22 @@ namespace like
 			: base_type(t1, t2, t3, t4)
 			, next_type(t5...)
 		{}
+
+		void operator += (xmm_ptr_c11 const & that)
+		{
+			base_type::operator += (that);
+			next_type::operator += (that);
+		}
+		void operator -= (xmm_ptr_c11 const & that)
+		{
+			base_type::operator -= (that);
+			next_type::operator -= (that);
+		}
+		void operator *= (intptr_t n)
+		{
+			base_type::operator *= (n);
+			next_type::operator *= (n);
+		}
 	};
 #endif
 
@@ -129,6 +190,34 @@ namespace like
 		xmm_ptr(TArgs... Args)
 			: base_type(Args...)
 		{}
+
+		xmm_ptr & operator += (xmm_ptr const & that)
+		{
+			base_type::operator += (that);
+			return *this;
+		}
+		xmm_ptr operator + (xmm_ptr const & that) const
+		{
+			return xmm_ptr(*this) += that;
+		}
+		xmm_ptr & operator -= (xmm_ptr const & that)
+		{
+			base_type::operator -= (that);
+			return *this;
+		}
+		xmm_ptr operator - (xmm_ptr const & that) const
+		{
+			return xmm_ptr(*this) -= that;
+		}
+		xmm_ptr & operator *= (intptr_t n)
+		{
+			base_type::operator *= (n);
+			return *this;
+		}
+		xmm_ptr operator * (intptr_t n) const
+		{
+			return xmm_ptr(*this) *= n;
+		}
 	};
 
 	template <unsigned uIndex, typename TPtr>
