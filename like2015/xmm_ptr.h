@@ -92,10 +92,10 @@ namespace like
 	template <unsigned uIndex, typename TA, typename TB, typename... TC>
 	struct xmm_ptr_c11<uIndex, TA, TB, TC...>
 		: xmm_ptr_c11<uIndex, TA, TB>
-		, xmm_ptr_c11<uIndex + 2, TC...>
+		, xmm_ptr_c11<uIndex + 1, TC...>
 	{
 		typedef xmm_ptr_c11<uIndex, TA, TB> base_type;
-		typedef xmm_ptr_c11<uIndex + 2, TC...> next_type;
+		typedef xmm_ptr_c11<uIndex + 1, TC...> next_type;
 
 		template <typename T1, typename T2, typename...T3>
 		xmm_ptr_c11(T1 t1, T2 t2, T3... t3)
@@ -151,10 +151,10 @@ namespace like
 	template <unsigned uIndex, typename TA, typename TB, typename TC, typename TD, typename... TE>
 	struct xmm_ptr_c11<uIndex, TA, TB, TC, TD, TE...>
 		: xmm_ptr_c11<uIndex, TA, TB, TC, TD>
-		, xmm_ptr_c11<uIndex + 4, TE...>
+		, xmm_ptr_c11<uIndex + 1, TE...>
 	{
 		typedef xmm_ptr_c11<uIndex, TA, TB, TC, TD> base_type;
-		typedef xmm_ptr_c11<uIndex + 4, TE...> next_type;
+		typedef xmm_ptr_c11<uIndex + 1, TE...> next_type;
 
 		template <typename T1, typename T2, typename T3, typename T4, typename... T5>
 		xmm_ptr_c11(T1 t1, T2 t2, T3 t3, T4 t4, T5... t5)
@@ -237,23 +237,23 @@ namespace like
 	template <unsigned uIndex, typename... TPointers>
 	typename std::enable_if<(uIndex % 2 != 0), typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>::type get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
 	{
-		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_extract_epi64(static_cast<xmm_ptr_c11<uIndex&(~(2 - 1))>const&>(xmmPtr).xmm, uIndex & (2 - 1)));
+		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_extract_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, uIndex % 2));
 	}
 	template <unsigned uIndex, typename... TPointers>
 	typename std::enable_if<(uIndex % 2 == 0), typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>::type get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
 	{
-		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_cvtsi128_si64(static_cast<xmm_ptr_c11<uIndex>const&>(xmmPtr).xmm));
+		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_cvtsi128_si64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm));
 	}
 #else
 	template <unsigned uIndex, typename... TPointers>
 	typename std::enable_if<(uIndex % 4 != 0), typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>::type get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
 	{
-		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_extract_epi32(static_cast<xmm_ptr_c11<uIndex&(~(4 - 1))>const&>(xmmPtr).xmm, uIndex & (4 - 1)));
+		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_extract_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, uIndex % 4));
 	}
 	template <unsigned uIndex, typename... TPointers>
 	typename std::enable_if<(uIndex % 4 == 0), typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>::type get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
 	{
-		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_cvtsi128_si32(static_cast<xmm_ptr_c11<uIndex>const&>(xmmPtr).xmm));
+		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_cvtsi128_si32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm));
 	}
 #endif
 }
