@@ -3,6 +3,7 @@
 #include "shared_ptr.h"
 #include "shared_lock.h"
 #include "atomic.h"
+#include "xmm_ptr.h"
 
 #if 0
 template <typename T>
@@ -48,6 +49,28 @@ struct SMain
 
 int main(int nArgc)
 {
+	like::xmm_ptr<int> xmmPtr1(&nArgc);
+	like::xmm_ptr<int, int> xmmPtr2(&nArgc, &nArgc + 1);
+	like::xmm_ptr<int, int, int> xmmPtr3(&nArgc, &nArgc + 1, &nArgc + 2);
+	like::xmm_ptr<int, int, int, int> xmmPtr4(&nArgc, &nArgc + 1, &nArgc + 2, &nArgc + 3);
+	like::xmm_ptr<int, int, int, int, int> xmmPtr5(&nArgc, &nArgc + 1, &nArgc + 2, &nArgc + 3, &nArgc + 4);
+
+	like::get_ptr<0>(xmmPtr1);
+	like::get_ptr<0>(xmmPtr2);
+	like::get_ptr<1>(xmmPtr2);
+	like::get_ptr<0>(xmmPtr3);
+	like::get_ptr<1>(xmmPtr3);
+	like::get_ptr<2>(xmmPtr3);
+	like::get_ptr<0>(xmmPtr4);
+	like::get_ptr<1>(xmmPtr4);
+	like::get_ptr<2>(xmmPtr4);
+	like::get_ptr<3>(xmmPtr4);
+	like::get_ptr<0>(xmmPtr5);
+	like::get_ptr<1>(xmmPtr5);
+	like::get_ptr<2>(xmmPtr5);
+	like::get_ptr<3>(xmmPtr5);
+	like::get_ptr<4>(xmmPtr5);
+
 	int nRET = nArgc;
 	{
 		like_shared_ptr<SMain> spMain0(new SMain);
