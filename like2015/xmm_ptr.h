@@ -18,7 +18,7 @@ namespace like
 			: xmm(that)
 		{}
 
-		void operator += (xmm_ptr_c11<uIndex> const & that)
+		void operator += (xmm_ptr_c11 const & that)
 		{
 #ifdef _M_X64
 			xmm = _mm_add_epi64(xmm, that.xmm);
@@ -26,7 +26,7 @@ namespace like
 			xmm = _mm_add_epi32(xmm, that.xmm);
 #endif
 		}
-		void operator -= (xmm_ptr_c11<uIndex> const & that)
+		void operator -= (xmm_ptr_c11 const & that)
 		{
 #ifdef _M_X64
 			xmm = _mm_sub_epi64(xmm, that.xmm);
@@ -103,12 +103,12 @@ namespace like
 			, next_type(t3...)
 		{}
 
-		void operator += (this_type const & that)
+		void operator += (xmm_ptr_c11 const & that)
 		{
 			base_type::operator += (that);
 			next_type::operator += (that);
 		}
-		void operator -= (this_type const & that)
+		void operator -= (xmm_ptr_c11 const & that)
 		{
 			base_type::operator -= (that);
 			next_type::operator -= (that);
@@ -162,12 +162,12 @@ namespace like
 			, next_type(t5...)
 		{}
 
-		void operator += (this_type const & that)
+		void operator += (xmm_ptr_c11 const & that)
 		{
 			base_type::operator += (that);
 			next_type::operator += (that);
 		}
-		void operator -= (this_type const & that)
+		void operator -= (xmm_ptr_c11 const & that)
 		{
 			base_type::operator -= (that);
 			next_type::operator -= (that);
@@ -209,9 +209,9 @@ namespace like
 		{
 			return xmm_ptr(*this) -= that;
 		}
-		xmm_ptr & operator *= (xmm_ptr const & that)
+		xmm_ptr & operator *= (intptr_t n)
 		{
-			base_type::operator *= (that);
+			base_type::operator *= (n);
 			return *this;
 		}
 		xmm_ptr operator * (intptr_t n) const
