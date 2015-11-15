@@ -79,10 +79,10 @@ namespace like
 	template <unsigned uIndex, unsigned uSize>
 	struct xmm_int_c11
 		: xmm_int_c11<uIndex, 4>
-		, xmm_int_c11<uIndex + 4, uSize - 4>
+		, xmm_int_c11<uIndex + 1, uSize - 4>
 	{
 		typedef xmm_int_c11<uIndex, 4> base_type;
-		typedef xmm_int_c11<uIndex + 4, uSize - 4> next_type;
+		typedef xmm_int_c11<uIndex + 1, uSize - 4> next_type;
 
 		template <typename T1, typename T2, typename T3, typename T4, typename... T5>
 		xmm_int_c11(T1 t1, T2 t2, T3 t3, T4 t4, T5... t5)
@@ -106,11 +106,11 @@ namespace like
 	template <unsigned uIndex, unsigned uSize>
 	typename std::enable_if<(uIndex < uSize) && (uIndex % 4 != 0), int>::type get_int(xmm_int<uSize> const & xmmPtr)
 	{
-		return _mm_extract_epi32(static_cast<xmm_int_c11<uIndex&(~(4 - 1)), 0>const&>(xmmPtr).xmm, uIndex & (4 - 1));
+		return _mm_extract_epi32(static_cast<xmm_int_c11<uIndex / 4, 0>const&>(xmmPtr).xmm, uIndex % 4);
 	}
 	template <unsigned uIndex, unsigned uSize>
 	typename std::enable_if<(uIndex < uSize) && (uIndex % 4 == 0), int>::type get_int(xmm_int<uSize> const & xmmPtr)
 	{
-		return _mm_cvtsi128_si32(static_cast<xmm_int_c11<uIndex&(~(4 - 1)), 0>const&>(xmmPtr).xmm);
+		return _mm_cvtsi128_si32(static_cast<xmm_int_c11<uIndex / 4, 0>const&>(xmmPtr).xmm);
 	}
 }
