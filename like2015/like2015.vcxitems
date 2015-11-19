@@ -21,7 +21,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)shared_obj.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)shared_ptr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)tsx.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)xmm_int.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)xmm_int32.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)xmm_ptr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)xmm_traits.h" />
   </ItemGroup>

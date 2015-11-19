@@ -4,7 +4,7 @@
 #include "shared_lock.h"
 #include "atomic.h"
 #include "xmm_ptr.h"
-#include "xmm_int.h"
+#include "xmm_int32.h"
 
 #if 0
 template <typename T>
@@ -50,13 +50,13 @@ struct SMain
 
 int main(int nArgc)
 {
-	like::xmm_int<1> xmmInt1(1);
-	like::xmm_int<2> xmmInt2(1, 2);
-	like::xmm_int<3> xmmInt3(1, 2, 3);
-	like::xmm_int<4> xmmInt4(1, 2, 3, 4);
-	like::xmm_int<5> xmmInt5(1, 2, 3, 4, 5);
-	like::xmm_int<8> xmmInt8(1, 2, 3, 4, 5, 6, 7, 8);
-	like::xmm_int<9> xmmInt9(1, 2, 3, 4, 5, 6, 7, 8, 9);
+	like::xmm_int32<1> xmmInt1(1);
+	like::xmm_int32<2> xmmInt2(1, 2);
+	like::xmm_int32<3> xmmInt3(1, 2, 3);
+	like::xmm_int32<4> xmmInt4(1, 2, 3, 4);
+	like::xmm_int32<5> xmmInt5(1, 2, 3, 4, 5);
+	like::xmm_int32<8> xmmInt8(1, 2, 3, 4, 5, 6, 7, 8);
+	like::xmm_int32<9> xmmInt9(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
 	like::get_int<0>(xmmInt1);
 	like::get_int<0>(xmmInt2);
