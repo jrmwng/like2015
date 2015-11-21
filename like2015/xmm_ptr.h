@@ -226,7 +226,7 @@ namespace like
 	template <typename TA, typename... TB>
 	struct xmm_ptr_element<0, xmm_ptr<TA, TB...>>
 	{
-		typedef void type;
+		typedef TA type;
 	};
 	template <unsigned uIndex, typename TA, typename... TB>
 	struct xmm_ptr_element<uIndex, xmm_ptr<TA, TB...>>
