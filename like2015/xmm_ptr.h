@@ -236,7 +236,7 @@ namespace like
 	template <unsigned uIndex, typename TPtr>
 	struct xmm_ptr_access
 	{
-		typedef typename xmm_ptr_element<uIndex, TPtr>::type TA;
+		typedef typename xmm_ptr_element<uIndex, TPtr>::type type;
 
 		TPtr & xmmPtr;
 
@@ -244,16 +244,47 @@ namespace like
 			: xmmPtr(that)
 		{}
 
-		operator TA * (void) const
+		operator typename type * (void) const
 		{
 #ifdef _M_X64
-			return reinterpret_cast<TA*>(_mm_extract_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, uIndex % 2));
+			return reinterpret_cast<typename type*>(_mm_extract_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, uIndex % 2));
 #else
-			return reinterpret_cast<TA*>(_mm_extract_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, uIndex % 4));
+			return reinterpret_cast<typename type*>(_mm_extract_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, uIndex % 4));
 #endif
 		}
 
-		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator = (TA *ptA)
+		template <unsigned uIndex1, typename TPtr1>
+		bool operator == (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		{
+			return static_cast<typename type*>(*this) == static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+		}
+		template <unsigned uIndex1, typename TPtr1>
+		bool operator != (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		{
+			return static_cast<typename type*>(*this) != static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+		}
+		template <unsigned uIndex1, typename TPtr1>
+		bool operator <= (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		{
+			return static_cast<typename type*>(*this) <= static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+		}
+		template <unsigned uIndex1, typename TPtr1>
+		bool operator >= (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		{
+			return static_cast<typename type*>(*this) >= static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+		}
+		template <unsigned uIndex1, typename TPtr1>
+		bool operator < (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		{
+			return static_cast<typename type*>(*this) < static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+		}
+		template <unsigned uIndex1, typename TPtr1>
+		bool operator > (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		{
+			return static_cast<typename type*>(*this) > static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+		}
+
+		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator = (type *ptA)
 		{
 #ifdef _M_X64
 			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_insert_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, reinterpret_cast<intptr_t>(ptA), uIndex % 2);
@@ -266,18 +297,18 @@ namespace like
 		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator += (intptr_t n)
 		{
 #ifdef _M_X64
-			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_add_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(TA), uIndex % 2));
+			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_add_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(type), uIndex % 2));
 #else
-			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_add_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(TA), uIndex % 4));
+			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_add_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(type), uIndex % 4));
 #endif
 			return *this;
 		}
 		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator -= (intptr_t n)
 		{
 #ifdef _M_X64
-			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_sub_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(TA), uIndex % 2));
+			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_sub_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(type), uIndex % 2));
 #else
-			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_sub_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(TA), uIndex % 4));
+			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_sub_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(type), uIndex % 4));
 #endif
 			return *this;
 		}

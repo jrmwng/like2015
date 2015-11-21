@@ -102,8 +102,10 @@ int main(int nArgc)
 
 	assert(like::get_ptr<0>(xmmPtr1) == &nArgc);
 	assert(like::get_ptr<0>(xmmPtr2) == &nArgc);
+	assert(like::get_ptr<0>(xmmPtr2) == like::get_ptr<0>(xmmPtr1));
 	assert(like::get_ptr<1>(xmmPtr2) == &nArgc + 1);
-	like::get_ptr<0>(xmmPtr3);
+	assert(like::get_ptr<1>(xmmPtr2) != like::get_ptr<0>(xmmPtr2));
+	assert(like::get_ptr<0>(xmmPtr3) == &nArgc);
 	like::get_ptr<1>(xmmPtr3);
 	like::get_ptr<2>(xmmPtr3);
 	like::get_ptr<0>(xmmPtr4);
