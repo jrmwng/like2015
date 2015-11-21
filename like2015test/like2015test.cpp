@@ -1,4 +1,5 @@
 #include <ppl.h>
+#include <assert.h>
 #include <future>
 #include "shared_ptr.h"
 #include "shared_lock.h"
@@ -58,10 +59,10 @@ int main(int nArgc)
 	like::xmm_int32<8> xmmInt8(1, 2, 3, 4, 5, 6, 7, 8);
 	like::xmm_int32<9> xmmInt9(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-	like::get_int<0>(xmmInt1);
-	like::get_int<0>(xmmInt2);
-	like::get_int<1>(xmmInt2);
-	like::get_int<0>(xmmInt3);
+	assert(like::get_int<0>(xmmInt1) == 1);
+	assert(like::get_int<0>(xmmInt2) == 1);
+	assert(like::get_int<1>(xmmInt2) == 2);
+	assert(like::get_int<0>(xmmInt3) == 1);
 	like::get_int<1>(xmmInt3);
 	like::get_int<2>(xmmInt3);
 	like::get_int<0>(xmmInt4);
@@ -99,9 +100,9 @@ int main(int nArgc)
 	like::xmm_ptr<int, int, int, int, int, int, int, int> xmmPtr8(&nArgc, &nArgc + 1, &nArgc + 2, &nArgc + 3, &nArgc + 4, &nArgc + 5, &nArgc + 6, &nArgc + 7);
 	like::xmm_ptr<int, int, int, int, int, int, int, int, int> xmmPtr9(&nArgc, &nArgc + 1, &nArgc + 2, &nArgc + 3, &nArgc + 4, &nArgc + 5, &nArgc + 6, &nArgc + 7, &nArgc + 8);
 
-	like::get_ptr<0>(xmmPtr1);
-	like::get_ptr<0>(xmmPtr2);
-	like::get_ptr<1>(xmmPtr2);
+	assert(like::get_ptr<0>(xmmPtr1) == &nArgc);
+	assert(like::get_ptr<0>(xmmPtr2) == &nArgc);
+	assert(like::get_ptr<1>(xmmPtr2) == &nArgc + 1);
 	like::get_ptr<0>(xmmPtr3);
 	like::get_ptr<1>(xmmPtr3);
 	like::get_ptr<2>(xmmPtr3);
@@ -113,7 +114,7 @@ int main(int nArgc)
 	like::get_ptr<1>(xmmPtr5);
 	like::get_ptr<2>(xmmPtr5);
 	like::get_ptr<3>(xmmPtr5);
-	like::get_ptr<4>(xmmPtr5);
+	assert(like::get_ptr<4>(xmmPtr5) == &nArgc + 4);
 	like::get_ptr<0>(xmmPtr8);
 	like::get_ptr<1>(xmmPtr8);
 	like::get_ptr<2>(xmmPtr8);
@@ -129,30 +130,37 @@ int main(int nArgc)
 	like::get_ptr<4>(xmmPtr9);
 	like::get_ptr<5>(xmmPtr9);
 	like::get_ptr<6>(xmmPtr9);
-	like::get_ptr<7>(xmmPtr9);
-	like::get_ptr<8>(xmmPtr9);
+	assert(like::get_ptr<7>(xmmPtr9) == &nArgc + 7);
+	assert(like::get_ptr<8>(xmmPtr9) == &nArgc + 8);
 
 	xmmPtr1 += like::xmm_ptr<int>(1) + like::xmm_ptr<int>(2) - like::xmm_ptr<int>(3) * 1;
+	assert(like::get_ptr<0>(xmmPtr1) == &nArgc);
 	xmmPtr1 -= like::xmm_ptr<int>(0);
-	xmmPtr1 *= 1;
+	assert(like::get_ptr<0>(xmmPtr1) == &nArgc);
 	xmmPtr2 += like::xmm_ptr<int, int>(1, 2) + like::xmm_ptr<int, int>(2, 1) - like::xmm_ptr<int, int>(3, 3) * 1;
 	xmmPtr2 -= like::xmm_ptr<int, int>(0, 0);
-	xmmPtr2 *= 1;
 	xmmPtr3 += like::xmm_ptr<int, int, int>(1, 2, 1) + like::xmm_ptr<int, int, int>(2, 1, 2) - like::xmm_ptr<int, int, int>(3, 3, 3) * 1;
 	xmmPtr3 -= like::xmm_ptr<int, int, int>(0, 0, 0);
-	xmmPtr3 *= 1;
 	xmmPtr4 += like::xmm_ptr<int, int, int, int>(1, 2, 1, 2) + like::xmm_ptr<int, int, int, int>(2, 1, 2, 1) - like::xmm_ptr<int, int, int, int>(3, 3, 3, 3) * 1;
 	xmmPtr4 -= like::xmm_ptr<int, int, int, int>(0, 0, 0, 0);
-	xmmPtr4 *= 1;
 	xmmPtr5 += like::xmm_ptr<int, int, int, int, int>(1, 2, 1, 2, 1) + like::xmm_ptr<int, int, int, int, int>(2, 1, 2, 1, 2) - like::xmm_ptr<int, int, int, int, int>(3, 3, 3, 3, 3) * 1;
 	xmmPtr5 -= like::xmm_ptr<int, int, int, int, int>(0, 0, 0, 0, 0);
-	xmmPtr5 *= 1;
 	xmmPtr8 += like::xmm_ptr<int, int, int, int, int, int, int, int>(1, 2, 1, 2, 1, 2, 1, 2) + like::xmm_ptr<int, int, int, int, int, int, int, int>(2, 1, 2, 1, 2, 1, 2, 1) - like::xmm_ptr<int, int, int, int, int, int, int, int>(3, 3, 3, 3, 3, 3, 3, 3) * 1;
 	xmmPtr8 -= like::xmm_ptr<int, int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0, 0);
-	xmmPtr8 *= 1;
 	xmmPtr9 += like::xmm_ptr<int, int, int, int, int, int, int, int, int>(1, 2, 1, 2, 1, 2, 1, 2, 1) + like::xmm_ptr<int, int, int, int, int, int, int, int, int>(2, 1, 2, 1, 2, 1, 2, 1, 2) - like::xmm_ptr<int, int, int, int, int, int, int, int, int>(3, 3, 3, 3, 3, 3, 3, 3, 3) * 1;
+	assert(like::get_ptr<8>(xmmPtr9) == &nArgc + 8);
 	xmmPtr9 -= like::xmm_ptr<int, int, int, int, int, int, int, int, int>(0, 0, 0, 0, 0, 0, 0, 0, 0);
-	xmmPtr9 *= 1;
+	assert(like::get_ptr<8>(xmmPtr9) == &nArgc + 8);
+
+	assert(like::get_ptr<0>(xmmPtr1) == &nArgc);
+	assert((like::get_ptr<0>(xmmPtr1) += 1) == &nArgc + 1);
+	assert((like::get_ptr<0>(xmmPtr1) -= 1) == &nArgc);
+	assert(like::get_ptr<0>(xmmPtr2) == &nArgc);
+	assert((like::get_ptr<0>(xmmPtr2) += 1) == &nArgc + 1);
+	assert((like::get_ptr<0>(xmmPtr2) -= 1) == &nArgc);
+	assert(like::get_ptr<1>(xmmPtr2) == &nArgc + 1);
+	assert((like::get_ptr<1>(xmmPtr2) += 1) == &nArgc + 2);
+	assert((like::get_ptr<1>(xmmPtr2) -= 1) == &nArgc + 1);
 
 	int nRET = nArgc;
 	{

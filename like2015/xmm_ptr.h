@@ -233,27 +233,64 @@ namespace like
 		: xmm_ptr_element<uIndex - 1, xmm_ptr<TB...>>
 	{};
 
+	template <unsigned uIndex, typename TPtr>
+	struct xmm_ptr_access
+	{
+		typedef typename xmm_ptr_element<uIndex, TPtr>::type TA;
+
+		TPtr & xmmPtr;
+
+		xmm_ptr_access(TPtr & that)
+			: xmmPtr(that)
+		{}
+
+		operator TA * (void) const
+		{
 #ifdef _M_X64
-	template <unsigned uIndex, typename... TPointers>
-	typename std::enable_if<(uIndex % 2 != 0), typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>::type get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
-	{
-		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_extract_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, uIndex % 2));
-	}
-	template <unsigned uIndex, typename... TPointers>
-	typename std::enable_if<(uIndex % 2 == 0), typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>::type get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
-	{
-		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_cvtsi128_si64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm));
-	}
+			return reinterpret_cast<TA*>(_mm_extract_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, uIndex % 2));
 #else
-	template <unsigned uIndex, typename... TPointers>
-	typename std::enable_if<(uIndex % 4 != 0), typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>::type get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
-	{
-		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_extract_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, uIndex % 4));
-	}
-	template <unsigned uIndex, typename... TPointers>
-	typename std::enable_if<(uIndex % 4 == 0), typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>::type get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
-	{
-		return reinterpret_cast<typename xmm_ptr_element<uIndex, xmm_ptr<TPointers...>>::type*>(_mm_cvtsi128_si32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm));
-	}
+			return reinterpret_cast<TA*>(_mm_extract_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, uIndex % 4));
 #endif
+		}
+
+		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator = (TA *ptA)
+		{
+#ifdef _M_X64
+			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_insert_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, reinterpret_cast<intptr_t>(ptA), uIndex % 2);
+#else
+			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_insert_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, reinterpret_cast<intptr_t>(ptA), uIndex % 4);
+#endif
+			return *this;
+		}
+
+		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator += (intptr_t n)
+		{
+#ifdef _M_X64
+			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_add_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(TA), uIndex % 2));
+#else
+			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_add_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(TA), uIndex % 4));
+#endif
+			return *this;
+		}
+		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator -= (intptr_t n)
+		{
+#ifdef _M_X64
+			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_sub_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(TA), uIndex % 2));
+#else
+			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_sub_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(TA), uIndex % 4));
+#endif
+			return *this;
+		}
+	};
+
+	template <unsigned uIndex, typename... TPointers>
+	xmm_ptr_access<uIndex, xmm_ptr<TPointers...>> get_ptr(xmm_ptr<TPointers...> & xmmPtr)
+	{
+		return xmm_ptr_access<uIndex, xmm_ptr<TPointers...>>(xmmPtr);
+	}
+	template <unsigned uIndex, typename... TPointers>
+	xmm_ptr_access<uIndex, xmm_ptr<TPointers...>const> get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
+	{
+		return xmm_ptr_access<uIndex, xmm_ptr<TPointers...>const>(xmmPtr);
+	}
 }
