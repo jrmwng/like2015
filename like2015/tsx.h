@@ -28,7 +28,7 @@ typename std::enable_if<!std::is_void<TR>::value, TR>::type tsx(TF const & tF)
 {
 #ifdef TSX
 	_xbegin();
-	register TR tR = std::move(tF());
+	TR tR = std::move(tF());
 	if (_xtest()) // should I use result of _xbegin() instead?
 		_xend();
 	return std::move(tR);
