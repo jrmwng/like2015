@@ -297,18 +297,18 @@ namespace like
 		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator += (intptr_t n)
 		{
 #ifdef _M_X64
-			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_add_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(type), uIndex % 2));
+			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_add_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(typename type), uIndex % 2));
 #else
-			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_add_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(type), uIndex % 4));
+			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_add_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(typename type), uIndex % 4));
 #endif
 			return *this;
 		}
 		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator -= (intptr_t n)
 		{
 #ifdef _M_X64
-			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_sub_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(type), uIndex % 2));
+			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_sub_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(typename type), uIndex % 2));
 #else
-			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_sub_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(type), uIndex % 4));
+			static_cast<xmm_ptr_c11<uIndex / 4>&>(xmmPtr).xmm = _mm_sub_epi32(static_cast<xmm_ptr_c11<uIndex / 4>const&>(xmmPtr).xmm, _mm_insert_epi32(_mm_setzero_si128(), n * sizeof(typename type), uIndex % 4));
 #endif
 			return *this;
 		}
