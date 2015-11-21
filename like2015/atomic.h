@@ -26,11 +26,11 @@ namespace like
 	void atomic_tsx_load(T const volatile *pvt, T *pt)
 	{
 #ifdef TSX
-		register unsigned const uStatus = _xbegin();
+		unsigned const uStatus = _xbegin();
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
-			register T const t = *const_cast<T const*>(pvt); // read-set: pvt[0]
+			T const t = *const_cast<T const*>(pvt); // read-set: pvt[0]
 			_xend();
 			*pt = t;
 		}
@@ -44,8 +44,8 @@ namespace like
 	void atomic_tsx_store(T volatile *pvt, T const *pt)
 	{
 #ifdef TSX
-		register T const t = *pt;
-		register unsigned const uStatus = _xbegin();
+		T const t = *pt;
+		unsigned const uStatus = _xbegin();
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
@@ -62,12 +62,12 @@ namespace like
 	void atomic_tsx_swap(T volatile *pvt, T *pt)
 	{
 #ifdef TSX
-		register T const t0 = *pt;
-		register unsigned const uStatus = _xbegin();
+		T const t0 = *pt;
+		unsigned const uStatus = _xbegin();
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
-			register T const t1 = *const_cast<T*>(pvt); // read-set: pvt[0]
+			T const t1 = *const_cast<T*>(pvt); // read-set: pvt[0]
 			*const_cast<T*>(pvt) = t0; // write-set: pvt[0]
 			_xend();
 			*pt = t1;
@@ -82,13 +82,13 @@ namespace like
 	bool atomic_tsx_cas(T volatile *pvt, T *pt, T const *ptCMP)
 	{
 #ifdef TSX
-		register T const tCMP = *reinterpret_cast<T const*>(ptCMP);
-		register T const t0 = *pt;
-		register unsigned const uStatus = _xbegin();
+		T const tCMP = *reinterpret_cast<T const*>(ptCMP);
+		T const t0 = *pt;
+		unsigned const uStatus = _xbegin();
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
-			register T const t1 = *const_cast<T*>(pvt); // read-set: pvt[0]
+			T const t1 = *const_cast<T*>(pvt); // read-set: pvt[0]
 			if (t1 == tCMP)
 			{
 				*const_cast<T*>(pvt) = t0; // write-set: pvt[0]
