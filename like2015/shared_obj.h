@@ -36,12 +36,12 @@ namespace like
 		unsigned read_begin(void)
 		{
 #ifdef TSX
-			register unsigned const uStatus = _xbegin();
+			unsigned const uStatus = _xbegin();
 
 			if (uStatus == _XBEGIN_STARTED)
 			{
-				register int const nShared = _mm_movemask_epi8(xmmShared); // read-set: xmmShared
-				register int const nStatic = _mm_movemask_epi8(xmmStatic); // read-set: xmmShared, xmmStatic
+				int const nShared = _mm_movemask_epi8(xmmShared); // read-set: xmmShared
+				int const nStatic = _mm_movemask_epi8(xmmStatic); // read-set: xmmShared, xmmStatic
 
 				if (nShared == 1 && nStatic == 0)
 					return 0; // only if no outstanding non-transaction
@@ -154,7 +154,7 @@ namespace like
 		void load(TFunc tFunc) const
 		{
 #ifdef TSX
-			register unsigned const uStatus = _xbegin();
+			unsigned const uStatus = _xbegin();
 
 			if (uStatus == _XBEGIN_STARTED)
 			{
@@ -190,7 +190,7 @@ namespace like
 		void swap(TObj & that)
 		{
 #if 0 // this is an invalid TSX application, because *this could be read by another thread before the memory transaction
-			register unsigned const uStatus = _xbegin();
+			unsigned const uStatus = _xbegin();
 
 			if (uStatus == _XBEGIN_STARTED)
 			{
@@ -209,12 +209,12 @@ namespace like
 		typename std::enable_if<sizeof(TObj) == sizeof(TCompare), bool>::type cas(TObj & that, TCompare const & tCompare)
 		{
 #if 0 // this is an invalid TSX application, because *this could be read by another thread before the memory transaction
-			register unsigned const uStatus = _xbegin();
+			unsigned const uStatus = _xbegin();
 
 			if (uStatus == _XBEGIN_STARTED)
 			{
 				// TODO: CMPXCHG
-				register bool const bRET = atomic_lock_cas(static_cast<TObj volatile*>(this), that, tCompare);
+				bool const bRET = atomic_lock_cas(static_cast<TObj volatile*>(this), that, tCompare);
 				_xend();
 				return bRET;
 			}
