@@ -3,6 +3,7 @@
 /* Author: jrmwng @ 2015 */
 
 #include <intrin.h>
+#include <type_traits>
 
 namespace like
 {
