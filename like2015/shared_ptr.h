@@ -822,6 +822,11 @@ namespace like
 				m_pLock->release_weak();
 		}
 
+		operator bool(void) const
+		{
+			return m_pt != nullptr;
+		}
+
 		bool expired(void) const
 		{
 			if (m_pLock != nullptr)
@@ -841,10 +846,20 @@ namespace like
 			swap(this_type(std::forward<TArgs>(_Args)...));
 		}
 
+		typename this_type & operator = (typename this_type const & t1)
+		{
+			swap(this_type(t1));
+			return *this;
+		}
 		template <typename T1>
 		typename this_type & operator = (T1 const & t1)
 		{
 			swap(this_type(t1));
+			return *this;
+		}
+		typename this_type & operator = (typename this_type && t1)
+		{
+			swap(this_type(std::forward<typename this_type>(t1)));
 			return *this;
 		}
 		template <typename T1>
