@@ -199,7 +199,7 @@ namespace like
 				return;
 			}
 #endif
-			atomic_lock_swap(static_cast<TObj volatile*>(this), std::addressof(that));
+			atomic_lock_swap<sizeof(TObj)>(static_cast<TObj volatile*>(this), std::addressof(that));
 
 			if (TSync()(that))
 				m_Lock.read_sync();
@@ -219,7 +219,7 @@ namespace like
 				return bRET;
 			}
 #endif
-			if (atomic_lock_cas(static_cast<TObj volatile*>(this), that, tCompare))
+			if (atomic_lock_cas<sizeof(TObj)>(static_cast<TObj volatile*>(this), std::addressof(that), std::addressof(tCompare)))
 			{
 				if (TSync()(that))
 					m_Lock.read_sync();
@@ -255,9 +255,21 @@ namespace like
 			swap(TObj(that));
 			return *this;
 		}
+		template <typename T1>
+		typename this_type & operator = (T1 const & that)
+		{
+			swap(TObj(that));
+			return *this;
+		}
 		typename this_type & operator = (TObj && that)
 		{
 			swap(TObj(std::forward<TObj>(that)));
+			return *this;
+		}
+		template <typename T1>
+		typename this_type & operator = (T1 && that)
+		{
+			swap(TObj(std::forward<T1>(that)));
 			return *this;
 		}
 	};
