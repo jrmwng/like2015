@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "App1", "..\App1\App1.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sudoku", "..\sudoku\sudoku.vcxproj", "{B23F1569-966B-426F-B0BE-57A6BFAA082F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "like2015UnitTest", "..\like2015UnitTest\like2015UnitTest.vcxproj", "{A934656E-9B17-4047-A3DB-089A2B0C2386}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		like2015.vcxitems*{398e0e0b-fdec-45f7-94d9-7b5bf99d1826}*SharedItemsImports = 4
@@ -63,6 +65,16 @@ Global
 		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Release|x64.Build.0 = Release|x64
 		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Release|x86.ActiveCfg = Release|Win32
 		{B23F1569-966B-426F-B0BE-57A6BFAA082F}.Release|x86.Build.0 = Release|Win32
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Debug|ARM.ActiveCfg = Debug|Win32
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Debug|x64.ActiveCfg = Debug|x64
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Debug|x64.Build.0 = Debug|x64
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Debug|x86.ActiveCfg = Debug|Win32
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Debug|x86.Build.0 = Debug|Win32
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Release|ARM.ActiveCfg = Release|Win32
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Release|x64.ActiveCfg = Release|x64
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Release|x64.Build.0 = Release|x64
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Release|x86.ActiveCfg = Release|Win32
+		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
