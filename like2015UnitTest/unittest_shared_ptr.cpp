@@ -51,7 +51,6 @@ namespace like2015UnitTest
 			bool b7 = (sp0 == sp0);
 			bool b8 = (sp0 != sp0);
 			bool b9 = sp0;
-			int n19 = *sp0;
 			sp0 = sp0;
 			sp0 = std::move(sp0);
 			sp0 = wp1;
@@ -69,9 +68,9 @@ namespace like2015UnitTest
 			so.cmov(std::move(t1));
 			so.cmov(std::move(t1), t1);
 			so.cmov(std::move(t1), t1c);
-			so.cmov(like::shared_ptr<int>(t1));
-			so.cmov(like::shared_ptr<int>(t1), t1);
-			so.cmov(like::shared_ptr<int>(t1), t1c);
+			so.cmov(T1(t1));
+			so.cmov(T1(t1), t1);
+			so.cmov(T1(t1), t1c);
 			t1 = so.load();
 			so.load([&](auto const & o)
 			{
