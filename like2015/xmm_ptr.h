@@ -235,13 +235,13 @@ namespace like
 	{};
 
 	template <unsigned uIndex, typename TPtr>
-	struct xmm_ptr_access
+	struct xmm_ptr_ref
 	{
 		typedef typename xmm_ptr_element<uIndex, TPtr>::type type;
 
 		TPtr & xmmPtr;
 
-		xmm_ptr_access(TPtr & that)
+		xmm_ptr_ref(TPtr & that)
 			: xmmPtr(that)
 		{}
 
@@ -255,37 +255,37 @@ namespace like
 		}
 
 		template <unsigned uIndex1, typename TPtr1>
-		bool operator == (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		bool operator == (xmm_ptr_ref<uIndex1, TPtr1> const & that) const
 		{
-			return static_cast<typename type*>(*this) == static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+			return static_cast<typename type*>(*this) == static_cast<typename xmm_ptr_ref<uIndex1, TPtr1>::type*>(that);
 		}
 		template <unsigned uIndex1, typename TPtr1>
-		bool operator != (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		bool operator != (xmm_ptr_ref<uIndex1, TPtr1> const & that) const
 		{
-			return static_cast<typename type*>(*this) != static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+			return static_cast<typename type*>(*this) != static_cast<typename xmm_ptr_ref<uIndex1, TPtr1>::type*>(that);
 		}
 		template <unsigned uIndex1, typename TPtr1>
-		bool operator <= (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		bool operator <= (xmm_ptr_ref<uIndex1, TPtr1> const & that) const
 		{
-			return static_cast<typename type*>(*this) <= static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+			return static_cast<typename type*>(*this) <= static_cast<typename xmm_ptr_ref<uIndex1, TPtr1>::type*>(that);
 		}
 		template <unsigned uIndex1, typename TPtr1>
-		bool operator >= (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		bool operator >= (xmm_ptr_ref<uIndex1, TPtr1> const & that) const
 		{
-			return static_cast<typename type*>(*this) >= static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+			return static_cast<typename type*>(*this) >= static_cast<typename xmm_ptr_ref<uIndex1, TPtr1>::type*>(that);
 		}
 		template <unsigned uIndex1, typename TPtr1>
-		bool operator < (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		bool operator < (xmm_ptr_ref<uIndex1, TPtr1> const & that) const
 		{
-			return static_cast<typename type*>(*this) < static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+			return static_cast<typename type*>(*this) < static_cast<typename xmm_ptr_ref<uIndex1, TPtr1>::type*>(that);
 		}
 		template <unsigned uIndex1, typename TPtr1>
-		bool operator > (xmm_ptr_access<uIndex1, TPtr1> const & that) const
+		bool operator > (xmm_ptr_ref<uIndex1, TPtr1> const & that) const
 		{
-			return static_cast<typename type*>(*this) > static_cast<typename xmm_ptr_access<uIndex1, TPtr1>::type*>(that);
+			return static_cast<typename type*>(*this) > static_cast<typename xmm_ptr_ref<uIndex1, TPtr1>::type*>(that);
 		}
 
-		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator = (type *ptA)
+		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_ref>::type & operator = (type *ptA)
 		{
 #ifdef _M_X64
 			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_insert_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, reinterpret_cast<intptr_t>(ptA), uIndex % 2);
@@ -295,7 +295,7 @@ namespace like
 			return *this;
 		}
 
-		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator += (intptr_t n)
+		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_ref>::type & operator += (intptr_t n)
 		{
 #ifdef _M_X64
 			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_add_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(typename type), uIndex % 2));
@@ -304,7 +304,7 @@ namespace like
 #endif
 			return *this;
 		}
-		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_access>::type & operator -= (intptr_t n)
+		typename std::enable_if<!std::is_const<TPtr>::value, xmm_ptr_ref>::type & operator -= (intptr_t n)
 		{
 #ifdef _M_X64
 			static_cast<xmm_ptr_c11<uIndex / 2>&>(xmmPtr).xmm = _mm_sub_epi64(static_cast<xmm_ptr_c11<uIndex / 2>const&>(xmmPtr).xmm, _mm_insert_epi64(_mm_setzero_si128(), n * sizeof(typename type), uIndex % 2));
@@ -316,13 +316,13 @@ namespace like
 	};
 
 	template <unsigned uIndex, typename... TPointers>
-	xmm_ptr_access<uIndex, xmm_ptr<TPointers...>> get_ptr(xmm_ptr<TPointers...> & xmmPtr)
+	xmm_ptr_ref<uIndex, xmm_ptr<TPointers...>> get_ptr(xmm_ptr<TPointers...> & xmmPtr)
 	{
-		return xmm_ptr_access<uIndex, xmm_ptr<TPointers...>>(xmmPtr);
+		return xmm_ptr_ref<uIndex, xmm_ptr<TPointers...>>(xmmPtr);
 	}
 	template <unsigned uIndex, typename... TPointers>
-	xmm_ptr_access<uIndex, xmm_ptr<TPointers...>const> get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
+	xmm_ptr_ref<uIndex, xmm_ptr<TPointers...>const> get_ptr(xmm_ptr<TPointers...> const & xmmPtr)
 	{
-		return xmm_ptr_access<uIndex, xmm_ptr<TPointers...>const>(xmmPtr);
+		return xmm_ptr_ref<uIndex, xmm_ptr<TPointers...>const>(xmmPtr);
 	}
 }
