@@ -29,5 +29,8 @@
     <ClCompile Include="unittest_shared_ptr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UnitTest_functional.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
