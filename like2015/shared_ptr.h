@@ -553,6 +553,8 @@ namespace like
 		typename std::enable_if<!std::is_base_of<TEnableShared, T>::value, void>::type enable_shared(void)
 		{}
 	public:
+		typedef T element_type;
+
 		shared_ptr(void)
 			: base_type(nullptr, nullptr)
 		{}
