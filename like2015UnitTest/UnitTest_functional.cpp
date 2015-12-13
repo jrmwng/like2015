@@ -114,8 +114,8 @@ namespace like2015UnitTest
 
 			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member<int>(&SDummy::nDummy)));
 			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member<int>(&SDummy::nDummy), std::greater<int>()));
-			//test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member(&SDummy::nDummy)));
-			//test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member(&SDummy::nDummy), std::greater<int>()));
+			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member(&SDummy::nDummy)));
+			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member(&SDummy::nDummy), std::greater<int>()));
 			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(&SDummy::nDummy));
 			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(&SDummy::nDummy, std::greater<int>()));
 		}
