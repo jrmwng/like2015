@@ -42,25 +42,25 @@ namespace like
 			return base_type::operator()(pt1->*pm);
 		}
 		template <typename T1, typename TM, typename TV>
-		TR eval(T1 *pt1, TV(TM::*pm)()) const
+		typename std::enable_if<(!std::is_reference<TR>::value) || (std::is_reference<TV>::value), TR>::type eval(T1 *pt1, TV(TM::*pm)()) const
 		{
 			TV tV((pt1->*pm)());
 			return base_type::operator()(tV);
 		}
 		template <typename T1, typename TM, typename TV>
-		TR eval(T1 *pt1, TV(TM::*pm)()const) const
+		typename std::enable_if<(!std::is_reference<TR>::value) || (std::is_reference<TV>::value), TR>::type eval(T1 *pt1, TV(TM::*pm)()const) const
 		{
 			TV tV((pt1->*pm)());
 			return base_type::operator()(tV);
 		}
 		template <typename T1, typename TM, typename TV>
-		TR eval(T1 *pt1, TV(TM::*pm)()volatile) const
+		typename std::enable_if<(!std::is_reference<TR>::value) || (std::is_reference<TV>::value), TR>::type eval(T1 *pt1, TV(TM::*pm)()volatile) const
 		{
 			TV tV((pt1->*pm)());
 			return base_type::operator()(tV);
 		}
 		template <typename T1, typename TM, typename TV>
-		TR eval(T1 *pt1, TV(TM::*pm)()const volatile) const
+		typename std::enable_if<(!std::is_reference<TR>::value) || (std::is_reference<TV>::value), TR>::type eval(T1 *pt1, TV(TM::*pm)()const volatile) const
 		{
 			TV tV((pt1->*pm)());
 			return base_type::operator()(tV);
