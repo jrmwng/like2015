@@ -16,7 +16,12 @@ namespace like
 		typedef TR type;
 
 		template <typename T1>
-		TR operator () (T1 & t1) const
+		typename std::enable_if<(!std::is_void<TR>::value), TR>::type operator () (T1 & t1) const
+		{
+			return t1;
+		}
+		template <typename T1>
+		typename std::enable_if<(std::is_void<TR>::value), T1 &>::type operator () (T1 & t1) const
 		{
 			return t1;
 		}
@@ -37,48 +42,48 @@ namespace like
 		{}
 
 		template <typename T1, typename TM, typename TV>
-		TR eval(T1 *pt1, TV(TM::*pm)) const
+		decltype(auto) eval(T1 *pt1, TV(TM::*pm)) const
 		{
 			return base_type::operator()(pt1->*pm);
 		}
-		template <typename T1, typename TM, typename TV>
-		TR eval(T1 *pt1, TV(TM::*pm)()) const
+		template <typename T1, typename TM, typename TV, typename TProtect = std::enable_if<(std::is_reference<TV>::value) || (!std::is_reference<TR>::value && !std::is_void<TR>::value)>::type>
+		decltype(auto) eval(T1 *pt1, TV(TM::*pm)()) const
 		{
 			TV tV((pt1->*pm)());
 			return base_type::operator()(tV);
 		}
-		template <typename T1, typename TM, typename TV>
-		TR eval(T1 *pt1, TV(TM::*pm)()const) const
+		template <typename T1, typename TM, typename TV, typename TProtect = std::enable_if<(std::is_reference<TV>::value) || (!std::is_reference<TR>::value && !std::is_void<TR>::value)>::type>
+		decltype(auto) eval(T1 *pt1, TV(TM::*pm)()const) const
 		{
 			TV tV((pt1->*pm)());
 			return base_type::operator()(tV);
 		}
-		template <typename T1, typename TM, typename TV>
-		TR eval(T1 *pt1, TV(TM::*pm)()volatile) const
+		template <typename T1, typename TM, typename TV, typename TProtect = std::enable_if<(std::is_reference<TV>::value) || (!std::is_reference<TR>::value && !std::is_void<TR>::value)>::type>
+		decltype(auto) eval(T1 *pt1, TV(TM::*pm)()volatile) const
 		{
 			TV tV((pt1->*pm)());
 			return base_type::operator()(tV);
 		}
-		template <typename T1, typename TM, typename TV>
-		TR eval(T1 *pt1, TV(TM::*pm)()const volatile) const
+		template <typename T1, typename TM, typename TV, typename TProtect = std::enable_if<(std::is_reference<TV>::value) || (!std::is_reference<TR>::value && !std::is_void<TR>::value)>::type>
+		decltype(auto) eval(T1 *pt1, TV(TM::*pm)()const volatile) const
 		{
 			TV tV((pt1->*pm)());
 			return base_type::operator()(tV);
 		}
 
 		template <typename T1>
-		TR operator () (T1 & t1) const
+		decltype(auto) operator () (T1 & t1) const
 		{
 			return eval(std::addressof(t1), m_tM1);
 		}
 		template <typename T1>
-		TR operator () (T1 *pt1) const
+		decltype(auto) operator () (T1 *pt1) const
 		{
 			return eval(pt1, m_tM1);
 		}
 	};
 
-	template <typename TR, typename... TM>
+	template <typename TR = void, typename... TM>
 	member_t<TR, TM...> member(TM... tM)
 	{
 		return member_t<TR, TM...>(std::forward<TM>(tM)...);
