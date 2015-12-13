@@ -16,7 +16,7 @@ Please start from [shared_ptr.h](https://github.com/jrmwng/like2015/blob/master/
 
 `like::atomic_shared_ptr<T>` could be your good friend in lock-free programming, if you are friend with it.
 
-## functional.h
+## Supplements of &lt;functional&gt;
 
 Please start from [functional.h](https://github.com/jrmwng/like2015/blob/master/like2015/functional.h)
 
