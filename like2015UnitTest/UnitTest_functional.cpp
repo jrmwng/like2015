@@ -101,8 +101,21 @@ namespace like2015UnitTest
 			test_member(like::member<int>(&like2015UnitTest_functional::m_stDummy, &SDummy::volatile_dummy));
 			test_member(like::member<int>(&like2015UnitTest_functional::m_stDummy, &SDummy::cv_dummy));
 
+			test_member(like::member(&like2015UnitTest_functional::m_nDummy));
+			test_member(like::member(&like2015UnitTest_functional::m_stDummy, &SDummy::nDummy));
+			test_member(like::member(&like2015UnitTest_functional::dummy));
+			test_member(like::member(&like2015UnitTest_functional::const_dummy));
+			test_member(like::member(&like2015UnitTest_functional::volatile_dummy));
+			test_member(like::member(&like2015UnitTest_functional::cv_dummy));
+			test_member(like::member(&like2015UnitTest_functional::m_stDummy, &SDummy::dummy));
+			test_member(like::member(&like2015UnitTest_functional::m_stDummy, &SDummy::const_dummy));
+			test_member(like::member(&like2015UnitTest_functional::m_stDummy, &SDummy::volatile_dummy));
+			test_member(like::member(&like2015UnitTest_functional::m_stDummy, &SDummy::cv_dummy));
+
 			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member<int>(&SDummy::nDummy)));
 			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member<int>(&SDummy::nDummy), std::greater<int>()));
+			//test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member(&SDummy::nDummy)));
+			//test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(like::member(&SDummy::nDummy), std::greater<int>()));
 			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(&SDummy::nDummy));
 			test_binary_predicate(std::begin(m_astDummy), std::end(m_astDummy), std::cbegin(m_astDummy), std::cend(m_astDummy), 0, like::order_by(&SDummy::nDummy, std::greater<int>()));
 		}
