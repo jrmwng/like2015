@@ -35,6 +35,13 @@ namespace like2015UnitTest
 		typename std::enable_if<std::is_base_of<like::shared_ptr<int>, T1>::value, void>::type test_shared_ptr(T1 & sp0)
 		{
 			like::weak_ptr<int> wp1;
+			int *pn4 = sp0.get();
+			long l5 = sp0.use_count();
+			bool b6 = sp0.unique();
+			bool b7 = (sp0 == sp0);
+			bool b8 = (sp0 != sp0);
+			bool b9 = sp0;
+			int const & n10 = *sp0;
 			sp0.reset();
 			sp0.reset(sp0);
 			sp0.reset(sp0, sp0.get());
@@ -45,13 +52,6 @@ namespace like2015UnitTest
 			sp0.reset(std::move(wp1));
 			sp0.reset(std::move(wp1), sp0.get());
 			sp0.swap(sp0);
-			int *pn4 = sp0.get();
-			long l5 = sp0.use_count();
-			bool b6 = sp0.unique();
-			bool b7 = (sp0 == sp0);
-			bool b8 = (sp0 != sp0);
-			bool b9 = sp0;
-			int n19 = *sp0;
 			sp0 = sp0;
 			sp0 = std::move(sp0);
 			sp0 = wp1;
