@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "like2015", "like2015.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sudoku", "..\sudoku\sudoku.vcxproj", "{B23F1569-966B-426F-B0BE-57A6BFAA082F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "like2015UnitTest", "..\like2015UnitTest\like2015UnitTest.vcxproj", "{A934656E-9B17-4047-A3DB-089A2B0C2386}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPUID_2015", "..\CPUID_2015\CPUID_2015.vcxproj", "{CB713622-40CA-4C17-9A5F-A671920DD4F2}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -75,6 +77,16 @@ Global
 		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Release|x64.Build.0 = Release|x64
 		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Release|x86.ActiveCfg = Release|Win32
 		{A934656E-9B17-4047-A3DB-089A2B0C2386}.Release|x86.Build.0 = Release|Win32
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Debug|ARM.ActiveCfg = Debug|Win32
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Debug|x64.ActiveCfg = Debug|x64
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Debug|x64.Build.0 = Debug|x64
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Debug|x86.ActiveCfg = Debug|Win32
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Debug|x86.Build.0 = Debug|Win32
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Release|ARM.ActiveCfg = Release|Win32
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Release|x64.ActiveCfg = Release|x64
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Release|x64.Build.0 = Release|x64
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Release|x86.ActiveCfg = Release|Win32
+		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
