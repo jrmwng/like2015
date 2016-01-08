@@ -18,7 +18,7 @@ typename std::enable_if<std::is_void<TR>::value, void>::type tsx(TF const & tF)
 	_xbegin();
 	tF();
 	if (_xtest()) // should I use result of _xbegin() instead?
-		xend();
+		_xend();
 #else
 	tF();
 #endif
