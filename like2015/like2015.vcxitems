@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)atomic.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)cpuid.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)functional.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)heap.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)journal.h" />
