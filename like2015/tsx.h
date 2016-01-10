@@ -5,19 +5,24 @@
 #include <intrin.h>
 #include <type_traits>
 
-#ifndef TSX
-#ifdef __AVX2__
 #define TSX
+
+#ifdef TSX
+#ifndef RTM
+#define RTM
+#endif
+#ifndef HLE
+#define HLE
 #endif
 #endif
 
 template <typename TR, typename TF>
 typename std::enable_if<std::is_void<TR>::value, void>::type tsx(TF const & tF)
 {
-#ifdef TSX
+#ifdef RTM
 	_xbegin();
 	tF();
-	if (_xtest()) // should I use result of _xbegin() instead?
+	if (_xtest())
 		_xend();
 #else
 	tF();
@@ -26,10 +31,10 @@ typename std::enable_if<std::is_void<TR>::value, void>::type tsx(TF const & tF)
 template <typename TR, typename TF>
 typename std::enable_if<!std::is_void<TR>::value, TR>::type tsx(TF const & tF)
 {
-#ifdef TSX
+#ifdef RTM
 	_xbegin();
 	TR tR = std::move(tF());
-	if (_xtest()) // should I use result of _xbegin() instead?
+	if (_xtest())
 		_xend();
 	return std::move(tR);
 #else
