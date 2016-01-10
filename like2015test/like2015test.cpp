@@ -6,6 +6,7 @@
 #include "atomic.h"
 #include "xmm_ptr.h"
 #include "xmm_int32.h"
+#include "cpuid.h"
 
 #if 0
 template <typename T>
@@ -51,6 +52,17 @@ struct SMain
 
 int main(int nArgc)
 {
+	like::cpuid_t<0x01> cpuid01;
+	like::cpuid_t<0x06> cpuid06;
+	like::cpuid_t<0x07> cpuid07;
+	like::cpuid_t<0x0C> cpuid0C;
+	like::cpuid_t<0x0D> cpuid0D;
+	like::cpuid_t<0x80000000> cpuid80000000;
+	like::cpuid_t<0x80000001> cpuid80000001;
+	like::cpuid_processor_brand_string_t cpuidProcessorBrandString;
+
+	char const *pcProcessorBrandString = cpuidProcessorBrandString;
+
 	like::xmm_int32<1> xmmInt1(1);
 	like::xmm_int32<2> xmmInt2(1, 2);
 	like::xmm_int32<3> xmmInt3(1, 2, 3);
