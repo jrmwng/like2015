@@ -53,10 +53,20 @@ struct SMain
 int main(int nArgc)
 {
 	like::cpuid_t<0x01> cpuid01;
+	like::cpuid_t<0x05> cpuid05;
 	like::cpuid_t<0x06> cpuid06;
 	like::cpuid_t<0x07> cpuid07;
 	like::cpuid_t<0x0C> cpuid0C;
 	like::cpuid_t<0x0D> cpuid0D;
+	like::cpuid_t<0x0D, 1> cpuid0D1;
+	like::cpuid_t<0x0D, 2> cpuid0D2_AVX;
+	like::cpuid_t<0x0D, 3> cpuid0D3_BNDREG;
+	like::cpuid_t<0x0D, 4> cpuid0D4_BNDCSR;
+	like::cpuid_t<0x0D, 5> cpuid0D5_Opmask;
+	like::cpuid_t<0x0D, 6> cpuid0D6_ZMM_Hi256;
+	like::cpuid_t<0x0D, 7> cpuid0D7_Hi16_ZMM;
+	like::cpuid_t<0x0D, 8> cpuid0D8_PT;
+	like::cpuid_t<0x0D, 9> cpuid0D9_PKRU;
 	like::cpuid_t<0x80000000> cpuid80000000;
 	like::cpuid_t<0x80000001> cpuid80000001;
 	like::cpuid_processor_brand_string_t cpuidProcessorBrandString;
