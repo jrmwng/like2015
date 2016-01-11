@@ -24,8 +24,10 @@ namespace like
 		// eax
 		unsigned : 32;
 		// ebx
-		unsigned uProcessorBrandIndex : 8;
-		unsigned : 24;
+		unsigned uProcessorBrandIndex : 8; // [bits 7:0]
+		unsigned uLineSizeCLFLUSH : 8; // [bits 15:8]
+		unsigned uMaxNumOfID : 8; // [bits 23:16]
+		unsigned uInitialAPIC_ID: 8; // [bits 31:24]
 		// ecx
 		unsigned uSSE3: 1;
 		unsigned uPCLMULQDQ : 1; // bit 1
@@ -35,7 +37,8 @@ namespace like
 		unsigned uSSSE3 : 1; // bit 9
 		unsigned : 2;
 		unsigned uFMA : 1; // bit 12
-		unsigned : 6;
+		unsigned uCMPXCHG16B : 1; // bit 13
+		unsigned : 5;
 		unsigned uSSE4_2 : 1; // bit 19
 		unsigned uSSE4_1 : 1; // bit 20
 		unsigned : 1;
@@ -57,10 +60,25 @@ namespace like
 		unsigned uFXSR: 1; // bit 24
 		unsigned uSSE : 1; // bit 25
 		unsigned uSSE2 : 1; // bit 26
-		unsigned : 5;
+		unsigned : 1;
+		unsigned uHTT : 1; // bit 28
+		unsigned : 3;
 	};
 	template <>
-	struct cpuid_base_t<0x06>
+	struct cpuid_base_t<0x05>
+	{
+		// eax
+		unsigned uSmallestLineSizeMONITOR : 16; // [bits 15:0]
+		unsigned : 16;
+		// ebx
+		unsigned uLargestLineSizeMONITOR : 16; // [bits 15:0]
+		unsigned : 16;
+		// ecx
+		unsigned : 32;
+		// edx
+		unsigned : 32;
+	};
+	template <> struct cpuid_base_t<0x06>
 	{
 		// eax
 		unsigned uDigitalThermalSensor : 1; // bit 0
@@ -91,17 +109,22 @@ namespace like
 		unsigned uBMI1 : 1; // bit 3
 		unsigned uHLE : 1; // bit 4
 		unsigned uAVX2 : 1; // bit 5
-		unsigned : 2;
+		unsigned uFIP_FDP : 1; // bit 6: x87 FPU Instruction Pointer, Data (Operand) Pointer
+		unsigned : 1;
 		unsigned uBMI2 : 1; // bit 8
 		unsigned uFastStringOperation : 1; // bit 9
 		unsigned : 1;
 		unsigned uRTM : 1; // bit 11
-		unsigned : 2;
+		unsigned : 1;
+		unsigned uFCS_FDS : 1; // bit 13: suppress FCS, FDS
 		unsigned uIntelMPX : 1; // bit 14
 		unsigned : 3;
 		unsigned uRDSEED : 1; // bit 18
 		unsigned uADX : 1; // bit 19
-		unsigned : 5;
+		unsigned uSMAP : 1; // bit 20
+		unsigned : 2;
+		unsigned uCLFLUSHOPT : 1; // bit 23
+		unsigned : 1;
 		unsigned uIntelProcessorTrace : 1; // bit 25
 		unsigned : 6;
 		// ecx
@@ -114,7 +137,7 @@ namespace like
 	{
 		// eax
 		unsigned uSGX1 : 1; // bit 0
-		unsigned uSGX2 : 2; // bit 1
+		unsigned uSGX2 : 1; // bit 1
 		unsigned : 30;
 		// ebx
 		unsigned uMISCSELECT : 32;
@@ -290,6 +313,9 @@ namespace like
 		cpuid_t()
 		{
 			__cpuidex(reinterpret_cast<int*>(this), nEAX, nECX);
+
+			if (sizeof(cpuid_base_t<nEAX, nECX>) != 16)
+				__debugbreak();
 		}
 	};
 
