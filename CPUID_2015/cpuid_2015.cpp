@@ -29,7 +29,10 @@ int main(void)
 	__m128i xmmCPUID;
 	{
 		__cpuid(xmmCPUID.m128i_i32, 0);
-		printf("%4.4s%4.4s%4.4s\n", xmmCPUID.m128i_i32 + 1, xmmCPUID.m128i_i32 + 3, xmmCPUID.m128i_i32 + 2);
+		printf("%4.4s%4.4s%4.4s\n",
+			reinterpret_cast<char const*>(xmmCPUID.m128i_i32 + 1),
+			reinterpret_cast<char const*>(xmmCPUID.m128i_i32 + 3),
+			reinterpret_cast<char const*>(xmmCPUID.m128i_i32 + 2));
 	}
 	print_cpuid(1, xmmCPUID.m128i_i32[0]);
 
