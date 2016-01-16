@@ -13,7 +13,11 @@ void print_cpuid(int nFirst, int nLast)
 		{
 			__cpuidex(xmmCPUID1.m128i_i32, i, j);
 
-			if (_mm_movemask_epi8(_mm_cmpeq_epi8(xmmCPUID0, xmmCPUID1)) == 0xFFFF)
+			__m128i const xmmCMP0 = _mm_cmpeq_epi8(xmmCPUID1, _mm_setzero_si128());
+			__m128i const xmmCMP1 = _mm_cmpeq_epi8(xmmCPUID1, xmmCPUID0);
+
+			if (_mm_movemask_epi8(xmmCMP0) == 0xFFFF ||
+				_mm_movemask_epi8(xmmCMP1) == 0xFFFF)
 			{
 				break;
 			}
