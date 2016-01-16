@@ -314,8 +314,7 @@ namespace like
 		{
 			__cpuidex(reinterpret_cast<int*>(this), nEAX, nECX);
 
-			if (sizeof(cpuid_base_t<nEAX, nECX>) != 16)
-				__debugbreak();
+			static_assert(sizeof(cpuid_base_t<nEAX, nECX>) == 16, "CPUID expects 4 32-bit integers");
 		}
 	};
 
