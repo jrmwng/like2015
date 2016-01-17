@@ -52,10 +52,23 @@ struct SMain
 
 int main(int nArgc)
 {
+	like::cpuid_t<0x00> cpuid00;
+	__m128i xmmVendorID = cpuid00.vendor_identification_string();
 	like::cpuid_t<0x01> cpuid01;
+	like::cpuid_t<0x02> cpuid02;
+	like::cpuid_t<0x04, 0> cpuid04_0;
+	like::cpuid_t<0x04, 1> cpuid04_1;
+	like::cpuid_t<0x04, 2> cpuid04_2;
+	like::cpuid_t<0x04, 3> cpuid04_3;
+	like::cpuid_t<0x04, 4> cpuid04_4;
 	like::cpuid_t<0x05> cpuid05;
 	like::cpuid_t<0x06> cpuid06;
 	like::cpuid_t<0x07> cpuid07;
+	like::cpuid_t<0x09> cpuid09;
+	like::cpuid_t<0x0A> cpuid0A;
+	like::cpuid_t<0x0B, 0> cpuid0B0;
+	like::cpuid_t<0x0B, 1> cpuid0B1;
+	like::cpuid_t<0x0B, 2> cpuid0B2;
 	like::cpuid_t<0x0C> cpuid0C;
 	like::cpuid_t<0x0D> cpuid0D;
 	like::cpuid_t<0x0D, 1> cpuid0D1;
@@ -67,13 +80,66 @@ int main(int nArgc)
 	like::cpuid_t<0x0D, 7> cpuid0D7_Hi16_ZMM;
 	like::cpuid_t<0x0D, 8> cpuid0D8_PT;
 	like::cpuid_t<0x0D, 9> cpuid0D9_PKRU;
+	like::cpuid_t<0x0F> cpuid0F;
+	like::cpuid_t<0x0F, 1> cpuid0F1;
+	like::cpuid_t<0x10> cpuid10;
+	like::cpuid_t<0x10, 1> cpuid101;
+	like::cpuid_t<0x14> cpuid14;
+	like::cpuid_t<0x14, 1> cpuid141;
+	like::cpuid_t<0x15> cpuid15;
+	like::cpuid_t<0x16> cpuid16;
+	like::cpuid_t<0x17> cpuid17;
+	like::cpuid_soc_vendor_brand_string_t cpuidSocVendorBrandString;
 	like::cpuid_t<0x80000000> cpuid80000000;
 	like::cpuid_t<0x80000001> cpuid80000001;
+	like::cpuid_t<0x80000002> cpuid80000002;
+	like::cpuid_t<0x80000003> cpuid80000003;
+	like::cpuid_t<0x80000004> cpuid80000004;
 	like::cpuid_processor_brand_string_t cpuidProcessorBrandString;
+	like::cpuid_t<0x80000006> cpuid80000006;
+	like::cpuid_t<0x80000007> cpuid80000007;
+	like::cpuid_t<0x80000008> cpuid80000008;
 
+	char const *pcSocVendorBrandString = cpuidSocVendorBrandString;
 	char const *pcProcessorBrandString = cpuidProcessorBrandString;
 
-	like::xmm_int32<1> xmmInt1(1);
+	std::cout <<
+		std::setw(8) << "EAX" << std::ends <<
+		std::setw(3) << "ECX" << std::ends <<
+		std::setw(8) << "EAX" << std::ends <<
+		std::setw(8) << "EBX" << std::ends <<
+		std::setw(8) << "ECX" << std::ends <<
+		std::setw(8) << "EDX" << std::endl <<
+		cpuid00 <<
+		cpuid01 <<
+		cpuid04_0 <<
+		cpuid04_1 <<
+		cpuid04_2 <<
+		cpuid04_3 <<
+		cpuid04_4 <<
+		cpuid05 <<
+		cpuid06 <<
+		cpuid07 <<
+		cpuid09 <<
+		cpuid0A <<
+		cpuid0B0 <<
+		cpuid0B1 <<
+		cpuid0B2 <<
+		cpuid0C <<
+		cpuid0D <<
+		cpuid0D1 <<
+		cpuid0D2_AVX <<
+		cpuid80000000 <<
+		cpuid80000001 <<
+		cpuid80000002 <<
+		cpuid80000003 <<
+		cpuid80000004 <<
+		cpuid80000006 <<
+		cpuid80000007 <<
+		cpuid80000008
+		;
+
+ 	like::xmm_int32<1> xmmInt1(1);
 	like::xmm_int32<2> xmmInt2(1, 2);
 	like::xmm_int32<3> xmmInt3(1, 2, 3);
 	like::xmm_int32<4> xmmInt4(1, 2, 3, 4);
