@@ -1,6 +1,6 @@
 #pragma once
 
-/* Author: jrmwng @ 2015,2016 */
+/* Author: jrmwng @ 2015-2016 */
 
 #include <intrin.h>
 #include <iostream>
@@ -285,21 +285,6 @@ namespace like
 		// edx
 		unsigned u_x2APIC_ID : 32;
 	};
-	template <> struct cpuid_base_t<0x0C>
-	{
-		// eax
-		unsigned uSGX1 : 1; // bit 0
-		unsigned uSGX2 : 1; // bit 1
-		unsigned : 30;
-		// ebx
-		unsigned uMISCSELECT : 32;
-		// ecx
-		unsigned : 32;
-		// edx
-		unsigned uMaxEnclaveSize_Not64 : 8; // [7:0]
-		unsigned uMaxEnclaveSize_64 : 8; // [15:8]
-		unsigned : 16;
-	};
 	template <> struct cpuid_base_t<0x0D>
 	{
 		// eax
@@ -400,6 +385,21 @@ namespace like
 		unsigned uMaxOfCOS : 16; // [bits 15:0]
 		unsigned : 16;
 	};
+	template <> struct cpuid_base_t<0x12>
+	{
+		// eax
+		unsigned uSGX1 : 1; // bit 0
+		unsigned uSGX2 : 1; // bit 1
+		unsigned : 30;
+		// ebx
+		unsigned uMISCSELECT : 32;
+		// ecx
+		unsigned : 32;
+		// edx
+		unsigned uMaxEnclaveSize_Not64 : 8; // [7:0]
+		unsigned uMaxEnclaveSize_64 : 8; // [15:8]
+		unsigned : 16;
+	};
 	template <> struct cpuid_base_t<0x14>
 	{
 		// eax
@@ -475,6 +475,11 @@ namespace like
 	template <> struct cpuid_base_t<0x17, 1>
 	{
 		char ac[16];
+
+		char const * soc_vendor_brand_string(void) const
+		{
+			return ac;
+		}
 	};
 	template <> struct cpuid_base_t<0x17, 2>
 	{
@@ -523,6 +528,11 @@ namespace like
 	template <> struct cpuid_base_t<0x80000002>
 	{
 		char ac[16];
+
+		char const * processor_brand_string(void) const
+		{
+			return ac;
+		}
 	};
 	template <> struct cpuid_base_t<0x80000003>
 	{
@@ -583,20 +593,26 @@ namespace like
 
 			static_assert(sizeof(cpuid_base_t<nEAX, nECX>) == 16, "CPUID expects 4 32-bit integers");
 		}
+
+		cpuid_t const & operator >> (std::ostream & os) const
+		{
+			int nMask = os.setf(std::ios_base::hex);
+			os.unsetf(std::ios_base::dec);
+			os <<
+				std::setw(8) << nEAX << std::ends <<
+				std::setw(3) << nECX << std::ends <<
+				std::setw(8) << reinterpret_cast<int const*>(this)[0] << std::ends <<
+				std::setw(8) << reinterpret_cast<int const*>(this)[1] << std::ends <<
+				std::setw(8) << reinterpret_cast<int const*>(this)[2] << std::ends <<
+				std::setw(8) << reinterpret_cast<int const*>(this)[3] << std::endl;
+			os.setf(nMask);
+			return *this;
+		}
 	};
 	template <int nEAX, int nECX>
 	std::ostream & operator << (std::ostream & os, cpuid_t<nEAX, nECX> const & cpuid)
 	{
-		int nMask = os.setf(std::ios_base::hex);
-		os.unsetf(std::ios_base::dec);
-		os <<
-			std::setw(8) << nEAX << std::ends <<
-			std::setw(3) << nECX << std::ends <<
-			std::setw(8) << reinterpret_cast<int const*>(&cpuid)[0] << std::ends <<
-			std::setw(8) << reinterpret_cast<int const*>(&cpuid)[1] << std::ends <<
-			std::setw(8) << reinterpret_cast<int const*>(&cpuid)[2] << std::ends <<
-			std::setw(8) << reinterpret_cast<int const*>(&cpuid)[3] << std::endl;
-		os.setf(nMask);
+		cpuid >> os;
 		return os;
 	}
 
@@ -620,4 +636,141 @@ namespace like
 			return reinterpret_cast<char const*>(this);
 		}
 	};
+
+	//
+	template <int nEAX, int nECX = 0>
+	struct cpuid_tree_traits;
+
+	template <int nEAX, int nECX>
+	struct cpuid_tree_traits
+	{
+		enum { DEC_EAX = 0, INC_ECX = 1 };
+	};
+	template <int nEAX>
+	struct cpuid_tree_traits<nEAX>
+	{
+		enum { DEC_EAX = 1, INC_ECX = 0 };
+	};
+	template <> struct cpuid_tree_traits<0>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 0 };
+	};
+	template <> struct cpuid_tree_traits<0x04>
+	{
+		enum { DEC_EAX = 1, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x04, 4>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 0 };
+	};
+	template <int nECX> struct cpuid_tree_traits<0x04, nECX>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x0B>
+	{
+		enum { DEC_EAX = 1, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x0B, 2>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 0 };
+	};
+	template <int nECX> struct cpuid_tree_traits<0x0B, nECX>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x0D>
+	{
+		enum { DEC_EAX = 1, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x0D, 9>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 0 };
+	};
+	template <int nECX> struct cpuid_tree_traits<0x0D, nECX>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x0F>
+	{
+		enum { DEC_EAX = 1, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x0F, 2>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 0 };
+	};
+	template <int nECX> struct cpuid_tree_traits<0x0F, nECX>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x10>
+	{
+		enum { DEC_EAX = 1, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x10, 2>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 0 };
+	};
+	template <int nECX> struct cpuid_tree_traits<0x10, nECX>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x14>
+	{
+		enum { DEC_EAX = 1, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x14, 2>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 0 };
+	};
+	template <int nECX> struct cpuid_tree_traits<0x14, nECX>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x17>
+	{
+		enum { DEC_EAX = 1, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x17, 3>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 0 };
+	};
+	template <int nECX> struct cpuid_tree_traits<0x17, nECX>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 1 };
+	};
+	template <> struct cpuid_tree_traits<0x80000000>
+	{
+		enum { DEC_EAX = 0, INC_ECX = 0 };
+	};
+
+	template <int nEAX, int nECX = 0, typename TT = cpuid_tree_traits<nEAX, nECX> >
+	struct cpuid_tree_t
+		: std::conditional_t<TT::DEC_EAX, cpuid_tree_t<nEAX - TT::DEC_EAX, nECX>, cpuid_tree_traits<nEAX, nECX> >
+		, cpuid_t<nEAX, nECX>
+		, std::conditional_t<TT::INC_ECX, cpuid_tree_t<nEAX, nECX + TT::INC_ECX>, cpuid_tree_traits<nEAX, nECX + 1> >
+	{
+		template <typename T>
+		void print(std::ostream & os) const
+		{
+			static_cast<T const&>(*this) >> os;
+		}
+		template <> void print<cpuid_tree_traits<nEAX, nECX>>(std::ostream &) const {}
+		template <> void print<cpuid_tree_traits<nEAX, nECX + 1>>(std::ostream &) const {}
+
+		cpuid_tree_t const & operator >> (std::ostream & os) const
+		{
+			print<std::conditional_t<TT::DEC_EAX, cpuid_tree_t<nEAX - TT::DEC_EAX, nECX>, cpuid_tree_traits<nEAX, nECX> >>(os);
+			print<cpuid_t<nEAX, nECX>>(os);
+			print<std::conditional_t<TT::INC_ECX, cpuid_tree_t<nEAX, nECX + TT::INC_ECX>, cpuid_tree_traits<nEAX, nECX + 1> >>(os);
+			return *this;
+		}
+	};
+
+	template <int nEAX, int nECX>
+	std::ostream & operator << (std::ostream & os, cpuid_tree_t<nEAX, nECX> const & cpuid)
+	{
+		cpuid >> os;
+		return os;
+	}
 }
