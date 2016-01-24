@@ -1,6 +1,6 @@
 #pragma once
 
-/* Author: jrmwng @ 2015 */
+/* Author: jrmwng @ 2015-2016 */
 
 #include <intrin.h>
 #include <type_traits>
@@ -16,28 +16,48 @@
 #endif
 #endif
 
-template <typename TR, typename TF>
-typename std::enable_if<std::is_void<TR>::value, void>::type tsx(TF const & tF)
+template <typename TR, typename T1, typename T2>
+typename std::enable_if<std::is_void<TR>::value, void>::type tsx(T1 const & t1, T2 const & t2)
 {
 #ifdef RTM
-	_xbegin();
-	tF();
-	if (_xtest())
+	unsigned const uXBEGIN = _xbegin();
+
+	if (uXBEGIN == _XBEGIN_STARTED)
+	{
+		t2();
 		_xend();
-#else
-	tF();
+	}
+	else
 #endif
+	{
+		t1();
+	}
 }
-template <typename TR, typename TF>
-typename std::enable_if<!std::is_void<TR>::value, TR>::type tsx(TF const & tF)
+template <typename TR, typename T1, typename T2>
+typename std::enable_if<!std::is_void<TR>::value, TR>::type tsx(T1 const & t1, T2 const & t2)
 {
 #ifdef RTM
-	_xbegin();
-	TR tR = std::move(tF());
-	if (_xtest())
+	unsigned const uXBEGIN = _xbegin();
+
+	if (uXBEGIN == _XBEGIN_STARTED)
+	{
+		TR tR = std::move(t2());
 		_xend();
-	return std::move(tR);
-#else
-	return std::move(tF());
+		return std::move(tR);
+	}
 #endif
+	{
+		return std::move(t1());
+	}
+}
+
+template <typename TR, typename T1>
+typename std::enable_if<std::is_void<TR>::value, void>::type tsx(T1 const & t1)
+{
+	tsx<TR>(t1, t1);
+}
+template <typename TR, typename T1>
+typename std::enable_if<!std::is_void<TR>::value, TR>::type tsx(T1 const & t1)
+{
+	return std::move(tsx<TR>(t1, t1));
 }
