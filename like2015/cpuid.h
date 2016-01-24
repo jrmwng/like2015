@@ -20,6 +20,11 @@ namespace like
 		// edx
 		unsigned : 32;
 	};
+	template <int nEAX, int nECX>
+	std::ostream & operator << (std::ostream & os, cpuid_base_t<nEAX, nECX> const & cpuid)
+	{
+		return os;
+	}
 
 	template <> struct cpuid_base_t<0x00>
 	{
@@ -37,6 +42,12 @@ namespace like
 			return _mm_set_epi32(0, uECX, uEDX, uEBX);
 		}
 	};
+	template <>
+	std::ostream & operator << (std::ostream & os, cpuid_base_t<0x00> const & cpuid)
+	{
+		return os << cpuid.vendor_identification_string().m128i_i8;
+	}
+
 	template <> struct cpuid_base_t<0x01>
 	{
 		// eax
@@ -236,6 +247,31 @@ namespace like
 		// edx
 		unsigned : 32;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x07> const & cpuid)
+	{
+		return os <<
+			(cpuid.uFSGSBASE ? '+' : '-') << "FSGSBASE" << std::ends <<
+			(cpuid.uIntelSGX ? '+' : '-') << "SGX" << std::ends <<
+			(cpuid.uBMI1 ? '+' : '-') << "BMI1" << std::ends <<
+			(cpuid.uHLE ? '+' : '-') << "HLE" << std::ends <<
+			(cpuid.uAVX2 ? '+' : '-') << "AVX2" << std::ends <<
+			(cpuid.uSMEP ? '+' : '-') << "SMEP" << std::ends <<
+			(cpuid.uBMI2 ? '+' : '-') << "BMI2" << std::ends <<
+			(cpuid.uFastStringOperation ? '+' : '-') << "Fast-String" << std::ends <<
+			(cpuid.uINVPCID ? '+' : '-') << "INVPCID" << std::ends <<
+			(cpuid.uRTM ? '+' : '-') << "RTM" << std::ends <<
+			(cpuid.uPQM ? '+' : '-') << "PQM" << std::ends <<
+			(cpuid.uIntelMPX ? '+' : '-') << "MPX" << std::ends <<
+			(cpuid.uPQE ? '+' : '-') << "PQE" << std::ends <<
+			(cpuid.uRDSEED ? '+' : '-') << "RDSEED" << std::ends <<
+			(cpuid.uADX ? '+' : '-') << "ADX" << std::ends <<
+			(cpuid.uSMAP ? '+' : '-') << "SMAP" << std::ends <<
+			(cpuid.uCLFLUSHOPT ? '+' : '-') << "CLFLUSHOPT" << std::ends <<
+			(cpuid.uIntelProcessorTrace ? '+' : '-') << "PT" << std::ends <<
+			(cpuid.uPREFTEHCHWT1 ? '+' : '-') << "PREFTEHCHWT1" << std::ends <<
+			(cpuid.uPKU ? '+' : '-') << "PKU" << std::ends <<
+			(cpuid.uOSPKE ? '+' : '-') << "OSPKE" << std::ends;
+	}
 	template <> struct cpuid_base_t<0x09>
 	{
 		// eax
@@ -290,12 +326,12 @@ namespace like
 		// eax
 		unsigned uStateX87 : 1; // bit 0
 		unsigned uStateSSE : 1; // bit 1
-		unsigned : 1;
-		unsigned uBNDREGS : 1; // bit 3
-		unsigned uBNDCSR : 1; // bit 4
-		unsigned uAVX512 : 3; // [bits 7:5]
-		unsigned : 1; // bit 8
-		unsigned uPKRU : 1; // bit 9
+		unsigned uStateAVX : 1;
+		unsigned uStateBNDREGS : 1; // bit 3
+		unsigned uStateBNDCSR : 1; // bit 4
+		unsigned uStateAVX512 : 3; // [bits 7:5]
+		unsigned uStatePT : 1; // bit 8
+		unsigned uStatePKRU : 1; // bit 9
 		unsigned : 22;
 		// ebx
 		unsigned uSizeXCR0: 32;
@@ -304,6 +340,17 @@ namespace like
 		// edx
 		unsigned : 32;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D> const & cpuid)
+	{
+		return os <<
+			(cpuid.uStateX87 ? '+' : '-') << "x87" << std::ends <<
+			(cpuid.uStateSSE ? '+' : '-') << "SSE" << std::ends <<
+			(cpuid.uStateAVX ? '+' : '-') << "AVX" << std::ends <<
+			(cpuid.uStateBNDREGS ? '+' : '-') << "BNDREGS" << std::ends <<
+			(cpuid.uStateBNDCSR ? '+' : '-') << "BNDCSR" << std::ends <<
+			(cpuid.uStatePT ? '+' : '-') << "PT" << std::ends <<
+			(cpuid.uStatePKRU ? '+' : '-') << "PKRU" << std::ends;
+	}
 	template <> struct cpuid_base_t<0x0D, 1>
 	{
 		// eax
@@ -318,6 +365,14 @@ namespace like
 		// edx
 		unsigned long long uBitmap;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 1> const & cpuid)
+	{
+		return os <<
+			(cpuid.uXSAVEOPT ? '+' : '-') << "XSAVEOPT" << std::ends <<
+			(cpuid.uCompactionExtensions ? '+' : '-') << "Compaction-Extensions" << std::ends <<
+			(cpuid.uXGETBV ? '+' : '-') << "XGETBV" << std::ends <<
+			(cpuid.uXSAVES ? '+' : '-') << "XSAVES" << std::ends;
+	}
 	template <int nECX> struct cpuid_base_t<0x0D, nECX> // AVX state, BNGREG state, BNDCSR state, Opmask state, ZMM_Hi256 state, Hi16_ZMM state, PT state, PKRU state
 	{
 		// eax
@@ -331,6 +386,15 @@ namespace like
 		// edx
 		unsigned : 32;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 2> const & cpuid) { return os << "AVX"; }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 3> const & cpuid) { return os << "BNGREG"; }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 4> const & cpuid) { return os << "BNGCSR"; }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 5> const & cpuid) { return os << "Opmask"; }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 6> const & cpuid) { return os << "ZMM_Hi256"; }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 7> const & cpuid) { return os << "Hi16_ZMM"; }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 8> const & cpuid) { return os << "PT"; }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 9> const & cpuid) { return os << "PKRU"; }
+
 	template <> struct cpuid_base_t<0x0F>
 	{
 		// eax
@@ -400,6 +464,12 @@ namespace like
 		unsigned uMaxEnclaveSize_64 : 8; // [15:8]
 		unsigned : 16;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x12> const & cpuid)
+	{
+		return os <<
+			(cpuid.uSGX1 ? '+' : '-') << "SGX1" << std::ends <<
+			(cpuid.uSGX2 ? '+' : '-') << "SGX2" << std::ends;
+	}
 	template <> struct cpuid_base_t<0x14>
 	{
 		// eax
@@ -489,6 +559,15 @@ namespace like
 	{
 		char ac[16];
 	};
+	template <int nECX> std::enable_if_t<2 <= nECX && nECX <= 4, std::ostream &> operator << (std::ostream & os, cpuid_base_t<0x17, nECX> const & cpuid)
+	{
+		std::for_each(std::cbegin(cpuid.ac), std::cend(cpuid.ac), [&](char c)
+		{
+			os << c;
+		});
+		return os;
+	}
+
 	template <> struct cpuid_base_t<0x80000000>
 	{
 		// eax
@@ -525,6 +604,14 @@ namespace like
 		unsigned uIntel64 : 1; // bit 29
 		unsigned : 2;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000001> const & cpuid)
+	{
+		return os <<
+			(cpuid.uLZCNT ? '+' : '-') << "LZCNT" << std::ends <<
+			(cpuid.uPREFTEHCHW ? '+' : '-') << "PREFTEHCHW" << std::ends <<
+			(cpuid.uRDTSCP ? '+' : '-') << "RDTSCP" << std::ends <<
+			(cpuid.uIntel64 ? '+' : '-') << "x64" << std::ends;
+	}
 	template <> struct cpuid_base_t<0x80000002>
 	{
 		char ac[16];
@@ -542,6 +629,14 @@ namespace like
 	{
 		char ac[16];
 	};
+	template <int nEAX> std::enable_if_t<0x80000002 <= nEAX && nEAX <= 0x80000004, std::ostream &> operator << (std::ostream & os, cpuid_base_t<nEAX> const & cpuid)
+	{
+		std::for_each(std::cbegin(cpuid.ac), std::cend(cpuid.ac), [&](char c)
+		{
+			os << c;
+		});
+		return os;
+	}
 	template <> struct cpuid_base_t<0x80000006>
 	{
 		// eax
@@ -604,7 +699,8 @@ namespace like
 				std::setw(8) << reinterpret_cast<int const*>(this)[0] << std::ends <<
 				std::setw(8) << reinterpret_cast<int const*>(this)[1] << std::ends <<
 				std::setw(8) << reinterpret_cast<int const*>(this)[2] << std::ends <<
-				std::setw(8) << reinterpret_cast<int const*>(this)[3] << std::endl;
+				std::setw(8) << reinterpret_cast<int const*>(this)[3] << std::ends <<
+				static_cast<cpuid_base_t<nEAX, nECX>const&>(*this) << std::endl;
 			os.setf(nMask);
 			return *this;
 		}
