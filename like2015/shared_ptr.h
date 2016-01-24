@@ -282,23 +282,31 @@ namespace like
 
 		long use_count(void) const
 		{
-			return static_cast<long>(lRefCount >> SHARED_PTR_COUNT_THAT_SHIFT);
+			return static_cast<long>(lRefCount.load(std::memory_order_relaxed) >> SHARED_PTR_COUNT_THAT_SHIFT);
 		}
 		bool unique(void) const
 		{
-			return lRefCount == SHARED_PTR_COUNT_INIT; // unique without weak_ptr
+			return lRefCount.load(std::memory_order_relaxed) == SHARED_PTR_COUNT_INIT; // unique without weak_ptr
 		}
 		bool expired(void) const
 		{
-			return lRefCount < SHARED_PTR_COUNT_THAT;
+			return lRefCount.load(std::memory_order_relaxed) < SHARED_PTR_COUNT_THAT;
 		}
 
 		void release_shared(void)
 		{
-			count_type const lRefCount0 = tsx<count_type>([this](void)->count_type
-			{
-				return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH, std::memory_order_release);
-			});
+			count_type const lRefCount0 = tsx<count_type>(
+				[this](void)->count_type
+				{
+					return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH, std::memory_order_release);
+				},
+				[this](void)->count_type
+				{
+					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
+					count_type const lRefCount1 = lRefCount0 - SHARED_PTR_COUNT_BOTH;
+					lRefCount.store(lRefCount1, std::memory_order_relaxed);
+					return lRefCount0;
+				});
 
 			if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_THAT)
 			{
@@ -306,10 +314,18 @@ namespace like
 
 				if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
 					||
-					tsx<count_type>([this](void)->count_type
-					{
-						return lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE, std::memory_order_release);
-					}) < SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
+					tsx<count_type>(
+						[this](void)->count_type
+						{
+							return lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE, std::memory_order_release);
+						},
+						[this](void)->count_type
+						{
+							count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
+							count_type const lRefCount1 = lRefCount0 - SHARED_PTR_COUNT_BASE;
+							lRefCount.store(lRefCount1, std::memory_order_relaxed);
+							return lRefCount0;
+						}) < SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
 					)
 				{
 					delete_this();
@@ -318,68 +334,122 @@ namespace like
 		}
 		void release_weak(void)
 		{
-			count_type const lRefCount0 = tsx<count_type>([this](void)->count_type
-			{
-				return lRefCount.fetch_sub(SHARED_PTR_COUNT_THIS, std::memory_order_release);
-			});
+			count_type const lRefCount0 = tsx<count_type>(
+				[this](void)->count_type
+				{
+					return lRefCount.fetch_sub(SHARED_PTR_COUNT_THIS, std::memory_order_release);
+				},
+				[this](void)->count_type
+				{
+					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
+					count_type const lRefCount1 = lRefCount0 - SHARED_PTR_COUNT_THIS;
+					lRefCount.store(lRefCount1, std::memory_order_relaxed);
+					return lRefCount0;
+				});
 
 			if (lRefCount0 < SHARED_PTR_COUNT_THIS + SHARED_PTR_COUNT_BASE)
 				delete_this();
 		}
 		void acquire_weak(void)
 		{
-			tsx<void>([this](void)
-			{
-				lRefCount.fetch_add(SHARED_PTR_COUNT_THIS, std::memory_order_acquire);
-			});
+			tsx<void>(
+				[this](void)
+				{
+					lRefCount.fetch_add(SHARED_PTR_COUNT_THIS, std::memory_order_acquire);
+				},
+				[this](void)
+				{
+					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
+					count_type const lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_THIS;
+					lRefCount.store(lRefCount1, std::memory_order_relaxed);
+				});
 		}
 		void acquire_shared(void)
 		{
-			tsx<void>([this](void)
-			{
-				lRefCount.fetch_add(SHARED_PTR_COUNT_BOTH, std::memory_order_acquire);
-			});
+			tsx<void>(
+				[this](void)
+				{
+					lRefCount.fetch_add(SHARED_PTR_COUNT_BOTH, std::memory_order_acquire);
+				}, [this](void)
+				{
+					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
+					count_type const lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH;
+					lRefCount.store(lRefCount1, std::memory_order_relaxed);
+				});
 		}
 		bool try_shared(void)
 		{
-			return tsx<count_type>([this](void)->count_type
-			{
-				count_type lRefCount0;
-				count_type lRefCount1;
+			return tsx<count_type>(
+				[this](void)->count_type
 				{
-					for (lRefCount0 = lRefCount; lRefCount0 >= SHARED_PTR_COUNT_THAT && !lRefCount.compare_exchange_weak(lRefCount0, lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH, std::memory_order_acquire); lRefCount0 = lRefCount)
+					count_type lRefCount0;
+					count_type lRefCount1;
 					{
-						_mm_pause();
+						for (lRefCount0 = lRefCount.load(std::memory_order_relaxed); lRefCount0 >= SHARED_PTR_COUNT_THAT && !lRefCount.compare_exchange_weak(lRefCount0, lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH, std::memory_order_acquire); lRefCount0 = lRefCount.load(std::memory_order_relaxed))
+						{
+							_mm_pause();
+						}
 					}
+					return lRefCount0;
+				},
+				[this](void)->count_type
+				{
+					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
+					count_type const lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH;
+					if (lRefCount0 >= SHARED_PTR_COUNT_THAT)
+					{
+						lRefCount.store(lRefCount1, std::memory_order_relaxed);
+					}
+					return lRefCount0;
 				}
-				return lRefCount0;
-			}) >= SHARED_PTR_COUNT_THAT;
+			) >= SHARED_PTR_COUNT_THAT;
 		}
 		void convert_shared_into_weak(void)
 		{
-			count_type const lRefCount0 = tsx<count_type>([this](void)->count_type
-			{
-				return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS, std::memory_order_release);
-			});
+			count_type const lRefCount0 = tsx<count_type>(
+				[this](void)->count_type
+				{
+					return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS, std::memory_order_release);
+				},
+				[this](void)->count_type
+				{
+					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
+					count_type const lRefCount1 = lRefCount0 - (SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS);
+					lRefCount.store(lRefCount1, std::memory_order_relaxed);
+					return lRefCount0;
+				});
 
 			if (lRefCount0 < (SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS) + SHARED_PTR_COUNT_THAT)
 				delete_that();
 		}
 		bool convert_weak_into_shared(void)
 		{
-			if (tsx<count_type>([this](void)->count_type
+			if (tsx<count_type>(
+				[this](void)->count_type
 				{
 					count_type lRefCount0;
 					count_type lRefCount1;
 					{
-						for (lRefCount0 = lRefCount; lRefCount0 >= SHARED_PTR_COUNT_THAT && !lRefCount.compare_exchange_weak(lRefCount0, lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS, std::memory_order_acquire); lRefCount0 = lRefCount)
+						for (lRefCount0 = lRefCount.load(std::memory_order_relaxed); lRefCount0 >= SHARED_PTR_COUNT_THAT && !lRefCount.compare_exchange_weak(lRefCount0, lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS, std::memory_order_acquire); lRefCount0 = lRefCount.load(std::memory_order_relaxed))
 						{
 							_mm_pause();
 						}
 					}
 					return lRefCount0;
+				},
+				[this](void)->count_type
+				{
+					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
+					count_type const lRefCount1 = lRefCount0 + (SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS);
+					if (lRefCount0 >= SHARED_PTR_COUNT_THAT)
+					{
+						lRefCount.store(lRefCount1, std::memory_order_relaxed);
+					}
+					return lRefCount0;
 				}) >= SHARED_PTR_COUNT_THAT)
+			{
 				return true;
+			}
 			else
 			{
 				release_weak();
