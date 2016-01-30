@@ -226,6 +226,34 @@ namespace like
 		unsigned uComplexCacheIndexing : 1; // bit 2
 		unsigned : 29;
 	};
+	template <int nECX> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x04, nECX> const & cpuid)
+	{
+		switch (cpuid.uCacheTypeField)
+		{
+		case 0:
+			return os;
+		case 1:
+			os << "D-Cache" << std::ends;
+			break;
+		case 2:
+			os << "I-Cache" << std::ends;
+			break;
+		case 3:
+			os << "U-Cache" << std::ends;
+			break;
+		}
+		return os <<
+			'L' << (cpuid.uCacheLevel) << std::ends <<
+			std::setw(2) << (cpuid.uMaximumNumberOfAddressableIDsForLogicalProcessors + 1) << "processors" << std::ends <<
+			std::setw(1) << (cpuid.uMaximumNumberOfAddressableIDsForProcessorCores + 1) << "cores" << std::ends <<
+			std::setw(2) << (cpuid.uWaysOfAssociativity + 1) << "ways" << std::ends <<
+			'*' << std::ends <<
+			std::setw(1) << (cpuid.uPhysicalLinePartitions + 1) << "partitions" << std::ends <<
+			'*' << std::ends <<
+			std::setw(2) << (cpuid.uSystemCoherencyLineSize + 1) << "B" << std::ends <<
+			'*' << std::ends <<
+			std::setw(4) << (cpuid.uNumberOfSets + 1) << "sets" << std::ends;
+	}
 	template <> struct cpuid_base_t<0x05>
 	{
 		// eax
@@ -235,7 +263,7 @@ namespace like
 		unsigned uLargestLineSizeMONITOR : 16; // [bits 15:0]
 		unsigned : 16;
 		// ecx
-		unsigned uEnumeration : 1; // bit 0
+		unsigned uMWAIT_Extension : 1; // bit 0
 		unsigned uInterruptsAsBreakEvent : 1; // bit 1
 		unsigned : 30;
 		// edx
@@ -248,6 +276,21 @@ namespace like
 		unsigned uNumberOfC6 : 4;
 		unsigned uNumberOfC7 : 4;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x05> const & cpuid)
+	{
+		return os <<
+			'[' << (cpuid.uSmallestLineSizeMONITOR) << 'B' << ',' << (cpuid.uLargestLineSizeMONITOR) << 'B' << ']' << std::ends <<
+			(cpuid.uMWAIT_Extension ? '+' : '-') << "MWAIT" << std::ends <<
+			(cpuid.uInterruptsAsBreakEvent ? '+' : '-') << "InterruptsAsBreakEvent" << std::ends <<
+			"C0/" << (cpuid.uNumberOfC0) << std::ends <<
+			"C1/" << (cpuid.uNumberOfC1) << std::ends <<
+			"C2/" << (cpuid.uNumberOfC2) << std::ends <<
+			"C3/" << (cpuid.uNumberOfC3) << std::ends <<
+			"C4/" << (cpuid.uNumberOfC4) << std::ends <<
+			"C5/" << (cpuid.uNumberOfC5) << std::ends <<
+			"C6/" << (cpuid.uNumberOfC6) << std::ends <<
+			"C7/" << (cpuid.uNumberOfC7) << std::ends;
+	}
 	template <> struct cpuid_base_t<0x06>
 	{
 		// eax
@@ -277,6 +320,19 @@ namespace like
 		// edx
 		unsigned : 32;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x06> const & cpuid)
+	{
+		return os <<
+			(cpuid.uDigitalThermalSensor ? '+' : '-') << "ThermalSensor" << std::ends <<
+			(cpuid.uIntelTurboBoostTechnology ? '+' : '-') << "TurboBoost" << std::ends <<
+			(cpuid.uARAT ? '+' : '-') << "ARAT" << std::ends <<
+			(cpuid.uPLN ? '+' : '-') << "PLN" << std::ends <<
+			(cpuid.uECMD ? '+' : '-') << "ECMD" << std::ends <<
+			(cpuid.uPTM ? '+' : '-') << "PTM" << std::ends <<
+			(cpuid.uHWP ? '+' : '-') << "HWP" << std::ends <<
+			(cpuid.uHDC ? '+' : '-') << "HDC" << std::ends <<
+			(cpuid.uSETBH ? '+' : '-') << "SETBH" << std::ends;
+	}
 	template <> struct cpuid_base_t<0x07>
 	{
 		// eax
@@ -375,6 +431,15 @@ namespace like
 		unsigned uBitWidthOfFixedFunctionPerformanceCounters : 8; // [bits 12:5]
 		unsigned : 19;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0A> const & cpuid)
+	{
+		os << (cpuid.uNumOfGP) << '*' << (cpuid.uBitWidthOfGP) << 'b' << std::ends;
+		if (cpuid.uVersionID > 1)
+		{
+			os << (cpuid.uNumOfFixedFunctionPerformanceCounters) << '*' << (cpuid.uBitWidthOfFixedFunctionPerformanceCounters) << 'b' << std::ends;
+		}
+		return os;
+	}
 	template <int nECX> struct cpuid_base_t<0x0B, nECX>
 	{
 		// eax
@@ -437,7 +502,9 @@ namespace like
 			(cpuid.uStateBNDREGS ? '+' : '-') << "BNDREGS" << std::ends <<
 			(cpuid.uStateBNDCSR ? '+' : '-') << "BNDCSR" << std::ends <<
 			(cpuid.uStatePT ? '+' : '-') << "PT" << std::ends <<
-			(cpuid.uStatePKRU ? '+' : '-') << "PKRU" << std::ends;
+			(cpuid.uStatePKRU ? '+' : '-') << "PKRU" << std::ends <<
+			(cpuid.uSizeXCR0) << 'B' << std::ends <<
+			(cpuid.uSize) << 'B' << std::ends;
 	}
 	template <> struct cpuid_base_t<0x0D, 1>
 	{
@@ -445,7 +512,7 @@ namespace like
 		unsigned uXSAVEOPT : 1; // bit 0
 		unsigned uCompactionExtensions : 1; // bit 1
 		unsigned uXGETBV : 1; // bit 2
-		unsigned uXSAVES : 1; // bit 3
+		unsigned uXSAVES_IA32_XSS : 1; // bit 3
 		unsigned : 28;
 		// ebx
 		unsigned uSize : 32;
@@ -459,7 +526,8 @@ namespace like
 			(cpuid.uXSAVEOPT ? '+' : '-') << "XSAVEOPT" << std::ends <<
 			(cpuid.uCompactionExtensions ? '+' : '-') << "Compaction-Extensions" << std::ends <<
 			(cpuid.uXGETBV ? '+' : '-') << "XGETBV" << std::ends <<
-			(cpuid.uXSAVES ? '+' : '-') << "XSAVES" << std::ends;
+			(cpuid.uXSAVES_IA32_XSS ? '+' : '-') << "XSAVES-IA32_XSS" << std::ends <<
+			(cpuid.uSize) << 'B' << std::ends;
 	}
 	template <int nECX> struct cpuid_base_t<0x0D, nECX> // AVX state, BNGREG state, BNDCSR state, Opmask state, ZMM_Hi256 state, Hi16_ZMM state, PT state, PKRU state
 	{
@@ -709,6 +777,7 @@ namespace like
 		return os <<
 			(cpuid.uLZCNT ? '+' : '-') << "LZCNT" << std::ends <<
 			(cpuid.uPREFTEHCHW ? '+' : '-') << "PREFTEHCHW" << std::ends <<
+			(cpuid.u1GBytePages ? '+' : '-') << "1GBytePages" << std::ends <<
 			(cpuid.uRDTSCP ? '+' : '-') << "RDTSCP" << std::ends <<
 			(cpuid.uIntel64 ? '+' : '-') << "x64" << std::ends;
 	}
@@ -751,6 +820,35 @@ namespace like
 		// edx
 		unsigned : 32;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000006> const & cpuid)
+	{
+		os << (cpuid.uCacheLineSize) << "B" << std::ends;
+		switch (cpuid.uL2Associativity)
+		{
+		case 0:
+			os << "Disabled" << std::ends;
+			break;
+		case 1:
+			os << "DirectMapped" << std::ends;
+			break;
+		case 2:
+			os << "2-way" << std::ends;
+			break;
+		case 4:
+			os << "4-way" << std::ends;
+			break;
+		case 6:
+			os << "8-way" << std::ends;
+			break;
+		case 8:
+			os << "16-way" << std::ends;
+			break;
+		case 0xF:
+			os << "FullyAssociative" << std::ends;
+			break;
+		}
+		return os << (cpuid.uCacheSize1K) << "KB" << std::ends;
+	}
 	template <> struct cpuid_base_t<0x80000007>
 	{
 		// eax
@@ -764,6 +862,11 @@ namespace like
 		unsigned uInvariantTSC : 1; // bit 8
 		unsigned : 23;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000007> const & cpuid)
+	{
+		return os <<
+			(cpuid.uInvariantTSC ? '+' : '-') << "InvariantTSC" << std::ends;
+	}
 	template <> struct cpuid_base_t<0x80000008>
 	{
 		// eax
@@ -777,6 +880,12 @@ namespace like
 		// edx
 		unsigned : 32;
 	};
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000008> const & cpuid)
+	{
+		return os <<
+			(cpuid.uNumOfPhysicalAddressBits) << 'b' << std::ends <<
+			(cpuid.uNumOfLinearAddressBits) << 'b' << std::ends;
+	}
 
 	template <int nEAX, int nECX = 0>
 	struct cpuid_t
@@ -916,7 +1025,7 @@ namespace like
 	{
 		enum { DEC_EAX = 1, INC_ECX = 1 };
 	};
-	template <> struct cpuid_tree_traits<0x14, 2>
+	template <> struct cpuid_tree_traits<0x14, 1>
 	{
 		enum { DEC_EAX = 0, INC_ECX = 0 };
 	};
