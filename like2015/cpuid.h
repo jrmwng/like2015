@@ -20,6 +20,11 @@ namespace like
 		unsigned : 32;
 		// edx
 		unsigned : 32;
+
+		bool is_sub_leaf(unsigned uMaxECX) const
+		{
+			return static_cast<unsigned>(nECX) <= uMaxECX;
+		}
 	};
 	template <int nEAX, int nECX>
 	std::ostream & operator << (std::ostream & os, cpuid_base_t<nEAX, nECX> const & cpuid)
@@ -30,13 +35,18 @@ namespace like
 	template <> struct cpuid_base_t<0x00>
 	{
 		// eax
-		unsigned uMaximumLeaf : 32;
+		unsigned uMaxLeaf : 32;
 		// ebx
 		unsigned uEBX : 32;
 		// ecx
 		unsigned uECX : 32;
 		// edx
 		unsigned uEDX : 32;
+
+		unsigned max_leaf() const
+		{
+			return uMaxLeaf;
+		}
 
 		__m128i vendor_identification_string() const
 		{
@@ -225,6 +235,15 @@ namespace like
 		unsigned uCacheInclusiveness : 1; // bit 1
 		unsigned uComplexCacheIndexing : 1; // bit 2
 		unsigned : 29;
+
+		unsigned max_sub_leaf() const
+		{
+			return ~0;
+		}
+		bool is_sub_leaf(unsigned) const
+		{
+			return uCacheTypeField != 0;
+		}
 	};
 	template <int nECX> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x04, nECX> const & cpuid)
 	{
@@ -454,6 +473,15 @@ namespace like
 		unsigned : 16;
 		// edx
 		unsigned u_x2APIC_ID : 32;
+
+		unsigned max_sub_leaf() const
+		{
+			return ~0;
+		}
+		bool is_sub_leaf(unsigned) const
+		{
+			return uLevelType != 0;
+		}
 	};
 	template <int nECX> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0B, nECX> const & cpuid)
 	{
@@ -492,6 +520,13 @@ namespace like
 		unsigned uSize : 32;
 		// edx
 		unsigned : 32;
+
+		unsigned max_sub_leaf() const
+		{
+			unsigned long uIndex = 0;
+			_BitScanReverse(&uIndex, reinterpret_cast<unsigned const*>(this)[0]);
+			return uIndex;
+		}
 	};
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D> const & cpuid)
 	{
@@ -519,6 +554,11 @@ namespace like
 		// ecx
 		// edx
 		unsigned long long uBitmap;
+
+		bool is_sub_leaf(unsigned) const
+		{
+			return true;
+		}
 	};
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 1> const & cpuid)
 	{
@@ -541,6 +581,11 @@ namespace like
 		unsigned : 30;
 		// edx
 		unsigned : 32;
+
+		bool is_sub_leaf(unsigned uMaxECX) const
+		{
+			return static_cast<unsigned>(nECX) <= uMaxECX;
+		}
 	};
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 2> const & cpuid) { return os << "AVX"; }
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 3> const & cpuid) { return os << "BNGREG"; }
@@ -563,6 +608,13 @@ namespace like
 		unsigned : 1;
 		unsigned uL3CacheQoS_Monitoring : 1; // bit 1
 		unsigned : 30;
+
+		unsigned max_sub_leaf() const
+		{
+			unsigned long uIndex = 0;
+			_BitScanReverse(&uIndex, reinterpret_cast<unsigned const*>(this)[3]);
+			return uIndex;
+		}
 	};
 	template <> struct cpuid_base_t<0x0F, 1>
 	{
@@ -575,6 +627,11 @@ namespace like
 		// edx
 		unsigned uL3OccupancyMonitoring : 1; // bit 0
 		unsigned : 31;
+
+		bool is_sub_leaf(unsigned uMaxECX) const
+		{
+			return 1 <= uMaxECX;
+		}
 	};
 	template <> struct cpuid_base_t<0x10>
 	{
@@ -588,6 +645,13 @@ namespace like
 		unsigned : 32;
 		// edx
 		unsigned : 32;
+
+		unsigned max_sub_leaf() const
+		{
+			unsigned long uIndex = 0;
+			_BitScanReverse(&uIndex, reinterpret_cast<unsigned const*>(this)[1]);
+			return uIndex;
+		}
 	};
 	template <> struct cpuid_base_t<0x10, 1>
 	{
@@ -604,6 +668,11 @@ namespace like
 		// edx
 		unsigned uMaxOfCOS : 16; // [bits 15:0]
 		unsigned : 16;
+
+		bool is_sub_leaf(unsigned uMaxECX) const
+		{
+			return 1 <= uMaxECX;
+		}
 	};
 	template <> struct cpuid_base_t<0x12>
 	{
@@ -645,6 +714,11 @@ namespace like
 		unsigned uLIP : 1; // bit 31: Generated packets which contain IP payloads have LIP values, which include the CS base component.
 		// edx
 		unsigned : 32;
+
+		unsigned max_sub_leaf() const
+		{
+			return uMaxSubLeaf;
+		}
 	};
 	template <> struct cpuid_base_t<0x14, 1>
 	{
@@ -659,6 +733,11 @@ namespace like
 		unsigned : 32;
 		// edx
 		unsigned : 32;
+
+		bool is_sub_leaf(unsigned uMaxECX) const
+		{
+			return 1 <= uMaxECX;
+		}
 	};
 	template <> struct cpuid_base_t<0x15>
 	{
@@ -709,6 +788,11 @@ namespace like
 		unsigned uProjectID : 32;
 		// edx
 		unsigned uSteppingID : 32;
+
+		unsigned max_sub_leaf() const
+		{
+			return uMaxSOCID_Index;
+		}
 	};
 	template <> struct cpuid_base_t<0x17, 1>
 	{
@@ -718,14 +802,28 @@ namespace like
 		{
 			return ac;
 		}
+		bool is_sub_leaf(unsigned uMaxECX) const
+		{
+			return 1 <= uMaxECX;
+		}
 	};
 	template <> struct cpuid_base_t<0x17, 2>
 	{
 		char ac[16];
+
+		bool is_sub_leaf(unsigned uMaxECX) const
+		{
+			return 2 <= uMaxECX;
+		}
 	};
 	template <> struct cpuid_base_t<0x17, 3>
 	{
 		char ac[16];
+
+		bool is_sub_leaf(unsigned uMaxECX) const
+		{
+			return 3 <= uMaxECX;
+		}
 	};
 	template <int nECX> std::enable_if_t<2 <= nECX && nECX <= 4, std::ostream &> operator << (std::ostream & os, cpuid_base_t<0x17, nECX> const & cpuid)
 	{
@@ -739,13 +837,18 @@ namespace like
 	template <> struct cpuid_base_t<0x80000000>
 	{
 		// eax
-		unsigned uMaximumLeaf : 32;
+		unsigned uMaxLeaf : 32;
 		// ebx
 		unsigned : 32;
 		// ecx
 		unsigned : 32;
 		// edx
 		unsigned : 32;
+
+		unsigned max_leaf() const
+		{
+			return uMaxLeaf;
+		}
 	};
 	template <> struct cpuid_base_t<0x80000001>
 	{
@@ -898,7 +1001,7 @@ namespace like
 			static_assert(sizeof(cpuid_base_t<nEAX, nECX>) == 16, "CPUID expects 4 32-bit integers");
 		}
 
-		cpuid_t const & operator >> (std::ostream & os) const
+		std::ostream & print(std::ostream & os) const
 		{
 			int nMask = os.setf(std::ios_base::hex);
 			os.unsetf(std::ios_base::dec);
@@ -912,14 +1015,13 @@ namespace like
 			os.setf(nMask);
 			os <<
 				static_cast<cpuid_base_t<nEAX, nECX>const&>(*this) << std::endl;
-			return *this;
+			return os;
 		}
 	};
 	template <int nEAX, int nECX>
 	std::ostream & operator << (std::ostream & os, cpuid_t<nEAX, nECX> const & cpuid)
 	{
-		cpuid >> os;
-		return os;
+		return cpuid.print(os);
 	}
 
 	struct cpuid_soc_vendor_brand_string_t
@@ -1056,49 +1158,62 @@ namespace like
 		, cpuid_t<nEAX, nECX>
 		, std::conditional_t<TT::INC_ECX, cpuid_tree_t<nEAX, nECX + TT::INC_ECX>, cpuid_tree_traits<nEAX, nECX + 1> >
 	{
-		template <typename T>
-		void print(std::ostream & os) const
+		template <int nEnable>
+		std::ostream & print_subleaf(std::ostream & os, int nMaxECX) const
 		{
-			static_cast<T const&>(*this) >> os;
-		}
-		template <> void print<cpuid_tree_traits<nEAX, nECX>>(std::ostream &) const {}
-		template <> void print<cpuid_tree_traits<nEAX, nECX + 1>>(std::ostream &) const {}
-
-		template <bool bZeroECX>
-		bool should_print_leaf(void) const;
-
-		template <> bool should_print_leaf<true>(void) const
-		{
-			return nEAX <= uMaximumLeaf;
-		}
-		template <> bool should_print_leaf<false>(void) const
-		{
-			return true;
-		}
-
-		void print(std::ostream & os, int nMaxEAX, int nMaxECX)
-		{
-			if (nEAX <= nMaxEAX && nECX <= nMaxECX)
+			if (static_cast<cpuid_t<nEAX, nECX>const*>(this)->is_sub_leaf(nMaxECX))
 			{
+				static_cast<cpuid_t<nEAX, nECX>const*>(this)->print(os);
+
+				static_cast<cpuid_tree_t<nEAX, nECX + TT::INC_ECX>const*>(this)->print_subleaf<TT::INC_ECX>(os, nMaxECX);
 			}
+			return os;
+		}
+		template <>
+		std::ostream & print_subleaf<0>(std::ostream & os, int nMaxECX) const
+		{
+			return os;
 		}
 
-		cpuid_tree_t const & operator >> (std::ostream & os) const
+		template <int nEnable>
+		std::ostream & print_subleaf(std::ostream & os) const
 		{
-			print<std::conditional_t<TT::DEC_EAX, cpuid_tree_t<nEAX - TT::DEC_EAX, nECX>, cpuid_tree_traits<nEAX, nECX> >>(os);
-			if (should_print_leaf<nECX == 0>())
+			return static_cast<cpuid_tree_t<nEAX, nECX + TT::INC_ECX>const*>(this)->print_subleaf<nEnable>(os, cpuid_t<nEAX>::max_sub_leaf());
+		}
+		template <>
+		std::ostream & print_subleaf<0>(std::ostream & os) const
+		{
+			return os;
+		}
+
+		template <int nEnable>
+		std::ostream & print_leaf(std::ostream & os, int nMaxEAX) const
+		{
+			static_cast<cpuid_tree_t<nEAX - TT::DEC_EAX>const*>(this)->print_leaf(os);
+
+			print_leaf<0>(os, nMaxEAX);
+			return os;
+		}
+		template <>
+		std::ostream & print_leaf<0>(std::ostream & os, int nMaxEAX) const
+		{
+			if (nEAX <= nMaxEAX)
 			{
-				print<cpuid_t<nEAX, nECX>>(os);
-				print<std::conditional_t<TT::INC_ECX, cpuid_tree_t<nEAX, nECX + TT::INC_ECX>, cpuid_tree_traits<nEAX, nECX + 1> >>(os);
+				static_cast<cpuid_t<nEAX, nECX>const*>(this)->print(os);
+
+				print_subleaf<TT::INC_ECX>(os);
 			}
-			return *this;
+			return os;
+		}
+		std::ostream & print_leaf(std::ostream & os) const
+		{
+			return print_leaf<TT::DEC_EAX>(os, max_leaf());
 		}
 	};
 
 	template <int nEAX, int nECX>
 	std::ostream & operator << (std::ostream & os, cpuid_tree_t<nEAX, nECX> const & cpuid)
 	{
-		cpuid >> os;
-		return os;
+		return cpuid.print_leaf(os);
 	}
 }
