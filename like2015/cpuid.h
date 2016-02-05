@@ -3,7 +3,6 @@
 /* Author: jrmwng @ 2015-2016 */
 
 #include <intrin.h>
-#include <type_traits>
 #include <iostream>
 #include <iomanip>
 
@@ -138,70 +137,70 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x01> const & cpuid)
 	{
 		return os <<
-			(cpuid.uSSE3 ? '+' : '-') << "SSE3" << std::ends << //unsigned uSSE3 : 1; // bit 0
-			(cpuid.uPCLMULQDQ ? '+' : '-') << "PCLMULQDQ" << std::ends << //unsigned uPCLMULQDQ : 1; // bit 1
+			(cpuid.uSSE3 ? '+' : '-') << "SSE3" << ' ' << //unsigned uSSE3 : 1; // bit 0
+			(cpuid.uPCLMULQDQ ? '+' : '-') << "PCLMULQDQ" << ' ' << //unsigned uPCLMULQDQ : 1; // bit 1
 			//unsigned uDTES64 : 1; // bit 2
-			(cpuid.uMONITOR ? '+' : '-') << "MONITOR" << std::ends << //unsigned uMONITOR : 1; // bit 3
+			(cpuid.uMONITOR ? '+' : '-') << "MONITOR" << ' ' << //unsigned uMONITOR : 1; // bit 3
 			//unsigned uDS_CPL : 1; // bit 4
-			(cpuid.uVMX ? '+' : '-') << "VMX" << std::ends << //unsigned uVMX : 1; // bit 5
-			(cpuid.uSMX ? '+' : '-') << "SMX" << std::ends << //unsigned uSMX : 1; // bit 6: Safer Mode Extensions
-			(cpuid.uEIST ? '+' : '-') << "EIST" << std::ends << //unsigned uEIST : 1; // bit 7: Enhanced Intel SpeedStep technology
-			(cpuid.uTM2 ? '+' : '-') << "TM2" << std::ends << //unsigned uTM2 : 1; // bit 8: Thermal Monitor 2
-			(cpuid.uSSSE3 ? '+' : '-') << "SSSE3" << std::ends << //unsigned uSSSE3 : 1; // bit 9
+			(cpuid.uVMX ? '+' : '-') << "VMX" << ' ' << //unsigned uVMX : 1; // bit 5
+			(cpuid.uSMX ? '+' : '-') << "SMX" << ' ' << //unsigned uSMX : 1; // bit 6: Safer Mode Extensions
+			(cpuid.uEIST ? '+' : '-') << "EIST" << ' ' << //unsigned uEIST : 1; // bit 7: Enhanced Intel SpeedStep technology
+			(cpuid.uTM2 ? '+' : '-') << "TM2" << ' ' << //unsigned uTM2 : 1; // bit 8: Thermal Monitor 2
+			(cpuid.uSSSE3 ? '+' : '-') << "SSSE3" << ' ' << //unsigned uSSSE3 : 1; // bit 9
 			//unsigned uCNXT_ID : 1; // bit 10: L1 Context ID
 			//unsigned uSDBG : 1; // bit 11
-			(cpuid.uFMA ? '+' : '-') << "FMA" << std::ends << //unsigned uFMA : 1; // bit 12
-			(cpuid.uCMPXCHG16B ? '+' : '-') << "CMPXCHG16B" << std::ends << //unsigned uCMPXCHG16B : 1; // bit 13
+			(cpuid.uFMA ? '+' : '-') << "FMA" << ' ' << //unsigned uFMA : 1; // bit 12
+			(cpuid.uCMPXCHG16B ? '+' : '-') << "CMPXCHG16B" << ' ' << //unsigned uCMPXCHG16B : 1; // bit 13
 			//unsigned u_xTPR_UpdateControl : 1; // bit 14
-			(cpuid.uPDCM ? '+' : '-') << "PDCM" << std::ends << //unsigned uPDCM : 1; // bit 15: Perfmon and Debug Capability
+			(cpuid.uPDCM ? '+' : '-') << "PDCM" << ' ' << //unsigned uPDCM : 1; // bit 15: Perfmon and Debug Capability
 			//unsigned : 1; // bit 16
 			//unsigned uPCID : 1; // bit 17: Process-context identifiers
 			//unsigned uDCA : 1; // bit 18
-			(cpuid.uSSE4_1 ? '+' : '-') << "SSE4.1" << std::ends << //unsigned uSSE4_1 : 1; // bit 19
-			(cpuid.uSSE4_2 ? '+' : '-') << "SSE4.2" << std::ends << //unsigned uSSE4_2 : 1; // bit 20
-			(cpuid.u_x2APIC ? '+' : '-') << "x2APIC" << std::ends << //unsigned u_x2APIC : 1; // bit 21
-			(cpuid.uMOVBE ? '+' : '-') << "MOVBE" << std::ends << //unsigned uMOVBE : 1; // bit 22
-			(cpuid.uPOPCNT ? '+' : '-') << "POPCNT" << std::ends << //unsigned uPOPCNT : 1; // bit 23
-			(cpuid.uTSC_Deadline ? '+' : '-') << "TSC-Deadline" << std::ends << //unsigned uTSC_Deadline : 1; // bit 24
-			(cpuid.uAES ? '+' : '-') << "AES" << std::ends << //unsigned uAES : 1; // bit 25
-			(cpuid.uXSAVE ? '+' : '-') << "XSAVE" << std::ends << //unsigned uXSAVE : 1; // bit 26
-			(cpuid.uOSXSAVE ? '+' : '-') << "OSXSAVE" << std::ends << //unsigned uOSXSAVE : 1; // bit 27
-			(cpuid.uAVX ? '+' : '-') << "AVX" << std::ends << //unsigned uAVX : 1; // bit 28
-			(cpuid.uF16C ? '+' : '-') << "F16C" << std::ends << //unsigned uF16C : 1; // bit 29
-			(cpuid.uRDRAND ? '+' : '-') << "RDRAND" << std::ends << //unsigned uRDRAND : 1; // bit 30
+			(cpuid.uSSE4_1 ? '+' : '-') << "SSE4.1" << ' ' << //unsigned uSSE4_1 : 1; // bit 19
+			(cpuid.uSSE4_2 ? '+' : '-') << "SSE4.2" << ' ' << //unsigned uSSE4_2 : 1; // bit 20
+			(cpuid.u_x2APIC ? '+' : '-') << "x2APIC" << ' ' << //unsigned u_x2APIC : 1; // bit 21
+			(cpuid.uMOVBE ? '+' : '-') << "MOVBE" << ' ' << //unsigned uMOVBE : 1; // bit 22
+			(cpuid.uPOPCNT ? '+' : '-') << "POPCNT" << ' ' << //unsigned uPOPCNT : 1; // bit 23
+			(cpuid.uTSC_Deadline ? '+' : '-') << "TSC-Deadline" << ' ' << //unsigned uTSC_Deadline : 1; // bit 24
+			(cpuid.uAES ? '+' : '-') << "AES" << ' ' << //unsigned uAES : 1; // bit 25
+			(cpuid.uXSAVE ? '+' : '-') << "XSAVE" << ' ' << //unsigned uXSAVE : 1; // bit 26
+			(cpuid.uOSXSAVE ? '+' : '-') << "OSXSAVE" << ' ' << //unsigned uOSXSAVE : 1; // bit 27
+			(cpuid.uAVX ? '+' : '-') << "AVX" << ' ' << //unsigned uAVX : 1; // bit 28
+			(cpuid.uF16C ? '+' : '-') << "F16C" << ' ' << //unsigned uF16C : 1; // bit 29
+			(cpuid.uRDRAND ? '+' : '-') << "RDRAND" << ' ' << //unsigned uRDRAND : 1; // bit 30
 			//unsigned : 1;
-			(cpuid.uFPU ? '+' : '-') << "FPU" << std::ends << //unsigned uFPU : 1; // bit 0
-			(cpuid.uVME ? '+' : '-') << "VME" << std::ends << //unsigned uVME : 1; // bit 1: Virtual 8086 Mode Enhancements
-			(cpuid.uDE ? '+' : '-') << "DE" << std::ends << //unsigned uDE : 1; // bit 2: Debugging Extensions
-			(cpuid.uPSE ? '+' : '-') << "PSE" << std::ends << //unsigned uPSE : 1; // bit 3: Page Size Extension
-			(cpuid.uTSC ? '+' : '-') << "TSC" << std::ends << //unsigned uTSC : 1; // bit 4
-			(cpuid.uMSR ? '+' : '-') << "MSR" << std::ends << //unsigned uMSR : 1; // bit 5
-			(cpuid.uPAE ? '+' : '-') << "PAE" << std::ends << //unsigned uPAE : 1; // bit 6
-			(cpuid.uMCE ? '+' : '-') << "MCE" << std::ends << //unsigned uMCE : 1; // bit 7: Machine Check Exception
-			(cpuid.uCX8 ? '+' : '-') << "CX8" << std::ends << //unsigned uCX8 : 1; // bit 8: CMPXCHG8B Instruction
-			(cpuid.uAPIC ? '+' : '-') << "APIC" << std::ends << //unsigned uAPIC : 1; // bit 9
+			(cpuid.uFPU ? '+' : '-') << "FPU" << ' ' << //unsigned uFPU : 1; // bit 0
+			(cpuid.uVME ? '+' : '-') << "VME" << ' ' << //unsigned uVME : 1; // bit 1: Virtual 8086 Mode Enhancements
+			(cpuid.uDE ? '+' : '-') << "DE" << ' ' << //unsigned uDE : 1; // bit 2: Debugging Extensions
+			(cpuid.uPSE ? '+' : '-') << "PSE" << ' ' << //unsigned uPSE : 1; // bit 3: Page Size Extension
+			(cpuid.uTSC ? '+' : '-') << "TSC" << ' ' << //unsigned uTSC : 1; // bit 4
+			(cpuid.uMSR ? '+' : '-') << "MSR" << ' ' << //unsigned uMSR : 1; // bit 5
+			(cpuid.uPAE ? '+' : '-') << "PAE" << ' ' << //unsigned uPAE : 1; // bit 6
+			(cpuid.uMCE ? '+' : '-') << "MCE" << ' ' << //unsigned uMCE : 1; // bit 7: Machine Check Exception
+			(cpuid.uCX8 ? '+' : '-') << "CX8" << ' ' << //unsigned uCX8 : 1; // bit 8: CMPXCHG8B Instruction
+			(cpuid.uAPIC ? '+' : '-') << "APIC" << ' ' << //unsigned uAPIC : 1; // bit 9
 			//unsigned : 1; // bit 10
-			(cpuid.uSEP ? '+' : '-') << "SEP" << std::ends << //unsigned uSEP : 1; // bit 11: SYSENTER and SYSEXIT Instructions
-			(cpuid.uMTRR ? '+' : '-') << "MTRR" << std::ends << //unsigned uMTRR : 1; // bit 12
-			(cpuid.uPGE ? '+' : '-') << "PGE" << std::ends << //unsigned uPGE : 1; // bit 13: Page Global Bit
-			(cpuid.uMCA ? '+' : '-') << "MCA" << std::ends << //unsigned uMCA : 1; // bit 14 Machine Check Architecture
-			(cpuid.uCMOV ? '+' : '-') << "CMOV" << std::ends << //unsigned uCMOV : 1; // bit 15
-			(cpuid.uPAT ? '+' : '-') << "PAT" << std::ends << //unsigned uPAT : 1; // bit 16: Page Attribute Table
-			(cpuid.uPSE36 ? '+' : '-') << "PSE36" << std::ends << //unsigned uPSE36 : 1; // bit 17: 36-Bit Page Size Extension
-			(cpuid.uPSN ? '+' : '-') << "PSN" << std::ends << //unsigned uPSN : 1; // bit 18: Processor Serial Number
-			(cpuid.uCLFSH ? '+' : '-') << "CLFSH" << std::ends << //unsigned uCLFSH : 1; // bit 19
+			(cpuid.uSEP ? '+' : '-') << "SEP" << ' ' << //unsigned uSEP : 1; // bit 11: SYSENTER and SYSEXIT Instructions
+			(cpuid.uMTRR ? '+' : '-') << "MTRR" << ' ' << //unsigned uMTRR : 1; // bit 12
+			(cpuid.uPGE ? '+' : '-') << "PGE" << ' ' << //unsigned uPGE : 1; // bit 13: Page Global Bit
+			(cpuid.uMCA ? '+' : '-') << "MCA" << ' ' << //unsigned uMCA : 1; // bit 14 Machine Check Architecture
+			(cpuid.uCMOV ? '+' : '-') << "CMOV" << ' ' << //unsigned uCMOV : 1; // bit 15
+			(cpuid.uPAT ? '+' : '-') << "PAT" << ' ' << //unsigned uPAT : 1; // bit 16: Page Attribute Table
+			(cpuid.uPSE36 ? '+' : '-') << "PSE36" << ' ' << //unsigned uPSE36 : 1; // bit 17: 36-Bit Page Size Extension
+			(cpuid.uPSN ? '+' : '-') << "PSN" << ' ' << //unsigned uPSN : 1; // bit 18: Processor Serial Number
+			(cpuid.uCLFSH ? '+' : '-') << "CLFSH" << ' ' << //unsigned uCLFSH : 1; // bit 19
 			//unsigned : 1; // bit 20
-			(cpuid.uDS ? '+' : '-') << "DS" << std::ends << //unsigned uDS : 1; // bit 21: Debug Store
-			(cpuid.uACPI ? '+' : '-') << "ACPI" << std::ends << //unsigned uACPI : 1; // bit 22: Thermal Monitor and Software Controlled Clock Facilities
-			(cpuid.uMMX ? '+' : '-') << "MMX" << std::ends << //unsigned uMMX : 1; // bit 23
-			(cpuid.uFXSR ? '+' : '-') << "FXSR" << std::ends << //unsigned uFXSR : 1; // bit 24
-			(cpuid.uSSE ? '+' : '-') << "SSE" << std::ends << //unsigned uSSE : 1; // bit 25
-			(cpuid.uSSE2 ? '+' : '-') << "SSE2" << std::ends << //unsigned uSSE2 : 1; // bit 26
-			(cpuid.uSS ? '+' : '-') << "SS" << std::ends << //unsigned uSS : 1; // bit 27: Self Snoop
-			(cpuid.uHTT ? '+' : '-') << "HTT" << std::ends << //unsigned uHTT : 1; // bit 28: Max APIC IDs reserved field is Valid
-			(cpuid.uTM ? '+' : '-') << "TM" << std::ends << //unsigned uTM : 1; // bit 29: Thermal Monitor
+			(cpuid.uDS ? '+' : '-') << "DS" << ' ' << //unsigned uDS : 1; // bit 21: Debug Store
+			(cpuid.uACPI ? '+' : '-') << "ACPI" << ' ' << //unsigned uACPI : 1; // bit 22: Thermal Monitor and Software Controlled Clock Facilities
+			(cpuid.uMMX ? '+' : '-') << "MMX" << ' ' << //unsigned uMMX : 1; // bit 23
+			(cpuid.uFXSR ? '+' : '-') << "FXSR" << ' ' << //unsigned uFXSR : 1; // bit 24
+			(cpuid.uSSE ? '+' : '-') << "SSE" << ' ' << //unsigned uSSE : 1; // bit 25
+			(cpuid.uSSE2 ? '+' : '-') << "SSE2" << ' ' << //unsigned uSSE2 : 1; // bit 26
+			(cpuid.uSS ? '+' : '-') << "SS" << ' ' << //unsigned uSS : 1; // bit 27: Self Snoop
+			(cpuid.uHTT ? '+' : '-') << "HTT" << ' ' << //unsigned uHTT : 1; // bit 28: Max APIC IDs reserved field is Valid
+			(cpuid.uTM ? '+' : '-') << "TM" << ' ' << //unsigned uTM : 1; // bit 29: Thermal Monitor
 			//unsigned : 1; // bit 30
-			(cpuid.uPBE ? '+' : '-') << "PBE" << std::ends;//unsigned uPBE : 1; // bit 31: Pending Break Enable
+			(cpuid.uPBE ? '+' : '-') << "PBE" << ' ';//unsigned uPBE : 1; // bit 31: Pending Break Enable
 	}
 	template <> struct cpuid_base_t<0x02>
 	{
@@ -252,26 +251,26 @@ namespace like
 		case 0:
 			return os;
 		case 1:
-			os << "D-Cache" << std::ends;
+			os << "D-Cache" << ' ';
 			break;
 		case 2:
-			os << "I-Cache" << std::ends;
+			os << "I-Cache" << ' ';
 			break;
 		case 3:
-			os << "U-Cache" << std::ends;
+			os << "U-Cache" << ' ';
 			break;
 		}
 		return os <<
-			'L' << (cpuid.uCacheLevel) << std::ends <<
-			std::setw(2) << (cpuid.uMaximumNumberOfAddressableIDsForLogicalProcessors + 1) << "processors" << std::ends <<
-			std::setw(1) << (cpuid.uMaximumNumberOfAddressableIDsForProcessorCores + 1) << "cores" << std::ends <<
-			std::setw(2) << (cpuid.uWaysOfAssociativity + 1) << "ways" << std::ends <<
-			'*' << std::ends <<
-			std::setw(1) << (cpuid.uPhysicalLinePartitions + 1) << "partitions" << std::ends <<
-			'*' << std::ends <<
-			std::setw(2) << (cpuid.uSystemCoherencyLineSize + 1) << "B" << std::ends <<
-			'*' << std::ends <<
-			std::setw(4) << (cpuid.uNumberOfSets + 1) << "sets" << std::ends;
+			'L' << (cpuid.uCacheLevel) << ' ' <<
+			std::setw(2) << (cpuid.uMaximumNumberOfAddressableIDsForLogicalProcessors + 1) << "processors" << ' ' <<
+			std::setw(1) << (cpuid.uMaximumNumberOfAddressableIDsForProcessorCores + 1) << "cores" << ' ' <<
+			std::setw(2) << (cpuid.uWaysOfAssociativity + 1) << "ways" << ' ' <<
+			'*' << ' ' <<
+			std::setw(1) << (cpuid.uPhysicalLinePartitions + 1) << "partitions" << ' ' <<
+			'*' << ' ' <<
+			std::setw(2) << (cpuid.uSystemCoherencyLineSize + 1) << "B" << ' ' <<
+			'*' << ' ' <<
+			std::setw(4) << (cpuid.uNumberOfSets + 1) << "sets" << ' ';
 	}
 	template <> struct cpuid_base_t<0x05>
 	{
@@ -298,17 +297,17 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x05> const & cpuid)
 	{
 		return os <<
-			'[' << (cpuid.uSmallestLineSizeMONITOR) << 'B' << ',' << (cpuid.uLargestLineSizeMONITOR) << 'B' << ']' << std::ends <<
-			(cpuid.uMWAIT_Extension ? '+' : '-') << "MWAIT" << std::ends <<
-			(cpuid.uInterruptsAsBreakEvent ? '+' : '-') << "InterruptsAsBreakEvent" << std::ends <<
-			"C0/" << (cpuid.uNumberOfC0) << std::ends <<
-			"C1/" << (cpuid.uNumberOfC1) << std::ends <<
-			"C2/" << (cpuid.uNumberOfC2) << std::ends <<
-			"C3/" << (cpuid.uNumberOfC3) << std::ends <<
-			"C4/" << (cpuid.uNumberOfC4) << std::ends <<
-			"C5/" << (cpuid.uNumberOfC5) << std::ends <<
-			"C6/" << (cpuid.uNumberOfC6) << std::ends <<
-			"C7/" << (cpuid.uNumberOfC7) << std::ends;
+			'[' << (cpuid.uSmallestLineSizeMONITOR) << 'B' << ',' << (cpuid.uLargestLineSizeMONITOR) << 'B' << ']' << ' ' <<
+			(cpuid.uMWAIT_Extension ? '+' : '-') << "MWAIT" << ' ' <<
+			(cpuid.uInterruptsAsBreakEvent ? '+' : '-') << "InterruptsAsBreakEvent" << ' ' <<
+			"C0/" << (cpuid.uNumberOfC0) << ' ' <<
+			"C1/" << (cpuid.uNumberOfC1) << ' ' <<
+			"C2/" << (cpuid.uNumberOfC2) << ' ' <<
+			"C3/" << (cpuid.uNumberOfC3) << ' ' <<
+			"C4/" << (cpuid.uNumberOfC4) << ' ' <<
+			"C5/" << (cpuid.uNumberOfC5) << ' ' <<
+			"C6/" << (cpuid.uNumberOfC6) << ' ' <<
+			"C7/" << (cpuid.uNumberOfC7) << ' ';
 	}
 	template <> struct cpuid_base_t<0x06>
 	{
@@ -342,15 +341,15 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x06> const & cpuid)
 	{
 		return os <<
-			(cpuid.uDigitalThermalSensor ? '+' : '-') << "ThermalSensor" << std::ends <<
-			(cpuid.uIntelTurboBoostTechnology ? '+' : '-') << "TurboBoost" << std::ends <<
-			(cpuid.uARAT ? '+' : '-') << "ARAT" << std::ends <<
-			(cpuid.uPLN ? '+' : '-') << "PLN" << std::ends <<
-			(cpuid.uECMD ? '+' : '-') << "ECMD" << std::ends <<
-			(cpuid.uPTM ? '+' : '-') << "PTM" << std::ends <<
-			(cpuid.uHWP ? '+' : '-') << "HWP" << std::ends <<
-			(cpuid.uHDC ? '+' : '-') << "HDC" << std::ends <<
-			(cpuid.uSETBH ? '+' : '-') << "SETBH" << std::ends;
+			(cpuid.uDigitalThermalSensor ? '+' : '-') << "ThermalSensor" << ' ' <<
+			(cpuid.uIntelTurboBoostTechnology ? '+' : '-') << "TurboBoost" << ' ' <<
+			(cpuid.uARAT ? '+' : '-') << "ARAT" << ' ' <<
+			(cpuid.uPLN ? '+' : '-') << "PLN" << ' ' <<
+			(cpuid.uECMD ? '+' : '-') << "ECMD" << ' ' <<
+			(cpuid.uPTM ? '+' : '-') << "PTM" << ' ' <<
+			(cpuid.uHWP ? '+' : '-') << "HWP" << ' ' <<
+			(cpuid.uHDC ? '+' : '-') << "HDC" << ' ' <<
+			(cpuid.uSETBH ? '+' : '-') << "SETBH" << ' ';
 	}
 	template <> struct cpuid_base_t<0x07>
 	{
@@ -394,27 +393,27 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x07> const & cpuid)
 	{
 		return os <<
-			(cpuid.uFSGSBASE ? '+' : '-') << "FSGSBASE" << std::ends <<
-			(cpuid.uIntelSGX ? '+' : '-') << "SGX" << std::ends <<
-			(cpuid.uBMI1 ? '+' : '-') << "BMI1" << std::ends <<
-			(cpuid.uHLE ? '+' : '-') << "HLE" << std::ends <<
-			(cpuid.uAVX2 ? '+' : '-') << "AVX2" << std::ends <<
-			(cpuid.uSMEP ? '+' : '-') << "SMEP" << std::ends <<
-			(cpuid.uBMI2 ? '+' : '-') << "BMI2" << std::ends <<
-			(cpuid.uFastStringOperation ? '+' : '-') << "Fast-String" << std::ends <<
-			(cpuid.uINVPCID ? '+' : '-') << "INVPCID" << std::ends <<
-			(cpuid.uRTM ? '+' : '-') << "RTM" << std::ends <<
-			(cpuid.uPQM ? '+' : '-') << "PQM" << std::ends <<
-			(cpuid.uIntelMPX ? '+' : '-') << "MPX" << std::ends <<
-			(cpuid.uPQE ? '+' : '-') << "PQE" << std::ends <<
-			(cpuid.uRDSEED ? '+' : '-') << "RDSEED" << std::ends <<
-			(cpuid.uADX ? '+' : '-') << "ADX" << std::ends <<
-			(cpuid.uSMAP ? '+' : '-') << "SMAP" << std::ends <<
-			(cpuid.uCLFLUSHOPT ? '+' : '-') << "CLFLUSHOPT" << std::ends <<
-			(cpuid.uIntelProcessorTrace ? '+' : '-') << "PT" << std::ends <<
-			(cpuid.uPREFTEHCHWT1 ? '+' : '-') << "PREFTEHCHWT1" << std::ends <<
-			(cpuid.uPKU ? '+' : '-') << "PKU" << std::ends <<
-			(cpuid.uOSPKE ? '+' : '-') << "OSPKE" << std::ends;
+			(cpuid.uFSGSBASE ? '+' : '-') << "FSGSBASE" << ' ' <<
+			(cpuid.uIntelSGX ? '+' : '-') << "SGX" << ' ' <<
+			(cpuid.uBMI1 ? '+' : '-') << "BMI1" << ' ' <<
+			(cpuid.uHLE ? '+' : '-') << "HLE" << ' ' <<
+			(cpuid.uAVX2 ? '+' : '-') << "AVX2" << ' ' <<
+			(cpuid.uSMEP ? '+' : '-') << "SMEP" << ' ' <<
+			(cpuid.uBMI2 ? '+' : '-') << "BMI2" << ' ' <<
+			(cpuid.uFastStringOperation ? '+' : '-') << "Fast-String" << ' ' <<
+			(cpuid.uINVPCID ? '+' : '-') << "INVPCID" << ' ' <<
+			(cpuid.uRTM ? '+' : '-') << "RTM" << ' ' <<
+			(cpuid.uPQM ? '+' : '-') << "PQM" << ' ' <<
+			(cpuid.uIntelMPX ? '+' : '-') << "MPX" << ' ' <<
+			(cpuid.uPQE ? '+' : '-') << "PQE" << ' ' <<
+			(cpuid.uRDSEED ? '+' : '-') << "RDSEED" << ' ' <<
+			(cpuid.uADX ? '+' : '-') << "ADX" << ' ' <<
+			(cpuid.uSMAP ? '+' : '-') << "SMAP" << ' ' <<
+			(cpuid.uCLFLUSHOPT ? '+' : '-') << "CLFLUSHOPT" << ' ' <<
+			(cpuid.uIntelProcessorTrace ? '+' : '-') << "PT" << ' ' <<
+			(cpuid.uPREFTEHCHWT1 ? '+' : '-') << "PREFTEHCHWT1" << ' ' <<
+			(cpuid.uPKU ? '+' : '-') << "PKU" << ' ' <<
+			(cpuid.uOSPKE ? '+' : '-') << "OSPKE" << ' ';
 	}
 	template <> struct cpuid_base_t<0x09>
 	{
@@ -452,10 +451,10 @@ namespace like
 	};
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0A> const & cpuid)
 	{
-		os << (cpuid.uNumOfGP) << '*' << (cpuid.uBitWidthOfGP) << 'b' << std::ends;
+		os << (cpuid.uNumOfGP) << '*' << (cpuid.uBitWidthOfGP) << 'b' << ' ';
 		if (cpuid.uVersionID > 1)
 		{
-			os << (cpuid.uNumOfFixedFunctionPerformanceCounters) << '*' << (cpuid.uBitWidthOfFixedFunctionPerformanceCounters) << 'b' << std::ends;
+			os << (cpuid.uNumOfFixedFunctionPerformanceCounters) << '*' << (cpuid.uBitWidthOfFixedFunctionPerformanceCounters) << 'b' << ' ';
 		}
 		return os;
 	}
@@ -488,16 +487,16 @@ namespace like
 		switch (cpuid.uLevelType)
 		{
 		case 0:
-			os << "Invalid" << std::ends;
+			os << "Invalid" << ' ';
 			break;
 		case 1:
-			os << "SMT" << std::ends;
+			os << "SMT" << ' ';
 			break;
 		case 2:
-			os << "Core" << std::ends;
+			os << "Core" << ' ';
 			break;
 		default:
-			os << "Reserved" << std::ends;
+			os << "Reserved" << ' ';
 			break;
 		}
 		return os;
@@ -531,15 +530,15 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D> const & cpuid)
 	{
 		return os <<
-			(cpuid.uStateX87 ? '+' : '-') << "x87" << std::ends <<
-			(cpuid.uStateSSE ? '+' : '-') << "SSE" << std::ends <<
-			(cpuid.uStateAVX ? '+' : '-') << "AVX" << std::ends <<
-			(cpuid.uStateBNDREGS ? '+' : '-') << "BNDREGS" << std::ends <<
-			(cpuid.uStateBNDCSR ? '+' : '-') << "BNDCSR" << std::ends <<
-			(cpuid.uStatePT ? '+' : '-') << "PT" << std::ends <<
-			(cpuid.uStatePKRU ? '+' : '-') << "PKRU" << std::ends <<
-			(cpuid.uSizeXCR0) << 'B' << std::ends <<
-			(cpuid.uSize) << 'B' << std::ends;
+			(cpuid.uStateX87 ? '+' : '-') << "x87" << ' ' <<
+			(cpuid.uStateSSE ? '+' : '-') << "SSE" << ' ' <<
+			(cpuid.uStateAVX ? '+' : '-') << "AVX" << ' ' <<
+			(cpuid.uStateBNDREGS ? '+' : '-') << "BNDREGS" << ' ' <<
+			(cpuid.uStateBNDCSR ? '+' : '-') << "BNDCSR" << ' ' <<
+			(cpuid.uStatePT ? '+' : '-') << "PT" << ' ' <<
+			(cpuid.uStatePKRU ? '+' : '-') << "PKRU" << ' ' <<
+			(cpuid.uSizeXCR0) << 'B' << ' ' <<
+			(cpuid.uSize) << 'B' << ' ';
 	}
 	template <> struct cpuid_base_t<0x0D, 1>
 	{
@@ -563,11 +562,11 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x0D, 1> const & cpuid)
 	{
 		return os <<
-			(cpuid.uXSAVEOPT ? '+' : '-') << "XSAVEOPT" << std::ends <<
-			(cpuid.uCompactionExtensions ? '+' : '-') << "Compaction-Extensions" << std::ends <<
-			(cpuid.uXGETBV ? '+' : '-') << "XGETBV" << std::ends <<
-			(cpuid.uXSAVES_IA32_XSS ? '+' : '-') << "XSAVES-IA32_XSS" << std::ends <<
-			(cpuid.uSize) << 'B' << std::ends;
+			(cpuid.uXSAVEOPT ? '+' : '-') << "XSAVEOPT" << ' ' <<
+			(cpuid.uCompactionExtensions ? '+' : '-') << "Compaction-Extensions" << ' ' <<
+			(cpuid.uXGETBV ? '+' : '-') << "XGETBV" << ' ' <<
+			(cpuid.uXSAVES_IA32_XSS ? '+' : '-') << "XSAVES-IA32_XSS" << ' ' <<
+			(cpuid.uSize) << 'B' << ' ';
 	}
 	template <int nECX> struct cpuid_base_t<0x0D, nECX> // AVX state, BNGREG state, BNDCSR state, Opmask state, ZMM_Hi256 state, Hi16_ZMM state, PT state, PKRU state
 	{
@@ -692,8 +691,8 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x12> const & cpuid)
 	{
 		return os <<
-			(cpuid.uSGX1 ? '+' : '-') << "SGX1" << std::ends <<
-			(cpuid.uSGX2 ? '+' : '-') << "SGX2" << std::ends;
+			(cpuid.uSGX1 ? '+' : '-') << "SGX1" << ' ' <<
+			(cpuid.uSGX2 ? '+' : '-') << "SGX2" << ' ';
 	}
 	template <> struct cpuid_base_t<0x14>
 	{
@@ -753,7 +752,7 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x15> const & cpuid)
 	{
 		return os <<
-			cpuid.uTSC << '/' << cpuid.uCoreCrystalClock << std::ends;
+			cpuid.uTSC << '/' << cpuid.uCoreCrystalClock << ' ';
 	}
 	template <> struct cpuid_base_t<0x16>
 	{
@@ -772,9 +771,9 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x16> const & cpuid)
 	{
 		return os <<
-			cpuid.uProcessorBaseFrequencyMHz << "MHz" << std::ends <<
-			cpuid.uMaximumFrequencyMHz << "MHz" << std::ends <<
-			cpuid.uBusFrequencyMHz << "MHz" << std::ends;
+			cpuid.uProcessorBaseFrequencyMHz << "MHz" << ' ' <<
+			cpuid.uMaximumFrequencyMHz << "MHz" << ' ' <<
+			cpuid.uBusFrequencyMHz << "MHz" << ' ';
 	}
 	template <> struct cpuid_base_t<0x17>
 	{
@@ -825,14 +824,9 @@ namespace like
 			return 3 <= uMaxECX;
 		}
 	};
-	template <int nECX> std::enable_if_t<2 <= nECX && nECX <= 4, std::ostream &> operator << (std::ostream & os, cpuid_base_t<0x17, nECX> const & cpuid)
-	{
-		std::for_each(std::cbegin(cpuid.ac), std::cend(cpuid.ac), [&](char c)
-		{
-			os << c;
-		});
-		return os;
-	}
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x17, 1> const & cpuid) { return os.write(cpuid.ac, 16); }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x17, 2> const & cpuid) { return os.write(cpuid.ac, 16); }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x17, 3> const & cpuid) { return os.write(cpuid.ac, 16); }
 
 	template <> struct cpuid_base_t<0x80000000>
 	{
@@ -878,11 +872,11 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000001> const & cpuid)
 	{
 		return os <<
-			(cpuid.uLZCNT ? '+' : '-') << "LZCNT" << std::ends <<
-			(cpuid.uPREFTEHCHW ? '+' : '-') << "PREFTEHCHW" << std::ends <<
-			(cpuid.u1GBytePages ? '+' : '-') << "1GBytePages" << std::ends <<
-			(cpuid.uRDTSCP ? '+' : '-') << "RDTSCP" << std::ends <<
-			(cpuid.uIntel64 ? '+' : '-') << "x64" << std::ends;
+			(cpuid.uLZCNT ? '+' : '-') << "LZCNT" << ' ' <<
+			(cpuid.uPREFTEHCHW ? '+' : '-') << "PREFTEHCHW" << ' ' <<
+			(cpuid.u1GBytePages ? '+' : '-') << "1GBytePages" << ' ' <<
+			(cpuid.uRDTSCP ? '+' : '-') << "RDTSCP" << ' ' <<
+			(cpuid.uIntel64 ? '+' : '-') << "x64" << ' ';
 	}
 	template <> struct cpuid_base_t<0x80000002>
 	{
@@ -901,14 +895,9 @@ namespace like
 	{
 		char ac[16];
 	};
-	template <int nEAX> std::enable_if_t<0x80000002 <= nEAX && nEAX <= 0x80000004, std::ostream &> operator << (std::ostream & os, cpuid_base_t<nEAX> const & cpuid)
-	{
-		std::for_each(std::cbegin(cpuid.ac), std::cend(cpuid.ac), [&](char c)
-		{
-			os << c;
-		});
-		return os;
-	}
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000002> const & cpuid) { return os.write(cpuid.ac, 16); }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000003> const & cpuid) { return os.write(cpuid.ac, 16); }
+	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000004> const & cpuid) { return os.write(cpuid.ac, 16); }
 	template <> struct cpuid_base_t<0x80000006>
 	{
 		// eax
@@ -925,32 +914,32 @@ namespace like
 	};
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000006> const & cpuid)
 	{
-		os << (cpuid.uCacheLineSize) << "B" << std::ends;
+		os << (cpuid.uCacheLineSize) << "B" << ' ';
 		switch (cpuid.uL2Associativity)
 		{
 		case 0:
-			os << "Disabled" << std::ends;
+			os << "Disabled" << ' ';
 			break;
 		case 1:
-			os << "DirectMapped" << std::ends;
+			os << "DirectMapped" << ' ';
 			break;
 		case 2:
-			os << "2-way" << std::ends;
+			os << "2-way" << ' ';
 			break;
 		case 4:
-			os << "4-way" << std::ends;
+			os << "4-way" << ' ';
 			break;
 		case 6:
-			os << "8-way" << std::ends;
+			os << "8-way" << ' ';
 			break;
 		case 8:
-			os << "16-way" << std::ends;
+			os << "16-way" << ' ';
 			break;
 		case 0xF:
-			os << "FullyAssociative" << std::ends;
+			os << "FullyAssociative" << ' ';
 			break;
 		}
-		return os << (cpuid.uCacheSize1K) << "KB" << std::ends;
+		return os << (cpuid.uCacheSize1K) << "KB" << ' ';
 	}
 	template <> struct cpuid_base_t<0x80000007>
 	{
@@ -968,7 +957,7 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000007> const & cpuid)
 	{
 		return os <<
-			(cpuid.uInvariantTSC ? '+' : '-') << "InvariantTSC" << std::ends;
+			(cpuid.uInvariantTSC ? '+' : '-') << "InvariantTSC" << ' ';
 	}
 	template <> struct cpuid_base_t<0x80000008>
 	{
@@ -986,36 +975,88 @@ namespace like
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x80000008> const & cpuid)
 	{
 		return os <<
-			(cpuid.uNumOfPhysicalAddressBits) << 'b' << std::ends <<
-			(cpuid.uNumOfLinearAddressBits) << 'b' << std::ends;
+			(cpuid.uNumOfPhysicalAddressBits) << 'b' << ' ' <<
+			(cpuid.uNumOfLinearAddressBits) << 'b' << ' ';
 	}
 
 	template <int nEAX, int nECX = 0>
 	struct cpuid_t
 		: cpuid_base_t<nEAX, nECX>
 	{
+		static_assert(sizeof(cpuid_base_t<nEAX, nECX>) == 16, "CPUID expects 4 32-bit integers");
+
 		cpuid_t()
 		{
 			__cpuidex(reinterpret_cast<int*>(this), nEAX, nECX);
-
-			static_assert(sizeof(cpuid_base_t<nEAX, nECX>) == 16, "CPUID expects 4 32-bit integers");
+		}
+		cpuid_t(std::istream & is)
+		{
+			scan(is);
 		}
 
 		std::ostream & print(std::ostream & os) const
 		{
+			if (os.fail())
+			{
+				return os;
+			}
 			int nMask = os.setf(std::ios_base::hex);
 			os.unsetf(std::ios_base::dec);
 			os <<
-				std::setw(8) << nEAX << std::ends <<
-				std::setw(3) << nECX << std::ends <<
-				std::setw(8) << reinterpret_cast<int const*>(this)[0] << std::ends <<
-				std::setw(8) << reinterpret_cast<int const*>(this)[1] << std::ends <<
-				std::setw(8) << reinterpret_cast<int const*>(this)[2] << std::ends <<
-				std::setw(8) << reinterpret_cast<int const*>(this)[3] << std::ends;
+				std::setw(8) << static_cast<unsigned>(nEAX) << ' ' <<
+				std::setw(3) << static_cast<unsigned>(nECX) << ' ' <<
+				std::setw(8) << reinterpret_cast<unsigned const*>(this)[0] << ' ' <<
+				std::setw(8) << reinterpret_cast<unsigned const*>(this)[1] << ' ' <<
+				std::setw(8) << reinterpret_cast<unsigned const*>(this)[2] << ' ' <<
+				std::setw(8) << reinterpret_cast<unsigned const*>(this)[3] << ' ';
 			os.setf(nMask);
 			os <<
 				static_cast<cpuid_base_t<nEAX, nECX>const&>(*this) << std::endl;
 			return os;
+		}
+		std::istream & scan(std::istream & is)
+		{
+			reinterpret_cast<int*>(this)[0] = 0;
+			reinterpret_cast<int*>(this)[1] = 0;
+			reinterpret_cast<int*>(this)[2] = 0;
+			reinterpret_cast<int*>(this)[3] = 0;
+
+			if (is.fail())
+			{
+				return is;
+			}
+
+			std::streampos uPos = is.tellg();
+
+			unsigned uEAX = ~nEAX, uECX = ~nECX;
+			{
+				int nMask = is.setf(std::ios_base::hex | std::ios_base::skipws);
+				is.unsetf(std::ios_base::dec);
+				is >>
+					uEAX >>
+					uECX >>
+					reinterpret_cast<unsigned*>(this)[0] >>
+					reinterpret_cast<unsigned*>(this)[1] >>
+					reinterpret_cast<unsigned*>(this)[2] >>
+					reinterpret_cast<unsigned*>(this)[3];
+				is.setf(nMask);
+			}
+
+			if (is.fail() ||
+				uEAX != static_cast<unsigned>(nEAX) ||
+				uECX != static_cast<unsigned>(nECX))
+			{
+				is.clear();
+				is.seekg(uPos);
+				return is;
+			}
+
+			char ac[2000];
+			do
+			{
+				is.getline(ac, std::size(ac));
+			} while (is.fail() && !is.eof());
+			return is;
 		}
 	};
 	template <int nEAX, int nECX>
@@ -1051,6 +1092,12 @@ namespace like
 		: cpuid_sub_leaf_t<nEAX, nECX - 1>
 		, cpuid_t<nEAX, nECX>
 	{
+		cpuid_sub_leaf_t()
+		{}
+		cpuid_sub_leaf_t(std::istream & is)
+			: cpuid_sub_leaf_t<nEAX, nECX - 1>(is)
+			, cpuid_t<nEAX, nECX>(is)
+		{}
 		std::ostream & print_sub_leaf(std::ostream & os, unsigned uMaxSubLeaf = ~0) const
 		{
 			cpuid_sub_leaf_t<nEAX, nECX - 1>::print_sub_leaf(os, uMaxSubLeaf);
@@ -1061,14 +1108,28 @@ namespace like
 			}
 			return os;
 		}
+		std::istream & scan_sub_leaf(std::istream & is)
+		{
+			cpuid_sub_leaf_t<nEAX, nECX - 1>::scan_sub_leaf(is);
+			return cpuid_t<nEAX, nECX>::scan(is);
+		}
 	};
 	template <int nEAX>
 	struct cpuid_sub_leaf_t<nEAX>
 		: cpuid_t<nEAX>
 	{
+		cpuid_sub_leaf_t()
+		{}
+		cpuid_sub_leaf_t(std::istream & is)
+			: cpuid_t<nEAX>(is)
+		{}
 		std::ostream & print_sub_leaf(std::ostream & os, unsigned uMaxSubLeaf = ~0) const
 		{
 			return cpuid_t<nEAX>::print(os);
+		}
+		std::istream & scan_sub_leaf(std::istream & is)
+		{
+			return cpuid_t<nEAX>::scan(is);
 		}
 	};
 	template <int nEAX> struct cpuid_leaf_traits
@@ -1086,6 +1147,11 @@ namespace like
 	struct cpuid_leaf_t
 		: cpuid_sub_leaf_t<nEAX, cpuid_leaf_traits<nEAX>::MAX_ECX>
 	{
+		cpuid_leaf_t()
+		{}
+		cpuid_leaf_t(std::istream & is)
+			: cpuid_sub_leaf_t<nEAX, cpuid_leaf_traits<nEAX>::MAX_ECX>(is)
+		{}
 		template <int nEnable>
 		std::ostream & print_leaf(std::ostream & os) const
 		{
@@ -1100,6 +1166,10 @@ namespace like
 		{
 			return print_leaf<cpuid_leaf_traits<nEAX>::MAX_ECX>(os);
 		}
+		std::istream & scan_leaf(std::istream & is)
+		{
+			return cpuid_sub_leaf_t<nEAX, cpuid_leaf_traits<nEAX>::MAX_ECX>::scan_sub_leaf(is);
+		}
 	};
 
 	//
@@ -1109,6 +1179,12 @@ namespace like
 		: cpuid_tree_t<nEAX - 1>
 		, cpuid_leaf_t<nEAX>
 	{
+		cpuid_tree_t()
+		{}
+		cpuid_tree_t(std::istream & is)
+			: cpuid_tree_t<nEAX - 1>(is)
+			, cpuid_leaf_t<nEAX>(is)
+		{}
 		std::ostream & print_tree(std::ostream & os, unsigned uMaxLeaf) const
 		{
 			cpuid_tree_t<nEAX - 1>::print_tree(os, uMaxLeaf);
@@ -1122,28 +1198,56 @@ namespace like
 		{
 			return print_tree(os, max_leaf());
 		}
+		std::istream & scan_tree(std::istream & is)
+		{
+			cpuid_tree_t<nEAX - 1>::scan_tree(is);
+			return cpuid_leaf_t<nEAX>::scan_leaf(is);
+		}
 	};
 	template <>
 	struct cpuid_tree_t<0>
 		: cpuid_leaf_t<0>
 	{
+		cpuid_tree_t()
+		{}
+		cpuid_tree_t(std::istream & is)
+			: cpuid_leaf_t<0>(is)
+		{}
 		std::ostream & print_tree(std::ostream & os, unsigned uMaxLeaf = ~0) const
 		{
 			return print_leaf(os);
+		}
+		std::istream & scan_tree(std::istream & is)
+		{
+			return cpuid_leaf_t<0>::scan_leaf(is);
 		}
 	};
 	template <>
 	struct cpuid_tree_t<0x80000000>
 		: cpuid_leaf_t<0x80000000>
 	{
+		cpuid_tree_t()
+		{}
+		cpuid_tree_t(std::istream & is)
+			: cpuid_leaf_t<0x80000000>(is)
+		{}
 		std::ostream & print_tree(std::ostream & os, unsigned uMaxLeaf = ~0) const
 		{
 			return print_leaf(os);
+		}
+		std::istream & scan_tree(std::istream & is)
+		{
+			return cpuid_leaf_t<0x80000000>::scan_leaf(is);
 		}
 	};
 	template <int nEAX>
 	std::ostream & operator << (std::ostream & os, cpuid_tree_t<nEAX> const & cpuid)
 	{
 		return cpuid.print_tree(os);
+	}
+	template <int nEAX>
+	std::istream & operator >> (std::istream & is, cpuid_tree_t<nEAX> & cpuid)
+	{
+		return cpuid.scan_tree(is);
 	}
 }
