@@ -1047,173 +1047,103 @@ namespace like
 
 	//
 	template <int nEAX, int nECX = 0>
-	struct cpuid_tree_traits;
-
-	template <int nEAX, int nECX>
-	struct cpuid_tree_traits
+	struct cpuid_sub_leaf_t
+		: cpuid_sub_leaf_t<nEAX, nECX - 1>
+		, cpuid_t<nEAX, nECX>
 	{
-		enum { DEC_EAX = 0, INC_ECX = 1 };
+		std::ostream & print_sub_leaf(std::ostream & os, unsigned uMaxSubLeaf = ~0) const
+		{
+			cpuid_sub_leaf_t<nEAX, nECX - 1>::print_sub_leaf(os, uMaxSubLeaf);
+
+			if (cpuid_t<nEAX, nECX>::is_sub_leaf(uMaxSubLeaf))
+			{
+				cpuid_t<nEAX, nECX>::print(os);
+			}
+			return os;
+		}
 	};
 	template <int nEAX>
-	struct cpuid_tree_traits<nEAX>
+	struct cpuid_sub_leaf_t<nEAX>
+		: cpuid_t<nEAX>
 	{
-		enum { DEC_EAX = 1, INC_ECX = 0 };
+		std::ostream & print_sub_leaf(std::ostream & os, unsigned uMaxSubLeaf = ~0) const
+		{
+			return cpuid_t<nEAX>::print(os);
+		}
 	};
-	template <> struct cpuid_tree_traits<0>
+	template <int nEAX> struct cpuid_leaf_traits
 	{
-		enum { DEC_EAX = 0, INC_ECX = 0 };
+		enum { MAX_ECX = 0 };
 	};
-	template <> struct cpuid_tree_traits<0x04>
-	{
-		enum { DEC_EAX = 1, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x04, 4>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 0 };
-	};
-	template <int nECX> struct cpuid_tree_traits<0x04, nECX>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x0B>
-	{
-		enum { DEC_EAX = 1, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x0B, 2>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 0 };
-	};
-	template <int nECX> struct cpuid_tree_traits<0x0B, nECX>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x0D>
-	{
-		enum { DEC_EAX = 1, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x0D, 9>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 0 };
-	};
-	template <int nECX> struct cpuid_tree_traits<0x0D, nECX>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x0F>
-	{
-		enum { DEC_EAX = 1, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x0F, 2>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 0 };
-	};
-	template <int nECX> struct cpuid_tree_traits<0x0F, nECX>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x10>
-	{
-		enum { DEC_EAX = 1, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x10, 2>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 0 };
-	};
-	template <int nECX> struct cpuid_tree_traits<0x10, nECX>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x14>
-	{
-		enum { DEC_EAX = 1, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x14, 1>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 0 };
-	};
-	template <int nECX> struct cpuid_tree_traits<0x14, nECX>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x17>
-	{
-		enum { DEC_EAX = 1, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x17, 3>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 0 };
-	};
-	template <int nECX> struct cpuid_tree_traits<0x17, nECX>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 1 };
-	};
-	template <> struct cpuid_tree_traits<0x80000000>
-	{
-		enum { DEC_EAX = 0, INC_ECX = 0 };
-	};
-
-	template <int nEAX, int nECX = 0, typename TT = cpuid_tree_traits<nEAX, nECX> >
-	struct cpuid_tree_t
-		: std::conditional_t<TT::DEC_EAX, cpuid_tree_t<nEAX - TT::DEC_EAX, nECX>, cpuid_tree_traits<nEAX, nECX> >
-		, cpuid_t<nEAX, nECX>
-		, std::conditional_t<TT::INC_ECX, cpuid_tree_t<nEAX, nECX + TT::INC_ECX>, cpuid_tree_traits<nEAX, nECX + 1> >
+	template <> struct cpuid_leaf_traits<0x04> { enum { MAX_ECX = 4 }; };
+	template <> struct cpuid_leaf_traits<0x0B> { enum { MAX_ECX = 2 }; };
+	template <> struct cpuid_leaf_traits<0x0D> { enum { MAX_ECX = 9 }; };
+	template <> struct cpuid_leaf_traits<0x0F> { enum { MAX_ECX = 2 }; };
+	template <> struct cpuid_leaf_traits<0x10> { enum { MAX_ECX = 1 }; };
+	template <> struct cpuid_leaf_traits<0x14> { enum { MAX_ECX = 1 }; };
+	template <> struct cpuid_leaf_traits<0x17> { enum { MAX_ECX = 3 }; };
+	template <int nEAX>
+	struct cpuid_leaf_t
+		: cpuid_sub_leaf_t<nEAX, cpuid_leaf_traits<nEAX>::MAX_ECX>
 	{
 		template <int nEnable>
-		std::ostream & print_subleaf(std::ostream & os, int nMaxECX) const
+		std::ostream & print_leaf(std::ostream & os) const
 		{
-			if (static_cast<cpuid_t<nEAX, nECX>const*>(this)->is_sub_leaf(nMaxECX))
-			{
-				static_cast<cpuid_t<nEAX, nECX>const*>(this)->print(os);
-
-				static_cast<cpuid_tree_t<nEAX, nECX + TT::INC_ECX>const*>(this)->print_subleaf<TT::INC_ECX>(os, nMaxECX);
-			}
-			return os;
+			return cpuid_sub_leaf_t<nEAX, cpuid_leaf_traits<nEAX>::MAX_ECX>::print_sub_leaf(os, cpuid_t<nEAX>::max_sub_leaf());
 		}
 		template <>
-		std::ostream & print_subleaf<0>(std::ostream & os, int nMaxECX) const
+		std::ostream & print_leaf<0>(std::ostream & os) const
 		{
-			return os;
-		}
-
-		template <int nEnable>
-		std::ostream & print_subleaf(std::ostream & os) const
-		{
-			return static_cast<cpuid_tree_t<nEAX, nECX + TT::INC_ECX>const*>(this)->print_subleaf<nEnable>(os, cpuid_t<nEAX>::max_sub_leaf());
-		}
-		template <>
-		std::ostream & print_subleaf<0>(std::ostream & os) const
-		{
-			return os;
-		}
-
-		template <int nEnable>
-		std::ostream & print_leaf(std::ostream & os, int nMaxEAX) const
-		{
-			static_cast<cpuid_tree_t<nEAX - TT::DEC_EAX>const*>(this)->print_leaf(os);
-
-			print_leaf<0>(os, nMaxEAX);
-			return os;
-		}
-		template <>
-		std::ostream & print_leaf<0>(std::ostream & os, int nMaxEAX) const
-		{
-			if (nEAX <= nMaxEAX)
-			{
-				static_cast<cpuid_t<nEAX, nECX>const*>(this)->print(os);
-
-				print_subleaf<TT::INC_ECX>(os);
-			}
-			return os;
+			return cpuid_sub_leaf_t<nEAX, cpuid_leaf_traits<nEAX>::MAX_ECX>::print_sub_leaf(os);
 		}
 		std::ostream & print_leaf(std::ostream & os) const
 		{
-			return print_leaf<TT::DEC_EAX>(os, max_leaf());
+			return print_leaf<cpuid_leaf_traits<nEAX>::MAX_ECX>(os);
 		}
 	};
 
-	template <int nEAX, int nECX>
-	std::ostream & operator << (std::ostream & os, cpuid_tree_t<nEAX, nECX> const & cpuid)
+	//
+
+	template <int nEAX>
+	struct cpuid_tree_t
+		: cpuid_tree_t<nEAX - 1>
+		, cpuid_leaf_t<nEAX>
 	{
-		return cpuid.print_leaf(os);
+		std::ostream & print_tree(std::ostream & os, unsigned uMaxLeaf) const
+		{
+			cpuid_tree_t<nEAX - 1>::print_tree(os, uMaxLeaf);
+			if (static_cast<unsigned>(nEAX) <= uMaxLeaf)
+			{
+				cpuid_leaf_t<nEAX>::print_leaf(os);
+			}
+			return os;
+		}
+		std::ostream & print_tree(std::ostream & os) const
+		{
+			return print_tree(os, max_leaf());
+		}
+	};
+	template <>
+	struct cpuid_tree_t<0>
+		: cpuid_leaf_t<0>
+	{
+		std::ostream & print_tree(std::ostream & os, unsigned uMaxLeaf = ~0) const
+		{
+			return print_leaf(os);
+		}
+	};
+	template <>
+	struct cpuid_tree_t<0x80000000>
+		: cpuid_leaf_t<0x80000000>
+	{
+		std::ostream & print_tree(std::ostream & os, unsigned uMaxLeaf = ~0) const
+		{
+			return print_leaf(os);
+		}
+	};
+	template <int nEAX>
+	std::ostream & operator << (std::ostream & os, cpuid_tree_t<nEAX> const & cpuid)
+	{
+		return cpuid.print_tree(os);
 	}
 }
