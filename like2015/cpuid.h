@@ -354,7 +354,7 @@ namespace like
 	template <> struct cpuid_base_t<0x07>
 	{
 		// eax
-		unsigned : 32;
+		unsigned uMaxSubLeaf : 32;
 		// ebx
 		unsigned uFSGSBASE : 1; // bit 0
 		unsigned uIA32_TSC_ADJUST : 1; // bit 1
@@ -377,21 +377,31 @@ namespace like
 		unsigned uRDSEED : 1; // bit 18
 		unsigned uADX : 1; // bit 19
 		unsigned uSMAP : 1; // bit 20
-		unsigned : 2;
+		unsigned uAVX512IFMA : 1; // bit 21
+		unsigned uPCOMMIT : 1; // bit 22
 		unsigned uCLFLUSHOPT : 1; // bit 23
-		unsigned : 1;
+		unsigned uCLWB : 1;
 		unsigned uIntelProcessorTrace : 1; // bit 25
-		unsigned : 3;
+		unsigned uAVX512PF : 1; // bit 26
+		unsigned uAVX512ER : 1; // bit 27
+		unsigned uAVX512CD : 1; // bit 28
 		unsigned uSHA : 1; // bit 29
-		unsigned : 2;
+		unsigned uAVX512BW : 1; // bit 30
+		unsigned uAVX512VL : 1; // bit 31
 		// ecx
 		unsigned uPREFTEHCHWT1 : 1; // bit 0
-		unsigned : 2;
+		unsigned uAVX512VBMI : 1; // bit 1
+		unsigned : 1;
 		unsigned uPKU : 1; // bit 3: Supports protection keys for user-mode pages if 1.
 		unsigned uOSPKE : 1; // bit 4: If 1, OS has set CR4.PKE to enable protection keys (and the RDPKRU/WRPKRU instructions)
 		unsigned : 27;
 		// edx
 		unsigned : 32;
+
+		unsigned max_sub_leaf() const
+		{
+			return uMaxSubLeaf;
+		}
 	};
 	template <> std::ostream & operator << (std::ostream & os, cpuid_base_t<0x07> const & cpuid)
 	{
@@ -414,10 +424,19 @@ namespace like
 			(cpuid.uRDSEED ? '+' : '-') << "RDSEED" << ' ' <<
 			(cpuid.uADX ? '+' : '-') << "ADX" << ' ' <<
 			(cpuid.uSMAP ? '+' : '-') << "SMAP" << ' ' <<
+			(cpuid.uAVX512IFMA ? '+' : '-') << "AVX512IFMA" << ' ' << // bit 21
+			(cpuid.uPCOMMIT ? '+' : '-') << "PCOMMIT" << ' ' <<  // bit 22
 			(cpuid.uCLFLUSHOPT ? '+' : '-') << "CLFLUSHOPT" << ' ' <<
+			(cpuid.uCLWB ? '+' : '-') << "CLWB" << ' ' <<
 			(cpuid.uIntelProcessorTrace ? '+' : '-') << "PT" << ' ' <<
+			(cpuid.uAVX512PF ? '+' : '-') << "AVX512PF" << ' ' <<
+			(cpuid.uAVX512ER ? '+' : '-') << "AVX512ER" << ' ' <<
+			(cpuid.uAVX512CD ? '+' : '-') << "AVX512CD" << ' ' <<
 			(cpuid.uSHA ? '+' : '-') << "SHA" << ' ' << // bit 29
+			(cpuid.uAVX512BW ? '+' : '-') << "AVX512BW" << ' ' <<
+			(cpuid.uAVX512VL ? '+' : '-') << "AVX512VL" << ' ' <<
 			(cpuid.uPREFTEHCHWT1 ? '+' : '-') << "PREFTEHCHWT1" << ' ' <<
+			(cpuid.uAVX512VBMI ? '+' : '-') << "AVX512VBMI" << ' ' <<
 			(cpuid.uPKU ? '+' : '-') << "PKU" << ' ' <<
 			(cpuid.uOSPKE ? '+' : '-') << "OSPKE" << ' ';
 	}
@@ -1143,6 +1162,7 @@ namespace like
 		enum { MAX_ECX = 0 };
 	};
 	template <> struct cpuid_leaf_traits<0x04> { enum { MAX_ECX = 4 }; };
+	template <> struct cpuid_leaf_traits<0x07> { enum { MAX_ECX = 1 }; };
 	template <> struct cpuid_leaf_traits<0x0B> { enum { MAX_ECX = 2 }; };
 	template <> struct cpuid_leaf_traits<0x0D> { enum { MAX_ECX = 9 }; };
 	template <> struct cpuid_leaf_traits<0x0F> { enum { MAX_ECX = 2 }; };
