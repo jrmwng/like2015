@@ -372,7 +372,8 @@ namespace like
 		unsigned uFCS_FDS : 1; // bit 13: suppress FCS, FDS
 		unsigned uIntelMPX : 1; // bit 14
 		unsigned uPQE : 1; // bit 15: Supports Platform Quality of Service Enforcement (PQE) capability if 1.
-		unsigned : 2;
+		unsigned uAVX512F : 1; // bit 16: avx-512 foundation
+		unsigned uAVX512DQ : 1; // bit 17: avx-512 doubleword and quadword instructions
 		unsigned uRDSEED : 1; // bit 18
 		unsigned uADX : 1; // bit 19
 		unsigned uSMAP : 1; // bit 20
@@ -380,7 +381,9 @@ namespace like
 		unsigned uCLFLUSHOPT : 1; // bit 23
 		unsigned : 1;
 		unsigned uIntelProcessorTrace : 1; // bit 25
-		unsigned : 6;
+		unsigned : 3;
+		unsigned uSHA : 1; // bit 29
+		unsigned : 2;
 		// ecx
 		unsigned uPREFTEHCHWT1 : 1; // bit 0
 		unsigned : 2;
@@ -406,11 +409,14 @@ namespace like
 			(cpuid.uPQM ? '+' : '-') << "PQM" << ' ' <<
 			(cpuid.uIntelMPX ? '+' : '-') << "MPX" << ' ' <<
 			(cpuid.uPQE ? '+' : '-') << "PQE" << ' ' <<
+			(cpuid.uAVX512F ? '+' : '-') << "AVX512F" << ' ' << // bit 16: avx-512 foundation
+			(cpuid.uAVX512DQ ? '+' : '-') << "AVX512DQ" << ' ' << // bit 17: avx-512 doubleword and quadword instructions
 			(cpuid.uRDSEED ? '+' : '-') << "RDSEED" << ' ' <<
 			(cpuid.uADX ? '+' : '-') << "ADX" << ' ' <<
 			(cpuid.uSMAP ? '+' : '-') << "SMAP" << ' ' <<
 			(cpuid.uCLFLUSHOPT ? '+' : '-') << "CLFLUSHOPT" << ' ' <<
 			(cpuid.uIntelProcessorTrace ? '+' : '-') << "PT" << ' ' <<
+			(cpuid.uSHA ? '+' : '-') << "SHA" << ' ' << // bit 29
 			(cpuid.uPREFTEHCHWT1 ? '+' : '-') << "PREFTEHCHWT1" << ' ' <<
 			(cpuid.uPKU ? '+' : '-') << "PKU" << ' ' <<
 			(cpuid.uOSPKE ? '+' : '-') << "OSPKE" << ' ';
