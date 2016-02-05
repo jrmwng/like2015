@@ -1,6 +1,7 @@
 #include <ppl.h>
 #include <assert.h>
 #include <future>
+#include <fstream>
 #include "shared_ptr.h"
 #include "shared_lock.h"
 #include "atomic.h"
@@ -55,13 +56,33 @@ int main(int nArgc)
 	like::cpuid_tree_t<0x17> stCPUID;
 	like::cpuid_tree_t<0x80000008> stExtendedCPUID;
 
+	char acFileName[64];
+	{
+		sprintf_s(acFileName, "%-48.48s.%s", stExtendedCPUID.processor_brand_string(), "txt");
+	}
+
+	std::ofstream ofs;
+	{
+		ofs.open(acFileName, std::ios_base::trunc | std::ios_base::out);
+		if (ofs.good())
+		{
+			ofs << stCPUID << stExtendedCPUID;
+		}
+		ofs.close();
+	}
+	std::ifstream ifs;
+	{
+		ifs.open(acFileName, std::ios_base::in);
+		if (ifs.good())
+		{
+			ifs >> stCPUID >> stExtendedCPUID;
+		}
+		ifs.close();
+	}
+
 	__m128i const xmmVendorIdentString = stCPUID.vendor_identification_string();
 	char const *pcSocVendorBrandString = stCPUID.soc_vendor_brand_string();
 	char const *pcProcessorBrandString = stExtendedCPUID.processor_brand_string();
-
-	std::cout << xmmVendorIdentString.m128i_i8 << std::endl;
-	std::cout << pcSocVendorBrandString << std::endl;
-	std::cout << pcProcessorBrandString << std::endl;
 
 	std::cout <<
 		std::setw(8) << "EAX" << std::ends <<
@@ -69,7 +90,8 @@ int main(int nArgc)
 		std::setw(8) << "EAX" << std::ends <<
 		std::setw(8) << "EBX" << std::ends <<
 		std::setw(8) << "ECX" << std::ends <<
-		std::setw(8) << "EDX" << std::endl <<
+		std::setw(8) << "EDX" << std::endl;
+	std::cout <<
 		stCPUID <<
 		stExtendedCPUID;
 
