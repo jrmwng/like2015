@@ -70,6 +70,10 @@ int main(int nArgc)
 		}
 		ofs.close();
 	}
+
+	memset(&stCPUID, 0, sizeof(stCPUID));
+	memset(&stExtendedCPUID, 0, sizeof(stExtendedCPUID));
+
 	std::ifstream ifs;
 	{
 		ifs.open(acFileName, std::ios_base::in);
