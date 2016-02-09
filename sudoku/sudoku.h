@@ -51,9 +51,9 @@ namespace like
 								stNumber.lGroupSet |= (1 << (&stGroupBox - astGroup));
 								stNumber.lGroupSet |= (1 << (&stGroupCol - astGroup));
 								stNumber.lGroupSet |= (1 << (&stGroupRow - astGroup));
-								stGroupBox.alNumberIndex[x1 + y1 * 3] = &stNumber - astNumber;
-								stGroupCol.alNumberIndex[y1 + y0 * 3] = &stNumber - astNumber;
-								stGroupRow.alNumberIndex[x1 + x0 * 3] = &stNumber - astNumber;
+								stGroupBox.alNumberIndex[x1 + y1 * 3] = static_cast<long>(&stNumber - astNumber);
+								stGroupCol.alNumberIndex[y1 + y0 * 3] = static_cast<long>(&stNumber - astNumber);
+								stGroupRow.alNumberIndex[x1 + x0 * 3] = static_cast<long>(&stNumber - astNumber);
 							}
 						}
 					}
