@@ -17,8 +17,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPUID_2015", "..\CPUID_2015
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "App2", "..\App2\App2.vcxproj", "{CB1356B3-F513-463C-A8AD-7E484AD734E4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jrmwng", "..\jrmwng\jrmwng.vcxitems", "{4618FB35-A72B-45BB-B78F-7014279DAEC6}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\jrmwng\jrmwng.vcxitems*{4618fb35-a72b-45bb-b78f-7014279daec6}*SharedItemsImports = 9
 		like2015.vcxitems*{398e0e0b-fdec-45f7-94d9-7b5bf99d1826}*SharedItemsImports = 4
 		like2015.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
 	EndGlobalSection
