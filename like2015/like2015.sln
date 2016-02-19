@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "like2015UnitTest", "..\like
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPUID_2015", "..\CPUID_2015\CPUID_2015.vcxproj", "{CB713622-40CA-4C17-9A5F-A671920DD4F2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "App2", "..\App2\App2.vcxproj", "{CB1356B3-F513-463C-A8AD-7E484AD734E4}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		like2015.vcxitems*{398e0e0b-fdec-45f7-94d9-7b5bf99d1826}*SharedItemsImports = 4
@@ -87,6 +89,24 @@ Global
 		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Release|x64.Build.0 = Release|x64
 		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Release|x86.ActiveCfg = Release|Win32
 		{CB713622-40CA-4C17-9A5F-A671920DD4F2}.Release|x86.Build.0 = Release|Win32
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Debug|ARM.ActiveCfg = Debug|ARM
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Debug|ARM.Build.0 = Debug|ARM
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Debug|ARM.Deploy.0 = Debug|ARM
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Debug|x64.ActiveCfg = Debug|x64
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Debug|x64.Build.0 = Debug|x64
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Debug|x64.Deploy.0 = Debug|x64
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Debug|x86.ActiveCfg = Debug|Win32
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Debug|x86.Build.0 = Debug|Win32
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Debug|x86.Deploy.0 = Debug|Win32
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Release|ARM.ActiveCfg = Release|ARM
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Release|ARM.Build.0 = Release|ARM
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Release|ARM.Deploy.0 = Release|ARM
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Release|x64.ActiveCfg = Release|x64
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Release|x64.Build.0 = Release|x64
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Release|x64.Deploy.0 = Release|x64
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Release|x86.ActiveCfg = Release|Win32
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Release|x86.Build.0 = Release|Win32
+		{CB1356B3-F513-463C-A8AD-7E484AD734E4}.Release|x86.Deploy.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
