@@ -15,5 +15,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)align.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)atomic.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)functional.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)jrmwng.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)rtm.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)shared_ptr.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)xmm_traits.h" />
   </ItemGroup>
 </Project>
