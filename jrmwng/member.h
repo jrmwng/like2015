@@ -225,12 +225,12 @@ namespace jrmwng
 	//
 
 	template <typename TM, typename TOrder>
-	struct order_by_t
+	struct member_order_t
 	{
 		TM const m_tM;
 		TOrder const m_tOrder;
 
-		order_by_t(TM const & tM, TOrder const & tOrder)
+		member_order_t(TM const & tM, TOrder const & tOrder)
 			: m_tM(tM)
 			, m_tOrder(tOrder)
 		{}
@@ -257,13 +257,13 @@ namespace jrmwng
 	};
 
 	template <typename TM, typename TOrder = std::less<typename TM::result_type>>
-	order_by_t<TM, TOrder> order_by(TM const & tM, TOrder const & tOrder = TOrder())
+	member_order_t<TM, TOrder> member_order(TM const & tM, TOrder const & tOrder = TOrder())
 	{
-		return order_by_t<TM, TOrder>(tM, tOrder);
+		return member_order_t<TM, TOrder>(tM, tOrder);
 	}
 	template <typename TS, typename TV, typename TM = member_t<TV, TV(TS::*)>, typename TOrder = std::less<typename TM::result_type>>
-	order_by_t<TM, TOrder> order_by(TV(TS::*pM), TOrder const & tOrder = TOrder())
+	member_order_t<TM, TOrder> member_order(TV(TS::*pM), TOrder const & tOrder = TOrder())
 	{
-		return order_by_t<TM, TOrder>(TM(pM), tOrder);
+		return member_order_t<TM, TOrder>(TM(pM), tOrder);
 	}
 }
