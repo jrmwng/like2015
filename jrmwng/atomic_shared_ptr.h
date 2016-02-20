@@ -389,12 +389,12 @@ namespace jrmwng
 		typedef shared_ptr<T, TLock> this_type;
 
 		template <typename TEnableShared>
-		typename std::enable_if<std::is_base_of<TEnableShared, T>::value, void>::type enable_shared(void)
+		std::enable_if_t<std::is_base_of<TEnableShared, T>::value, void> enable_shared(void)
 		{
 			static_cast<TEnableShared*>(m_pt)->enable_shared(m_pt, m_pLock);
 		}
 		template <typename TEnableShared>
-		typename std::enable_if<!std::is_base_of<TEnableShared, T>::value, void>::type enable_shared(void)
+		std::enable_if_t<!std::is_base_of<TEnableShared, T>::value, void> enable_shared(void)
 		{}
 	public:
 		typedef T element_type;
