@@ -5,7 +5,6 @@
 #include <intrin.h>
 #include <array>
 #include <atomic>
-#include "rtm.h"
 
 namespace jrmwng
 {
@@ -15,6 +14,42 @@ namespace jrmwng
 	class weak_ptr;
 	template <typename T, typename TLock>
 	class enable_shared_from_this;
+
+	template <typename TR, typename T1, typename T2>
+	std::enable_if_t<std::is_void<TR>::value, void> shared_ptr_rtm(T1 const & t1, T2 const & t2)
+	{
+#ifdef RTM
+		unsigned const uXBEGIN = _xbegin();
+
+		if (uXBEGIN == _XBEGIN_STARTED)
+		{
+			t2();
+			_xend();
+		}
+		else
+#endif
+		{
+			t1();
+		}
+	}
+	template <typename TR, typename T1, typename T2>
+	std::enable_if_t<!std::is_void<TR>::value, TR> shared_ptr_rtm(T1 const & t1, T2 const & t2)
+	{
+#ifdef RTM
+		unsigned const uXBEGIN = _xbegin();
+
+		if (uXBEGIN == _XBEGIN_STARTED)
+		{
+			TR tR(std::move(t2()));
+			_xend();
+			return std::move(tR);
+		}
+		else
+#endif
+		{
+			return std::move(t1());
+		}
+	}
 
 	struct shared_ptr_count
 	{
@@ -53,7 +88,7 @@ namespace jrmwng
 
 		void release_shared(void)
 		{
-			count_type const lRefCount0 = rtm<count_type>(
+			count_type const lRefCount0 = shared_ptr_rtm<count_type>(
 				[this](void)->count_type
 				{
 					return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH, std::memory_order_release);
@@ -74,7 +109,7 @@ namespace jrmwng
 
 				if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
 					||
-					rtm<count_type>(
+					shared_ptr_rtm<count_type>(
 						[this](void)->count_type
 						{
 							return lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE, std::memory_order_release);
@@ -96,7 +131,7 @@ namespace jrmwng
 		}
 		void release_weak(void)
 		{
-			count_type const lRefCount0 = rtm<count_type>(
+			count_type const lRefCount0 = shared_ptr_rtm<count_type>(
 				[this](void)->count_type
 				{
 					return lRefCount.fetch_sub(SHARED_PTR_COUNT_THIS, std::memory_order_release);
@@ -116,7 +151,7 @@ namespace jrmwng
 		}
 		void acquire_weak(void)
 		{
-			rtm<void>(
+			shared_ptr_rtm<void>(
 				[this](void)
 				{
 					lRefCount.fetch_add(SHARED_PTR_COUNT_THIS, std::memory_order_acquire);
@@ -132,7 +167,7 @@ namespace jrmwng
 		}
 		void acquire_shared(void)
 		{
-			rtm<void>(
+			shared_ptr_rtm<void>(
 				[this](void)
 				{
 					lRefCount.fetch_add(SHARED_PTR_COUNT_BOTH, std::memory_order_acquire);
@@ -148,7 +183,7 @@ namespace jrmwng
 		}
 		bool try_shared(void)
 		{
-			return rtm<count_type>(
+			return shared_ptr_rtm<count_type>(
 				[this](void)->count_type
 				{
 					count_type lRefCount0;
@@ -176,7 +211,7 @@ namespace jrmwng
 		}
 		void convert_shared_into_weak(void)
 		{
-			count_type const lRefCount0 = rtm<count_type>(
+			count_type const lRefCount0 = shared_ptr_rtm<count_type>(
 				[this](void)->count_type
 				{
 					return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS, std::memory_order_release);
@@ -196,7 +231,7 @@ namespace jrmwng
 		}
 		bool convert_weak_into_shared(void)
 		{
-			if (rtm<count_type>(
+			if (shared_ptr_rtm<count_type>(
 				[this](void)->count_type
 				{
 					count_type lRefCount0;
@@ -308,30 +343,30 @@ namespace jrmwng
 		, TLock
 	{
 		void * operator new (size_t uByteCount)
-	{
-		return _aligned_malloc(uByteCount, std::max<size_t>(alignof(T), alignof(TLock)));
-	}
+		{
+			return _aligned_malloc(uByteCount, std::max<size_t>(alignof(T), alignof(TLock)));
+		}
 		void operator delete (void *p)
-	{
-		_aligned_free(p);
-	}
+		{
+			_aligned_free(p);
+		}
 
-	T * get_that(void) { return reinterpret_cast<T*>(static_cast<std::array<char,sizeof(T)>*>(this)); }
+		T * get_that(void) { return reinterpret_cast<T*>(static_cast<std::array<char,sizeof(T)>*>(this)); }
 
-	template<class... TArgs>
-	make_shared_ptr_count_t(TArgs &&... _Args)
-	{
-		::new (get_that()) T(std::forward<TArgs>(_Args)...);
-	}
+		template<class... TArgs>
+		make_shared_ptr_count_t(TArgs &&... _Args)
+		{
+			::new (get_that()) T(std::forward<TArgs>(_Args)...);
+		}
 
-	virtual void delete_this(void)
-	{
-		delete this;
-	}
-	virtual void delete_that(void)
-	{
-		get_that()->~T();
-	}
+		virtual void delete_this(void)
+		{
+			delete this;
+		}
+		virtual void delete_that(void)
+		{
+			get_that()->~T();
+		}
 	};
 
 	template <typename T, typename TLock>
