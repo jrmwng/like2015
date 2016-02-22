@@ -15,42 +15,57 @@ namespace jrmwng
 	template <typename T, typename TLock>
 	class enable_shared_from_this;
 
-	template <typename TR, typename T1, typename T2>
-	std::enable_if_t<std::is_void<TR>::value, void> shared_ptr_rtm(T1 const & t1, T2 const & t2)
+	template <typename TR, bool bLock, typename TLockFunc, typename TFunc>
+	std::enable_if_t<std::is_void<TR>::value, void> shared_ptr_tm(TLockFunc const & tLockFun, TFunc const & tFunc)
 	{
-#ifdef RTM
-		unsigned const uXBEGIN = _xbegin();
-
-		if (uXBEGIN == _XBEGIN_STARTED)
+		if (bLock)
 		{
-			t2();
-			_xend();
+#ifdef RTM
+			unsigned const uXBEGIN = _xbegin();
+
+			if (uXBEGIN == _XBEGIN_STARTED)
+			{
+				tFunc();
+				_xend();
+			}
+			else
+#endif
+			{
+				tLockFunc();
+			}
 		}
 		else
-#endif
 		{
-			t1();
+			tFunc();
 		}
 	}
-	template <typename TR, typename T1, typename T2>
-	std::enable_if_t<!std::is_void<TR>::value, TR> shared_ptr_rtm(T1 const & t1, T2 const & t2)
+	template <typename TR, bool bLock, typename TLockFunc, typename TFunc>
+	std::enable_if_t<!std::is_void<TR>::value, TR> shared_ptr_tm(TLockFunc const & tLockFunc, TFunc const & tFunc)
 	{
-#ifdef RTM
-		unsigned const uXBEGIN = _xbegin();
-
-		if (uXBEGIN == _XBEGIN_STARTED)
+		if (bLock)
 		{
-			TR tR(std::move(t2()));
-			_xend();
-			return std::move(tR);
+#ifdef RTM
+			unsigned const uXBEGIN = _xbegin();
+
+			if (uXBEGIN == _XBEGIN_STARTED)
+			{
+				TR tR(std::move(tFunc()));
+				_xend();
+				return std::move(tR);
+			}
+			else
+#endif
+			{
+				return std::move(tLockFunc());
+			}
 		}
 		else
-#endif
 		{
-			return std::move(t1());
+			return std::move(tFunc());
 		}
 	}
 
+	template <bool bLock>
 	struct shared_ptr_count
 	{
 		typedef intptr_t count_type;
@@ -88,7 +103,7 @@ namespace jrmwng
 
 		void release_shared(void)
 		{
-			count_type const lRefCount0 = shared_ptr_rtm<count_type>(
+			count_type const lRefCount0 = shared_ptr_tm<count_type, bLock>(
 				[this](void)->count_type
 				{
 					return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH, std::memory_order_release);
@@ -109,7 +124,7 @@ namespace jrmwng
 
 				if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
 					||
-					shared_ptr_rtm<count_type>(
+					shared_ptr_tm<count_type, bLock>(
 						[this](void)->count_type
 						{
 							return lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE, std::memory_order_release);
@@ -131,7 +146,7 @@ namespace jrmwng
 		}
 		void release_weak(void)
 		{
-			count_type const lRefCount0 = shared_ptr_rtm<count_type>(
+			count_type const lRefCount0 = shared_ptr_tm<count_type, bLock>(
 				[this](void)->count_type
 				{
 					return lRefCount.fetch_sub(SHARED_PTR_COUNT_THIS, std::memory_order_release);
@@ -151,7 +166,7 @@ namespace jrmwng
 		}
 		void acquire_weak(void)
 		{
-			shared_ptr_rtm<void>(
+			shared_ptr_tm<void, bLock>(
 				[this](void)
 				{
 					lRefCount.fetch_add(SHARED_PTR_COUNT_THIS, std::memory_order_acquire);
@@ -167,7 +182,7 @@ namespace jrmwng
 		}
 		void acquire_shared(void)
 		{
-			shared_ptr_rtm<void>(
+			shared_ptr_tm<void, bLock>(
 				[this](void)
 				{
 					lRefCount.fetch_add(SHARED_PTR_COUNT_BOTH, std::memory_order_acquire);
@@ -183,7 +198,7 @@ namespace jrmwng
 		}
 		bool try_shared(void)
 		{
-			return shared_ptr_rtm<count_type>(
+			return shared_ptr_tm<count_type, bLock>(
 				[this](void)->count_type
 				{
 					count_type lRefCount0;
@@ -211,7 +226,7 @@ namespace jrmwng
 		}
 		void convert_shared_into_weak(void)
 		{
-			count_type const lRefCount0 = shared_ptr_rtm<count_type>(
+			count_type const lRefCount0 = shared_ptr_tm<count_type, bLock>(
 				[this](void)->count_type
 				{
 					return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS, std::memory_order_release);
@@ -231,7 +246,7 @@ namespace jrmwng
 		}
 		bool convert_weak_into_shared(void)
 		{
-			if (shared_ptr_rtm<count_type>(
+			if (shared_ptr_tm<count_type, bLock>(
 				[this](void)->count_type
 				{
 					count_type lRefCount0;
@@ -416,7 +431,7 @@ namespace jrmwng
 		}
 	};
 
-	template <typename T, typename TLock = shared_ptr_count>
+	template <typename T, typename TLock = shared_ptr_count<true> >
 	class shared_ptr
 		: public shared_ptr_base<T, TLock>
 	{
@@ -613,7 +628,7 @@ namespace jrmwng
 			return m_pt != that.m_pt;
 		}
 	};
-	template <typename T, typename TLock = shared_ptr_count>
+	template <typename T, typename TLock = shared_ptr_count<true> >
 	class weak_ptr
 		: public weak_ptr_base<T, TLock>
 	{
@@ -760,13 +775,13 @@ namespace jrmwng
 		}
 	};
 
-	template<typename T, typename TLock = shared_ptr_count, class... TArgs>
+	template<typename T, typename TLock = shared_ptr_count<true>, class... TArgs>
 	shared_ptr<T, TLock> make_shared(TArgs &&... _Args)
 	{
 		return std::move(shared_ptr<T, TLock>(new make_shared_ptr_count_t<T, TLock>(std::forward<TArgs>(_Args)...)));
 	}
 
-	template <typename T, typename TLock = shared_ptr_count>
+	template <typename T, typename TLock = shared_ptr_count<true> >
 	class enable_shared_from_this
 		: public enable_shared_from_this_base<T, TLock>
 	{
@@ -791,6 +806,175 @@ namespace jrmwng
 		shared_ptr<T volatile, TLock> shared_from_this(void) volatile
 		{
 			return std::move(shared_ptr<T volatile, TLock>(*this));
+		}
+	};
+
+	struct alignas(32) shared_ptr_lock
+	{
+		__m128i volatile xmmLock;
+
+		shared_ptr_lock(void)
+			: xmmLock(_mm_setzero_si128())
+		{}
+
+		unsigned read_begin(void)
+		{
+			for (;;)
+			{
+				if (xmmLock.m128i_i32[0] == 0 && _InterlockedExchange_HLEAcquire(reinterpret_cast<long volatile*>(&xmmLock.m128i_i32[0]), ~0) == 0) return 0;
+				if (xmmLock.m128i_i32[1] == 0 && _InterlockedExchange_HLEAcquire(reinterpret_cast<long volatile*>(&xmmLock.m128i_i32[1]), ~0) == 0) return 1;
+				if (xmmLock.m128i_i32[2] == 0 && _InterlockedExchange_HLEAcquire(reinterpret_cast<long volatile*>(&xmmLock.m128i_i32[2]), ~0) == 0) return 2;
+				if (xmmLock.m128i_i32[3] == 0 && _InterlockedExchange_HLEAcquire(reinterpret_cast<long volatile*>(&xmmLock.m128i_i32[3]), ~0) == 0) return 3;
+
+				_mm_pause();
+			}
+		}
+		void read_end(unsigned uIndex)
+		{
+			_Store_HLERelease(reinterpret_cast<long volatile*>(&xmmLock.m128i_i32[uIndex]), 0);
+		}
+		void read_sync(void) const
+		{
+			for (int nLock = _mm_movemask_epi8(const_cast<__m128i const&>(xmmLock)); nLock; nLock &= _mm_movemask_epi8(const_cast<__m128i const&>(xmmLock)))
+			{
+				_mm_pause();
+			}
+		}
+	};
+
+	template <unsigned uSize>
+	struct shared_ptr_integral;
+
+	template <>
+	struct shared_ptr_integral<8>
+	{
+		typedef long long type;
+	};
+	template <>
+	struct shared_ptr_integral<16>
+	{
+		typedef __m128i type;
+	};
+
+	template <unsigned uSize>
+	using shared_ptr_integral_t = typename shared_ptr_integral<uSize>::type;
+
+	template <typename T, typename TObj = shared_ptr<T>, typename TSync = std::identity<TObj>>
+	class alignas(64) atomic_shared_ptr
+		: public TObj
+	{
+		shared_ptr_lock mutable m_Lock;
+
+		typedef shared_ptr_integral_t<sizeof(TObj)> integral_t;
+	public:
+		template <class... TArgs>
+		atomic_shared_ptr(TArgs &&... _Args)
+			: TObj(std::forward<TArgs>(_Args)...)
+		{}
+
+		template <typename TFunc>
+		void load(TFunc tFunc) const
+		{
+			unsigned const uKey = m_Lock.read_begin();
+
+			integral_t stLocal;
+			{
+				TObj const *pThisObj = static_cast<TObj const*>(this);
+
+				std::atomic<integral_t> const *pThisIntegral = reinterpret_cast<std::atomic<integral_t>const*>(pThisObj);
+
+				stLocal = pThisIntegral->load(std::memory_order_acquire);
+			}
+
+			tFunc(reinterpret_cast<TObj const&>(stLocal));
+
+			_mm_sfence(); // not perfect, but sufficient
+			m_Lock.read_end(uKey);
+		}
+
+		TObj load(void) const
+		{
+			register TObj tObj;
+			{
+				load([&](TObj const & that)
+				{
+					tObj = that;
+				});
+			}
+			return std::move(tObj);
+		}
+
+		void swap(TObj & that)
+		{
+			TObj *pThisObj = static_cast<TObj*>(this);
+
+			std::atomic<integral_t> *pThisIntegral = reinterpret_cast<std::atomic<integral_t>*>(pThisObj);
+
+			reinterpret_cast<integral_t&>(that) = pThisIntegral->exchange(reinterpret_cast<integral_t const&>(that));
+
+			if (TSync()(that))
+				m_Lock.read_sync();
+		}
+
+		template <typename TCompare>
+		std::enable_if_t<sizeof(TObj) == sizeof(TCompare), bool> cas(TObj & that, TCompare const & tCompare)
+		{
+			TObj *pThisObj = static_cast<TObj*>(this);
+
+			std::atomic<integral_t> *pThisIntegral = reinterpret_cast<std::atomic<integral_t>*>(pThisObj);
+
+			if (pThisIntegral->compare_exchange(reinterpret_cast<integral_t&>(that), reinterpret_cast<integral_t const&>(tCompare), std::memory_order_relaxed))
+			{
+				if (TSync()(that))
+					m_Lock.read_sync();
+				return true;
+			}
+			else
+				return false;
+		}
+
+		std::enable_if_t<std::is_default_constructible<TObj>::value, bool> cas(TObj & that)
+		{
+			return cas(that, TObj());
+		}
+
+		template <typename TCompare>
+		std::enable_if_t<sizeof(TObj) == sizeof(TCompare), bool> cmov(TObj && that, TCompare const & tCompare)
+		{
+			return cas(TObj(std::forward<TObj>(that)), tCompare);
+		}
+		std::enable_if_t<std::is_default_constructible<TObj>::value, bool> cmov(TObj && that)
+		{
+			return cas(TObj(std::forward<TObj>(that)), TObj());
+		}
+
+		template <class... TArgs>
+		void reset(TArgs &&... _Args)
+		{
+			swap(TObj(std::forward<TArgs>(_Args)...));
+		}
+
+		typename atomic_shared_ptr & operator = (TObj const & that)
+		{
+			swap(TObj(that));
+			return *this;
+		}
+		template <typename T1>
+		typename atomic_shared_ptr & operator = (T1 const & that)
+		{
+			swap(TObj(that));
+			return *this;
+		}
+		typename atomic_shared_ptr & operator = (TObj && that)
+		{
+			swap(TObj(std::forward<TObj>(that)));
+			return *this;
+		}
+		template <typename T1>
+		typename atomic_shared_ptr & operator = (T1 && that)
+		{
+			swap(TObj(std::forward<T1>(that)));
+			return *this;
 		}
 	};
 }
