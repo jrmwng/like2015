@@ -16,7 +16,7 @@ namespace jrmwng
 	class enable_shared_from_this;
 
 	template <typename TR, bool bLock, typename TLockFunc, typename TFunc>
-	std::enable_if_t<std::is_void<TR>::value, void> shared_ptr_tm(TLockFunc const & tLockFun, TFunc const & tFunc)
+	std::enable_if_t<std::is_void<TR>::value, void> shared_ptr_tm(TLockFunc const & tLockFunc, TFunc const & tFunc)
 	{
 		if (bLock)
 		{
@@ -296,7 +296,10 @@ namespace jrmwng
 			_aligned_free(p);
 		}
 
-		TDeleter * get_deleter(void) { return reinterpret_cast<TDeleter*>(static_cast<std::array<char,sizeof(TDeleter)>*>(this)); }
+		TDeleter * get_deleter(void)
+		{
+			return reinterpret_cast<TDeleter*>(static_cast<std::array<char,sizeof(TDeleter)>*>(this));
+		}
 
 		T * const m_pt;
 
@@ -438,6 +441,8 @@ namespace jrmwng
 		typedef shared_ptr_base<T, TLock> base_type;
 		typedef shared_ptr<T, TLock> this_type;
 
+		friend class shared_ptr;
+
 		template <typename TEnableShared>
 		std::enable_if_t<std::is_base_of<TEnableShared, T>::value, void> enable_shared(void)
 		{
@@ -482,7 +487,7 @@ namespace jrmwng
 		}
 		template <typename TDeleter>
 		shared_ptr(T *pt, TDeleter && tDeleter)
-			: base_type(pt, new shared_ptr_count_t<T, TLock, TDeleter>(pt, std::forward<TDeleter>(tDeleter)))
+			: base_type(pt, new shared_ptr_count_t<T, TLock, std::remove_reference_t<TDeleter>>(pt, std::forward<TDeleter>(tDeleter)))
 		{
 			enable_shared<enable_shared_from_this_base<T, TLock>>();
 		}
@@ -571,7 +576,8 @@ namespace jrmwng
 		}
 
 		T * operator -> (void) const { return m_pt; }
-		T & operator * (void) const { return *m_pt; }
+
+		std::add_lvalue_reference_t<T> operator * (void) const { return *m_pt; }
 
 		T * get(void) const { return m_pt; }
 		operator bool(void) const { return m_pt != nullptr; }
