@@ -845,16 +845,11 @@ namespace jrmwng
 	template <unsigned uSize>
 	struct shared_ptr_integral;
 
-	template <>
-	struct shared_ptr_integral<8>
-	{
-		typedef long long type;
-	};
-	template <>
-	struct shared_ptr_integral<16>
-	{
-		typedef __m128i type;
-	};
+	template <> struct shared_ptr_integral<1> { typedef char type; };
+	template <> struct shared_ptr_integral<2> { typedef short type; };
+	template <> struct shared_ptr_integral<4> { typedef long type; };
+	template <> struct shared_ptr_integral<8> { typedef long long type; };
+	template <> struct shared_ptr_integral<16> { typedef __m128i type; };
 
 	template <unsigned uSize>
 	using shared_ptr_integral_t = typename shared_ptr_integral<uSize>::type;
@@ -894,7 +889,7 @@ namespace jrmwng
 
 		TObj load(void) const
 		{
-			register TObj tObj;
+			TObj tObj;
 			{
 				load([&](TObj const & that)
 				{
