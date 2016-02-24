@@ -7,6 +7,20 @@
 
 namespace jrmwng
 {
+	namespace atomic
+	{
+		template <unsigned uSize>
+		struct integral;
+
+		template <> struct integral<1> { typedef char type; };
+		template <> struct integral<2> { typedef short type; };
+		template <> struct integral<4> { typedef long type; };
+		template <> struct integral<8> { typedef long long type; };
+		template <> struct integral<16> { typedef __m128i type; };
+
+		template <unsigned uSize>
+		using integral_t = typename integral<uSize>::type;
+	}
 	template <unsigned uSize>
 	void atomic_lock_load(void const volatile *pv, void *p);
 	template <unsigned uSize>
@@ -19,37 +33,45 @@ namespace jrmwng
 	template <typename T>
 	T atomic_rtm_load(T const volatile *pvt)
 	{
+		typedef atomic::integral_t<sizeof(T)> TLocal;
+		
+		TLocal stLocal;
+		{
 #ifdef RTM
-		unsigned const uStatus = _xbegin();
+			unsigned const uStatus = _xbegin();
 
-		if (uStatus == _XBEGIN_STARTED)
-		{
-			T const t = *pvt; // read-set: *pvt
-			_xend();
-			return std::move(t);
-		}
-		else
-#endif
-		{
-			char ac[sizeof(T)];
+			if (uStatus == _XBEGIN_STARTED)
 			{
-				atomic_lock_load<sizeof(T)>(pvt, ac);
+				stLocal = reinterpret_cast<TLocal const volatile&>(*pvt);
+				_xend();
 			}
-			return reinterpret_cast<T const&>(ac);
+			else
+#endif
+			{
+				atomic_lock_load<sizeof(T)>(pvt, &stLocal);
+			}
 		}
+		return reinterpret_cast<T const&>(stLocal);
 	}
 	template <typename T>
 	void atomic_rtm_store(T volatile *pvt, T const & t)
 	{
+		typedef atomic::integral_t<sizeof(T)> TLocal;
+
 		T t0 = t;
 #ifdef RTM
 		unsigned const uStatus = _xbegin();
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
-			T const t1 = std::move(*pvt); // read-set: *pvt
-			*pvt = std::move(t0); // write-set: *pvt
+			// read-set: *pvt
+			TLocal const stLocal = reinterpret_cast<TLocal volatile&>(*pvt);
+
+			// write-set: *pvt
+			reinterpret_cast<TLocal volatile&>(*pvt) = reinterpret_cast<TLocal const&>(t0);
 			_xend();
+
+			reinterpret_cast<TLocal&>(t0) = stLocal;
 		}
 		else
 #endif
@@ -63,51 +85,61 @@ namespace jrmwng
 	template <typename T>
 	void atomic_rtm_swap(T volatile *pvt, T & t)
 	{
-		T t0 = std::move(t);
+		typedef atomic::integral_t<sizeof(T)> TLocal;
+
+		TLocal const stLocal0 = reinterpret_cast<TLocal&>(t);
 #ifdef RTM
 		unsigned const uStatus = _xbegin();
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
-			T t1 = std::move(*pvt); // read-set: *pvt
-			*pvt = std::move(t0); // write-set: *pvt
+			// read-set: *pvt
+			TLocal const stLocal1 = reinterpret_cast<TLocal volatile&>(*pvt);
+
+			// write-set: *pvt
+			reinterpret_cast<TLocal&>(*pvt) = stLocal0;
 			_xend();
-			t = std::move(t1);
+
+			reinterpret_cast<TLocal&>(t) = stLocal1;
 		}
 		else
 #endif
 		{
-			atomic_lock_swap<sizeof(T)>(pvt, std::addressof(t0));
-			t = std::move(t0);
+			atomic_lock_swap<sizeof(T)>(pvt, std::addressof(t));
 		}
 	}
 	template <typename T>
 	bool atomic_rtm_cas(T volatile *pvt, T & t, T const & tCMP)
 	{
-		T t0 = std::move(t);
+		typedef atomic::integral_t<sizeof(T)> TLocal;
+
+		TLocal stLocal0 = reinterpret_cast<TLocal&>(t);
+		TLocal stLocalCMP = reinterpret_cast<TLocal const&>(tCMP);
 #ifdef RTM
 		unsigned const uStatus = _xbegin();
 
 		if (uStatus == _XBEGIN_STARTED)
 		{
-			if (*pvt == tCMP) // read-set: *pvt, tCMP
+			// read-set: *pvt
+			TLocal const stLocal1 = reinterpret_cast<TLocal volatile&>(*pvt);
+
+			if (stLocal1 == stLocalCMP)
 			{
-				T t1 = std::move(*pvt);
-				*pvt = std::move(t0); // write-set: *pvt
+				// write-set: *pvt
+				reinterpret_cast<TLocal volatile&>(*pvt) = stLocal0;
 				_xend();
-				t = std::move(t1);
+
+				reinterpret_cast<TLocal&>(t) = stLocal1;
 				return true;
 			}
 			else
 			{
-				t = std::move(t0);
 				return false;
 			}
 		}
 		else
 #endif
 		{
-			t = std::move(t0);
 			return atomic_lock_cas<sizeof(T)>(pvt, std::addressof(t), std::addressof(tCMP));
 		}
 	}
