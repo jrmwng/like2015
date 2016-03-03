@@ -20,6 +20,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)jrmwng.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)rtm.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)atomic_shared_ptr.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)tiff.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)xmm_traits.h" />
   </ItemGroup>
 </Project>
