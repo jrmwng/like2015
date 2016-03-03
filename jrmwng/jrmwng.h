@@ -3,6 +3,7 @@
 /* Author: jrmwng @ 2016 */
 
 #include "rtm.h"
+#include "tiff.h"
 #include "align.h"
 #include "atomic.h"
 #include "member.h"
