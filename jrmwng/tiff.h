@@ -526,7 +526,43 @@ namespace jrmwng
 	//XPosition 286 11E RATIONAL
 	//YPosition 287 11F RATIONAL
 	//FreeOffsets 288 120 LONG
+	template <> struct tiff_field<TIFF_TAG_FREE_OFFSETS>
+	{
+		tiff_tag_e const emTag;
+		tiff_type_e const emType;
+		tiff_long_t const ulCount;
+		tiff_long_t ulValue;
+		tiff_field()
+			: emTag(TIFF_TAG_FREE_OFFSETS)
+			, emType(TIFF_TYPE_LONG)
+			, ulCount(1)
+			, ulValue(0)
+		{}
+		tiff_field & operator = (tiff_long_t ulNewValue)
+		{
+			ulValue = ulNewValue;
+			return *this;
+		}
+	};
 	//FreeByteCounts 289 121 LONG
+	template <> struct tiff_field<TIFF_TAG_FREE_BYTE_COUNTS>
+	{
+		tiff_tag_e const emTag;
+		tiff_type_e const emType;
+		tiff_long_t const ulCount;
+		tiff_long_t ulValue;
+		tiff_field()
+			: emTag(TIFF_TAG_FREE_BYTE_COUNTS)
+			, emType(TIFF_TYPE_LONG)
+			, ulCount(1)
+			, ulValue(0)
+		{}
+		tiff_field & operator = (tiff_long_t ulNewValue)
+		{
+			ulValue = ulNewValue;
+			return *this;
+		}
+	};
 	//GrayResponseUnit 290 122 SHORT 1
 	//GrayResponseCurve 291 123 SHORT 2 * *BitsPerSample
 	//T4Options 292 124 LONG 1
@@ -634,6 +670,10 @@ namespace jrmwng
 	struct tiff_file
 		: tiff_file_header
 		, tiff_subfile<TFields...>
+	{};
+
+	struct tiff_free_fields
+		: tiff_field<TIFF_TAG_FREE_OFFSETS, TIFF_TAG_FREE_BYTE_COUNTS>
 	{};
 
 	struct tiff_baseline_fields
