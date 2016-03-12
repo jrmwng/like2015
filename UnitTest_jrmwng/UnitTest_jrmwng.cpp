@@ -351,6 +351,7 @@ namespace UnitTest_jrmwng
 				stBaselineFile.set<jrmwng::TIFF_TAG_IMAGE_WIDTH>(2560U);
 				stBaselineFile.set<jrmwng::TIFF_TAG_IMAGE_HEIGHT>(1920U);
 				stBaselineFile.set<jrmwng::TIFF_TAG_ROWS_PER_STRIP>(1920U);
+				stBaselineFile.set<jrmwng::TIFF_TAG_STRIP_OFFSETS>(123); // TODO
 				stBaselineFile.set<jrmwng::TIFF_TAG_RESOLUTION_UNIT>(jrmwng::TIFF_RESOLUTION_UNIT_CENTIMETER);
 			}
 		}
