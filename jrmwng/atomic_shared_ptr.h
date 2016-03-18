@@ -8,12 +8,92 @@
 
 namespace jrmwng
 {
+	template <typename T, typename TDeleter>
+	class unique_ptr;
 	template <typename T, typename TLock>
 	class shared_ptr;
 	template <typename T, typename TLock>
 	class weak_ptr;
 	template <typename T, typename TLock>
 	class enable_shared_from_this;
+
+	template <typename T, typename TDeleter>
+	class unique_ptr
+	{
+		TDeleter m_Deleter;
+		T *m_pt;
+
+		unique_ptr()
+			: m_pt(nullptr)
+		{}
+		unique_ptr(unique_ptr && that)
+			: m_Deleter(std::exchange(that.m_Deleter, TDeleter()))
+			, m_pt(std::exchange(that.m_pt, nullptr))
+		{}
+		unique_ptr(T *pt)
+			: m_pt(pt)
+		{}
+		unique_ptr(T *pt, TDeleter const & tDeleter)
+			: m_Deleter(tDeleter)
+			, m_pt(pt)
+		{}
+		unique_ptr(T *pt, TDeleter && tDeleter)
+			: m_Deleter(std::forward<TDeleter>(tDeleter))
+			, m_pt(pt)
+		{}
+
+		~unique_ptr()
+		{
+			if (m_pt)
+			{
+				m_Deleter(m_pt);
+			}
+		}
+
+		T * get() const
+		{
+			return m_pt;
+		}
+
+		TDeleter * get_deleter()
+		{
+			return std::addressof(m_Deleter);
+		}
+
+		T * release()
+		{
+			std::swap(m_Deleter, TDeleter());
+			return std::exchange(m_pt, nullptr);
+		}
+
+		void swap(unique_ptr & that)
+		{
+			std::swap(m_Deleter, that.m_Deleter);
+			std::swap(m_pt, that.m_pt);
+		}
+
+		template <typename... TArgs>
+		void reset(TArgs &&... Args)
+		{
+			swap(unique_ptr(std::forward<TArgs>(Args)...));
+		}
+
+		operator bool(void) const
+		{
+			return m_pt != nullptr;
+		}
+
+		unique_ptr & operator = (unique_ptr && upThat)
+		{
+			swap(unique_ptr(std::move(upThat)));
+			return *this;
+		}
+		unique_ptr & operator = (T *pt)
+		{
+			swap(unique_ptr(pt));
+			return *this;
+		}
+	};
 
 	template <typename TR, bool bLock, typename TLockFunc, typename TFunc>
 	std::enable_if_t<std::is_void<TR>::value, void> shared_ptr_tm(TLockFunc const & tLockFunc, TFunc const & tFunc)
@@ -480,6 +560,12 @@ namespace jrmwng
 			spThat.m_pLock = nullptr;
 		}
 		template <typename TDeleter>
+		shared_ptr(unique_ptr<T, TDeleter> && upThat)
+			: base_type(upThat.get(), upThat.get() == nullptr ? nullptr : new shared_ptr_count_t<T, TLock, TDeleter>(pt, *(upThat.get_deleter())))
+		{
+			upThat.release();
+		}
+		template <typename TDeleter>
 		shared_ptr(T *pt, TDeleter const & tDeleter)
 			: base_type(pt, new shared_ptr_count_t<T, TLock, TDeleter>(pt, tDeleter))
 		{
@@ -602,34 +688,40 @@ namespace jrmwng
 			swap(this_type(std::forward<TArgs>(_Args)...));
 		}
 
-		typename this_type & operator = (typename this_type const & that)
+		shared_ptr & operator = (shared_ptr const & that)
 		{
 			swap(this_type(that));
 			return *this;
 		}
 		template <typename T1>
-		typename this_type & operator = (T1 const & t1)
+		shared_ptr & operator = (T1 const & t1)
 		{
 			swap(this_type(t1));
 			return *this;
 		}
-		typename this_type & operator = (typename this_type && that)
+		shared_ptr & operator = (shared_ptr && that)
 		{
-			swap(this_type(std::forward<typename this_type>(that)));
+			swap(this_type(std::forward<shared_ptr>(that)));
+			return *this;
+		}
+		template <typename TDeleter>
+		shared_ptr & operator = (unique_ptr<T, TDeleter> && upThat)
+		{
+			swap(this_type(std::forward<unique_ptr<T, TDeleter>>(upThat)));
 			return *this;
 		}
 		template <typename T1>
-		typename this_type & operator = (T1 && t1)
+		shared_ptr & operator = (T1 && t1)
 		{
-			swap(this_type(std::forward<T1>(t1)));
+			swap(shared_ptr(std::forward<T1>(t1)));
 			return *this;
 		}
 
-		bool operator == (typename this_type const & that) const
+		bool operator == (shared_ptr const & that) const
 		{
 			return m_pt == that.m_pt;
 		}
-		bool operator != (typename this_type const & that) const
+		bool operator != (shared_ptr const & that) const
 		{
 			return m_pt != that.m_pt;
 		}
