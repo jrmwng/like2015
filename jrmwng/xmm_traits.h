@@ -8,6 +8,15 @@
 
 namespace jrmwng
 {
+	template <typename T1, typename T2>
+	struct alignas(16) xmm_traits_pair
+		: std::pair<T1, T2>
+	{
+		template <typename... TArgs>
+		xmm_traits_pair(TArgs... Args)
+			: std::pair<T1, T2>(std::forward<TArgs>(Args)...)
+		{}
+	};
 	struct xmm_traits
 	{
 		typedef uint8_t ub1_type;
@@ -35,15 +44,15 @@ namespace jrmwng
 		typedef __m128i xl2_type;
 		typedef __m128i xmm1_type;
 
-		typedef std::pair<ub16_type, ub16_type> ub32_type;
-		typedef std::pair<b16_type, b16_type> b32_type;
-		typedef std::pair<uw8_type, uw8_type> uw16_type;
-		typedef std::pair<w8_type, w8_type> w16_type;
-		typedef std::pair<ul4_type, ul4_type> ul8_type;
-		typedef std::pair<l4_type, l4_type> l8_type;
-		typedef std::pair<uxl2_type, uxl2_type> uxl4_type;
-		typedef std::pair<xl2_type, xl2_type> xl4_type;
-		typedef std::pair<xmm1_type, xmm1_type> xmm2_type;
+		typedef xmm_traits_pair<ub16_type, ub16_type> ub32_type;
+		typedef xmm_traits_pair<b16_type, b16_type> b32_type;
+		typedef xmm_traits_pair<uw8_type, uw8_type> uw16_type;
+		typedef xmm_traits_pair<w8_type, w8_type> w16_type;
+		typedef xmm_traits_pair<ul4_type, ul4_type> ul8_type;
+		typedef xmm_traits_pair<l4_type, l4_type> l8_type;
+		typedef xmm_traits_pair<uxl2_type, uxl2_type> uxl4_type;
+		typedef xmm_traits_pair<xl2_type, xl2_type> xl4_type;
+		typedef xmm_traits_pair<xmm1_type, xmm1_type> xmm2_type;
 
 		template <typename T>
 		static std::enable_if_t<std::is_integral<T>::value, __m128i> xmm1_headmask(int n)
