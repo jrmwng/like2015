@@ -13,7 +13,7 @@ namespace jrmwng
 		: std::pair<T1, T2>
 	{
 		template <typename... TArgs>
-		xmm_traits_pair(TArgs... Args)
+		xmm_traits_pair(TArgs &&... Args)
 			: std::pair<T1, T2>(std::forward<TArgs>(Args)...)
 		{}
 	};
