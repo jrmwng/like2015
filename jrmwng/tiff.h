@@ -466,6 +466,13 @@ namespace jrmwng
 			, ulCount(0)
 			, ulByteOffset(0)
 		{}
+		tiff_field & operator = (tiff_long_t ulNewValue)
+		{
+			emType = ulNewValue <= std::numeric_limits<tiff_short_t>::max() ? TIFF_TYPE_SHORT : TIFF_TYPE_LONG;
+			ulCount = 1;
+			ulValue = ulNewValue;
+			return *this;
+		}
 	};
 	//Orientation 274 112 SHORT 1
 	//SamplesPerPixel 277 115 SHORT 1
