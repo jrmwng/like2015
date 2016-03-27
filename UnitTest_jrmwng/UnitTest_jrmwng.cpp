@@ -359,7 +359,20 @@ namespace UnitTest_jrmwng
 		TEST_METHOD(TestMethod_jrmwng_jpeg)
 		{
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOI> stJpegSOI;
-			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOS,1> stJpegSOS_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF0, 1> stJpegSOF0_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF1, 1> stJpegSOF1_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF2, 1> stJpegSOF2_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF3, 1> stJpegSOF3_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF5, 1> stJpegSOF5_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF6, 1> stJpegSOF6_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF7, 1> stJpegSOF7_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF9, 1> stJpegSOF9_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF10, 1> stJpegSOF10_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF11, 1> stJpegSOF11_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF13, 1> stJpegSOF13_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF14, 1> stJpegSOF14_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOF15, 1> stJpegSOF15_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOS, 1> stJpegSOS_1;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DAC, 16, 16> stJpegDAC_16_16;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DHT, 16, 16> stJpegDHT_16_16;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DQT, jrmwng::JPEG_QUANT_BYTE, 8> stJpegDQT_ub64;

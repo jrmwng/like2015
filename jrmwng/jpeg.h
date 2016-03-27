@@ -117,13 +117,141 @@ namespace jrmwng
 		{}
 	};
 
+	// SOF
+	template <int n0>
+	struct jpeg_marker_sof_s
+		: jpeg_marker_base_s
+	{
+		unsigned char ubDataPrecision;
+		unsigned short uwImageHeight;
+		unsigned short uwImageWidth;
+		unsigned char const ubNumberOfComponents;
+
+		struct component_s
+		{
+			unsigned char ubID;
+			unsigned char ubSamplingFactorV : 4;
+			unsigned char ubSamplingFactorH : 4;
+			unsigned char ubQuantizationTableNumber;
+		} astComponent[n0];
+
+		jpeg_marker_sof_s(jpeg_marker_e const emType)
+			: jpeg_marker_base_s(emType, sizeof(jpeg_marker_sof_s) - sizeof(jpeg_marker_base_s))
+			, ubNumberOfComponents(n0)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF0, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF0)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF1, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF1)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF2, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF2)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF3, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF3)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF5, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF5)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF6, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF6)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF7, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF7)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF9, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF9)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF10, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF10)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF11, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF11)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF13, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF13)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF14, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF14)
+		{}
+	};
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOF15, n0>
+		: jpeg_marker_sof_s<n0>
+	{
+		jpeg_marker_s()
+			: jpeg_marker_sof_s<n0>(JPEG_MARKER_SOF15)
+		{}
+	};
+
 	// SOS
 	template <int n0>
 	struct jpeg_marker_s<JPEG_MARKER_SOS, n0>
 		: jpeg_marker_base_s
 	{
 		// number of components
-		unsigned char ubN;
+		unsigned char ubNumberOfComponents;
 
 		struct component_s
 		{
@@ -142,7 +270,7 @@ namespace jrmwng
 
 		jpeg_marker_s()
 			: jpeg_marker_base_s(JPEG_MARKER_SOS, sizeof(jpeg_marker_s) - sizeof(jpeg_marker_base_s))
-			, ubN(n0)
+			, ubNumberOfComponents(n0)
 		{}
 	};
 
@@ -278,7 +406,7 @@ namespace jrmwng
 	{
 		unsigned char ubID;
 		unsigned short uwMaxTrans;
-		unsigned char ubNt;
+		unsigned char const ubNt;
 		unsigned char aubComponentID[n0];
 		struct component_s
 		{
@@ -289,6 +417,7 @@ namespace jrmwng
 
 		jpeg_marker_s()
 			: jpeg_marker_base_s(JPEG_MARKER_JPG8, sizeof(jpeg_marker_s) - sizeof(jpeg_marker_base_s))
+			, ubNt(n0)
 		{}
 	};
 #pragma pack(pop)
