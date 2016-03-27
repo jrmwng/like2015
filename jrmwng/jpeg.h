@@ -110,8 +110,10 @@ namespace jrmwng
 	struct jpeg_marker_s;
 
 #pragma pack(push,1)
+
 	// SOS
-	template <int n0> struct jpeg_marker_s<JPEG_MARKER_SOS, n0>
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_SOS, n0>
 		: jpeg_marker_base_s
 	{
 		// number of components
@@ -139,7 +141,8 @@ namespace jrmwng
 	};
 
 	// DAC
-	template <int n0, int n1> struct jpeg_marker_s<JPEG_MARKER_DAC, n0, n1>
+	template <int n0, int n1>
+	struct jpeg_marker_s<JPEG_MARKER_DAC, n0, n1>
 		: jpeg_marker_base_s
 	{
 		struct arithmetic_dc_s
@@ -158,6 +161,8 @@ namespace jrmwng
 			: jpeg_marker_base_s(JPEG_MARKER_DAC, sizeof(jpeg_marker_s) - sizeof(jpeg_marker_base_s))
 		{}
 	};
+
+	// DHT
 	template <int nN>
 	struct jpeg_huffman_table_s
 	{
@@ -165,9 +170,8 @@ namespace jrmwng
 		unsigned char aubBits[16];
 		unsigned char aubValue[nN];
 	};
-
-	// DHT
-	template <int nM, int... nN> struct jpeg_marker_s<JPEG_MARKER_DHT, nM, nN...>
+	template <int nM, int... nN>
+	struct jpeg_marker_s<JPEG_MARKER_DHT, nM, nN...>
 		: jpeg_marker_s<JPEG_MARKER_DHT, nN...>
 	{
 		jpeg_huffman_table_s<nM> stHuffmanTable;
@@ -179,7 +183,8 @@ namespace jrmwng
 			: jpeg_marker_s<JPEG_MARKER_DHT, nN...>(uw)
 		{}
 	};
-	template <> struct jpeg_marker_s<JPEG_MARKER_DHT>
+	template <>
+	struct jpeg_marker_s<JPEG_MARKER_DHT>
 		: jpeg_marker_base_s
 	{
 		jpeg_marker_s(unsigned short uw)
@@ -187,21 +192,27 @@ namespace jrmwng
 		{}
 	};
 
+	// DQT
+
 	enum jpeg_quantization_type_e
 	{
 		JPEG_QUANT_BYTE = 0,
 		JPEG_QUANT_WORD = 1,
 	};
+
 	template <jpeg_quantization_type_e emType>
 	struct jpeg_quantization_traits;
-	template <> struct jpeg_quantization_traits<JPEG_QUANT_BYTE>
+	template <>
+	struct jpeg_quantization_traits<JPEG_QUANT_BYTE>
 	{
 		typedef unsigned char type;
 	};
-	template <> struct jpeg_quantization_traits<JPEG_QUANT_WORD>
+	template <>
+	struct jpeg_quantization_traits<JPEG_QUANT_WORD>
 	{
 		typedef unsigned short type;
 	};
+
 	template <jpeg_quantization_type_e emType>
 	using jpeg_quantization_t = typename jpeg_quantization_traits<emType>::type;
 
@@ -222,8 +233,8 @@ namespace jrmwng
 		{}
 	};
 
-	// DQT
-	template <int nL, int nM, int... nN> struct jpeg_marker_s<JPEG_MARKER_DQT, nL, nM, nN...>
+	template <int nL, int nM, int... nN>
+	struct jpeg_marker_s<JPEG_MARKER_DQT, nL, nM, nN...>
 		: jpeg_marker_s<JPEG_MARKER_DQT, nN...>
 	{
 		jpeg_quantization_table_s<jpeg_quantization_t<(jpeg_quantization_type_e)nL>, nM> stQuantizationTable;
@@ -235,12 +246,26 @@ namespace jrmwng
 			: jpeg_marker_s<JPEG_MARKER_DQT, nN...>(uw)
 		{}
 	};
-	template <> struct jpeg_marker_s<JPEG_MARKER_DQT>
+	template <>
+	struct jpeg_marker_s<JPEG_MARKER_DQT>
 		: jpeg_marker_base_s
 	{
 		jpeg_marker_s(unsigned short uw)
 			: jpeg_marker_base_s(JPEG_MARKER_DQT, uw)
 		{}
 	};
+
+	template <>
+	struct jpeg_marker_s<JPEG_MARKER_DRI>
+		: jpeg_marker_base_s
+	{
+		unsigned short uwRestartInterval;
+
+		jpeg_marker_s()
+			: jpeg_marker_base_s(JPEG_MARKER_DRI, sizeof(jpeg_marker_s) - sizeof(jpeg_marker_base_s))
+		{}
+	};
+
+
 #pragma pack(pop)
 }
