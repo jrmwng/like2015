@@ -355,5 +355,12 @@ namespace UnitTest_jrmwng
 				stBaselineFile.set<jrmwng::TIFF_TAG_RESOLUTION_UNIT>(jrmwng::TIFF_RESOLUTION_UNIT_CENTIMETER);
 			}
 		}
+
+		TEST_METHOD(TestMethod_jrmwng_jpeg)
+		{
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOS,1> stJpegSOS_1;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DAC, 16, 16> stJpegDAC_16_16;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DHT, 16, 16> stJpegDHT_16_16;
+		}
 	};
 }
