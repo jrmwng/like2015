@@ -106,10 +106,16 @@ namespace jrmwng
 		{}
 	};
 
-	template <jpeg_marker_e emMarker, int... n0>
-	struct jpeg_marker_s;
-
 #pragma pack(push,1)
+
+	template <jpeg_marker_e emMarker, int... n0>
+	struct jpeg_marker_s
+		: jpeg_marker_base_s
+	{
+		jpeg_marker_s()
+			: jpeg_marker_base_s(emMarker, 0)
+		{}
+	};
 
 	// SOS
 	template <int n0>
@@ -266,6 +272,24 @@ namespace jrmwng
 		{}
 	};
 
+	template <int n0>
+	struct jpeg_marker_s<JPEG_MARKER_JPG8, n0>
+		: jpeg_marker_base_s
+	{
+		unsigned char ubID;
+		unsigned short uwMaxTrans;
+		unsigned char ubNt;
+		unsigned char aubComponentID[n0];
+		struct component_s
+		{
+			unsigned char ubF;
+			unsigned short uwA1;
+			unsigned short uwA2;
+		} astComponent[n0];
 
+		jpeg_marker_s()
+			: jpeg_marker_base_s(JPEG_MARKER_JPG8, sizeof(jpeg_marker_s) - sizeof(jpeg_marker_base_s))
+		{}
+	};
 #pragma pack(pop)
 }

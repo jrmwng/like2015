@@ -358,11 +358,13 @@ namespace UnitTest_jrmwng
 
 		TEST_METHOD(TestMethod_jrmwng_jpeg)
 		{
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOI> stJpegSOI;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOS,1> stJpegSOS_1;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DAC, 16, 16> stJpegDAC_16_16;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DHT, 16, 16> stJpegDHT_16_16;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DQT, jrmwng::JPEG_QUANT_BYTE, 8> stJpegDQT_ub64;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DRI> stJpegDRI;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_JPG8, 3> stJpegLSE3;
 		}
 	};
 }
