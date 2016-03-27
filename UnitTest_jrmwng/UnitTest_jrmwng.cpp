@@ -361,6 +361,7 @@ namespace UnitTest_jrmwng
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_SOS,1> stJpegSOS_1;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DAC, 16, 16> stJpegDAC_16_16;
 			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DHT, 16, 16> stJpegDHT_16_16;
+			jrmwng::jpeg_marker_s<jrmwng::JPEG_MARKER_DQT, jrmwng::JPEG_QUANT_BYTE, 8> stJpegDQT_ub64;
 		}
 	};
 }
