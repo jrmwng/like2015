@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jrmwng", "..\jrmwng\jrmwng.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTest_jrmwng", "..\UnitTest_jrmwng\UnitTest_jrmwng.vcxproj", "{09B19A32-F44E-4122-9878-F82D801E4602}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jpeg2tsv", "..\jpeg2tsv\jpeg2tsv.vcxproj", "{71480059-A1DD-4083-B5A0-6CCEBD8C5434}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\jrmwng\jrmwng.vcxitems*{4618fb35-a72b-45bb-b78f-7014279daec6}*SharedItemsImports = 9
@@ -122,6 +124,16 @@ Global
 		{09B19A32-F44E-4122-9878-F82D801E4602}.Release|x64.Build.0 = Release|x64
 		{09B19A32-F44E-4122-9878-F82D801E4602}.Release|x86.ActiveCfg = Release|Win32
 		{09B19A32-F44E-4122-9878-F82D801E4602}.Release|x86.Build.0 = Release|Win32
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Debug|ARM.ActiveCfg = Debug|Win32
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Debug|x64.ActiveCfg = Debug|x64
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Debug|x64.Build.0 = Debug|x64
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Debug|x86.ActiveCfg = Debug|Win32
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Debug|x86.Build.0 = Debug|Win32
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Release|ARM.ActiveCfg = Release|Win32
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Release|x64.ActiveCfg = Release|x64
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Release|x64.Build.0 = Release|x64
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Release|x86.ActiveCfg = Release|Win32
+		{71480059-A1DD-4083-B5A0-6CCEBD8C5434}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

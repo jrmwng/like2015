@@ -19,6 +19,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)jpeg.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)member.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)jrmwng.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)memory.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)rtm.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)atomic_shared_ptr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)tiff.h" />

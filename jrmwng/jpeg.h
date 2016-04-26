@@ -93,6 +93,8 @@ namespace jrmwng
 		JPEG_MARKER_COM = 0xFE,
 	};
 
+#pragma pack(push,1)
+
 	struct jpeg_marker_base_s
 	{
 		unsigned char ubFF;
@@ -102,11 +104,9 @@ namespace jrmwng
 		jpeg_marker_base_s(jpeg_marker_e const em, unsigned short uw)
 			: ubFF(0xFF)
 			, emMarker(em)
-			, uwLength(uw)
+			, uwLength(_byteswap_ushort(2 + uw))
 		{}
 	};
-
-#pragma pack(push,1)
 
 	template <jpeg_marker_e emMarker, int... n0>
 	struct jpeg_marker_s
@@ -115,6 +115,26 @@ namespace jrmwng
 		jpeg_marker_s()
 			: jpeg_marker_base_s(emMarker, 0)
 		{}
+	protected:
+		jpeg_marker_s(unsigned short uw)
+			: jpeg_marker_base_s(emMarker, uw)
+		{}
+	};
+
+	// SOI
+	template <>
+	struct jpeg_marker_s<JPEG_MARKER_SOI>
+	{
+		unsigned char ubFF;
+		jpeg_marker_e emMarker : 8;
+		jpeg_marker_s()
+			: ubFF(0xFF)
+			, emMarker(JPEG_MARKER_SOI)
+		{}
+		operator bool() const
+		{
+			return ubFF == 0xFF && emMarker == JPEG_MARKER_SOI;
+		}
 	};
 
 	// SOF
@@ -263,8 +283,11 @@ namespace jrmwng
 			unsigned char ubDC : 4;
 		} astComponent[n0];
 
+		// Scan start position in block
 		unsigned char ubSs;
+		// Scan end position in block
 		unsigned char ubSe;
+		// Successive approximation Bit position
 		unsigned char ubAl : 4;
 		unsigned char ubAh : 4;
 
@@ -300,7 +323,9 @@ namespace jrmwng
 	template <int nN>
 	struct jpeg_huffman_table_s
 	{
-		unsigned char ubIndex;
+		unsigned char ubIndex : 4;
+		unsigned char ubAC : 1;
+		unsigned char : 3;
 		unsigned char aubBits[16];
 		unsigned char aubValue[nN];
 	};
@@ -419,6 +444,62 @@ namespace jrmwng
 			: jpeg_marker_base_s(JPEG_MARKER_JPG8, sizeof(jpeg_marker_s) - sizeof(jpeg_marker_base_s))
 			, ubNt(n0)
 		{}
+	};
+
+	template <unsigned char ubX, unsigned char ubY>
+	struct jpeg_marker_jfif_s
+		: jpeg_marker_jfif_s<0, 0>
+	{
+		struct rgb_s
+		{
+			unsigned char ubR;
+			unsigned char ubG;
+			unsigned char ubB;
+		} aastRGB[ubY][ubX];
+	};
+	template <>
+	struct jpeg_marker_jfif_s<0, 0>
+		: jpeg_marker_s<jrmwng::JPEG_MARKER_APP0>
+	{
+		char acIdentifier[5];
+		unsigned short uwVersion;
+		enum units_e : unsigned char
+		{
+			UNITS_NONE = 0,
+			UNITS_DOTS_PER_INCH = 1,
+			UNITS_DOTS_PER_CM = 2,
+		} emUnits;
+		unsigned short uwDensityX;
+		unsigned short uwDensityY;
+		unsigned char ubThumbnailX;
+		unsigned char ubThumbnailY;
+		jpeg_marker_jfif_s()
+			: jpeg_marker_s<jrmwng::JPEG_MARKER_APP0>(sizeof(jpeg_marker_jfif_s) - sizeof(jpeg_marker_s<jrmwng::JPEG_MARKER_APP0>))
+			, uwVersion(0x101)
+		{
+			acIdentifier[0] = 'J';
+			acIdentifier[1] = 'F';
+			acIdentifier[2] = 'I';
+			acIdentifier[3] = 'F';
+			acIdentifier[4] = 0;
+		}
+	};
+
+	struct jpeg_marker_exif_s
+		: jpeg_marker_s<jrmwng::JPEG_MARKER_APP1>
+	{
+		char acIdentifier[5];
+		char cPadding;
+		jpeg_marker_exif_s()
+			: jpeg_marker_s<jrmwng::JPEG_MARKER_APP1>(sizeof(jpeg_marker_exif_s) - sizeof(jpeg_marker_s<jrmwng::JPEG_MARKER_APP1>))
+			, cPadding(0)
+		{
+			acIdentifier[0] = 'E';
+			acIdentifier[1] = 'x';
+			acIdentifier[2] = 'i';
+			acIdentifier[3] = 'f';
+			acIdentifier[4] = 0;
+		}
 	};
 #pragma pack(pop)
 }
