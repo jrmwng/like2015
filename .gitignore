@@ -27,6 +27,7 @@ bld/
 
 # Visual Studio 2015 Update 1
 *.VC.opendb
+*.VC.db
 
 # MSTest test Results
 [Tt]est[Rr]esult*/

@@ -320,19 +320,19 @@ namespace UnitTest_jrmwng
 
 		TEST_METHOD(TestMethod_jrmwng_tiff)
 		{
-			jrmwng::tiff_field<jrmwng::TIFF_TAG_IMAGE_WIDTH> stImageWidthField;
-			jrmwng::tiff_field<jrmwng::TIFF_TAG_IMAGE_HEIGHT> stImageHeightField;
-			jrmwng::tiff_field<jrmwng::TIFF_TAG_ROWS_PER_STRIP> stRowsPerStripField;
-			jrmwng::tiff_field<jrmwng::TIFF_TAG_STRIP_OFFSETS> stStripOffsetsField;
-			jrmwng::tiff_field<jrmwng::TIFF_TAG_X_RESOLUTION> stXResolutionField;
-			jrmwng::tiff_field<jrmwng::TIFF_TAG_Y_RESOLUTION> stYResolutionField;
-			jrmwng::tiff_field<jrmwng::TIFF_TAG_RESOLUTION_UNIT> stResolutionUnitField;
+			jrmwng::tiff_field_s<jrmwng::TIFF_TAG_IMAGE_WIDTH> stImageWidthField;
+			jrmwng::tiff_field_s<jrmwng::TIFF_TAG_IMAGE_HEIGHT> stImageHeightField;
+			jrmwng::tiff_field_s<jrmwng::TIFF_TAG_ROWS_PER_STRIP> stRowsPerStripField;
+			jrmwng::tiff_field_s<jrmwng::TIFF_TAG_STRIP_OFFSETS> stStripOffsetsField;
+			jrmwng::tiff_field_s<jrmwng::TIFF_TAG_X_RESOLUTION> stXResolutionField;
+			jrmwng::tiff_field_s<jrmwng::TIFF_TAG_Y_RESOLUTION> stYResolutionField;
+			jrmwng::tiff_field_s<jrmwng::TIFF_TAG_RESOLUTION_UNIT> stResolutionUnitField;
 
-			typedef jrmwng::tiff_field<jrmwng::TIFF_TAG_IMAGE_WIDTH, jrmwng::TIFF_TAG_IMAGE_HEIGHT> image_size_field_t;
+			typedef jrmwng::tiff_field_s<jrmwng::TIFF_TAG_IMAGE_WIDTH, jrmwng::TIFF_TAG_IMAGE_HEIGHT> image_size_field_t;
 			image_size_field_t stImageSizeField;
-			typedef jrmwng::tiff_field<jrmwng::TIFF_TAG_ROWS_PER_STRIP, jrmwng::TIFF_TAG_STRIP_OFFSETS> strip_field_t;
+			typedef jrmwng::tiff_field_s<jrmwng::TIFF_TAG_ROWS_PER_STRIP, jrmwng::TIFF_TAG_STRIP_OFFSETS> strip_field_t;
 			strip_field_t stStripField;
-			typedef jrmwng::tiff_field<jrmwng::TIFF_TAG_X_RESOLUTION, jrmwng::TIFF_TAG_Y_RESOLUTION, jrmwng::TIFF_TAG_RESOLUTION_UNIT> resolution_field_t;
+			typedef jrmwng::tiff_field_s<jrmwng::TIFF_TAG_X_RESOLUTION, jrmwng::TIFF_TAG_Y_RESOLUTION, jrmwng::TIFF_TAG_RESOLUTION_UNIT> resolution_field_t;
 			resolution_field_t stResolutionField;
 
 			typedef jrmwng::tiff_subfile<image_size_field_t> image_size_subfile_t;

@@ -16,6 +16,7 @@
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)align.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)atomic.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)big_number.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)jpeg.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)member.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)jrmwng.h" />

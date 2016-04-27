@@ -8,5 +8,6 @@
 #include "align.h"
 #include "atomic.h"
 #include "member.h"
+#include "big_number.h"
 #include "xmm_traits.h"
 #include "atomic_shared_ptr.h"
