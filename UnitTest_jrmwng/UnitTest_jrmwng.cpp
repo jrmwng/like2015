@@ -300,9 +300,11 @@ namespace UnitTest_jrmwng
 			TestMethod_jrmwng_atomic<unsigned long long, unsigned int>(0, 0);
 			TestMethod_jrmwng_atomic<unsigned long long, unsigned long>(0, 0);
 
+#ifdef _M_X64
 			TestMethod_jrmwng_atomic<__m128i>(_mm_setzero_si128(), _mm_setzero_si128());
 
 			TestMethod_jrmwng_atomic<std::pair<long long, long long>>(std::pair<long long, long long>(0, 0), std::pair<long long, long long>(0, 0));
+#endif
 		}
 
 		TEST_METHOD(TestMethod_jrmwng_align)
