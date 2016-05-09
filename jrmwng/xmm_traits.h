@@ -8,6 +8,41 @@
 
 namespace jrmwng
 {
+	enum xmm_feature
+	{
+		XMM_FEATURE_SSE,
+		XMM_FEATURE_SSE_2,
+		XMM_FEATURE_SSE_3,
+		XMM_FEATURE_SSSE_3,
+		XMM_FEATURE_SSE_4_1,
+		XMM_FEATURE_SSE_4_2,
+		XMM_FEATURE_AVX,
+		XMM_FEATURE_AVX_2,
+		XMM_FEATURE_FMA,
+	};
+
+	template <xmm_feature emTest, xmm_feature... vemFeature>
+	struct xmm_feature_test;
+	template <xmm_feature emTest>
+	struct xmm_feature_test<emTest>
+	{
+		typedef std::false_type type;
+	};
+	template <xmm_feature emTest, xmm_feature emFeature, xmm_feature... vemFeature>
+	struct xmm_feature_test<emTest, emFeature, vemFeature...>
+	{
+		typedef std::conditional_t<emTest == emFeature, std::true_type, typename xmm_feature_test<emTest, vemFeature...>::type> type;
+	};
+	template <xmm_feature emTest, xmm_feature... vemFeature>
+	using xmm_feature_test_t = typename xmm_feature_test<emTest, vemFeature...>::type;
+
+	template <xmm_feature... vemFeature>
+	struct xmm_feature_set
+	{
+		template <xmm_feature emTest>
+		using exists_t = typename xmm_feature_test<emTest, vemFeature...>::type;
+	};
+
 	template <typename T1, typename T2>
 	struct alignas(16) xmm_traits_pair
 		: std::pair<T1, T2>
@@ -17,6 +52,8 @@ namespace jrmwng
 			: std::pair<T1, T2>(std::forward<TArgs>(Args)...)
 		{}
 	};
+
+	template <xmm_feature... vemFeature>
 	struct xmm_traits
 	{
 		typedef uint8_t ub1_type;
@@ -162,5 +199,232 @@ namespace jrmwng
 				_mm_maskmoveu_si128(xmmD, xmmMask, reinterpret_cast<char*>(pt) + (n & (16 / sizeof(T))));
 			}
 		}
-	};
+
+		template <int nShuffle>
+		static __m128 sse_shuffle_ps(__m128 const & xmmA, __m128 const & xmmB)
+		{
+			return _mm_shuffle_ps(xmmA, xmmB, nShuffle);
+		}
+		template <>
+		static __m128 sse_shuffle_ps<_MM_SHUFFLE(3, 2, 3, 2)>(__m128 const & xmmA, __m128 const & xmmB)
+		{
+			return _mm_movehl_ps(xmmB, xmmA);
+		}
+		template <>
+		static __m128 sse_shuffle_ps<_MM_SHUFFLE(1, 0, 1, 0)>(__m128 const & xmmA, __m128 const & xmmB)
+		{
+			return _mm_movelh_ps(xmmA, xmmB);
+		}
+		template <int nShuffle>
+		static __m128 sse_shuffle_ps(__m128 const & xmmA)
+		{
+			return _mm_shuffle_ps(xmmA, xmmA, nShuffle);
+		}
+		template <>
+		static __m128 sse_shuffle_ps<_MM_SHUFFLE(3, 3, 1, 1)>(__m128 const & xmmA)
+		{
+			return _mm_movehdup_ps(xmmA);
+		}
+		template <>
+		static __m128 sse_shuffle_ps<_MM_SHUFFLE(2, 2, 0, 0)>(__m128 const & xmmA)
+		{
+			return _mm_moveldup_ps(xmmA);
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<(TFeatureSet::template exists_t<XMM_FEATURE_SSE>::value), __m128> xmm_shuffle_ps(__m128 const & xmmA, __m128 const & xmmB)
+		{
+			return sse_shuffle_ps<nShuffle>(xmmA, xmmB);
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<(TFeatureSet::template exists_t<XMM_FEATURE_SSE>::value), __m128> xmm_shuffle_ps(__m128 const & xmmA)
+		{
+			return sse_shuffle_ps<nShuffle>(xmmA);
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<!(TFeatureSet::template exists_t<XMM_FEATURE_SSE>::value), __m128> xmm_shuffle_ps(__m128 const & xmmA, __m128 const & xmmB)
+		{
+			__m128 xmmC;
+			{
+				xmmC.m128_i32[0] = xmmA.m128_i32[((nShuffle & 0x03) >> 0)];
+				xmmC.m128_i32[1] = xmmA.m128_i32[((nShuffle & 0x0C) >> 2)];
+				xmmC.m128_i32[2] = xmmB.m128_i32[((nShuffle & 0x30) >> 4)];
+				xmmC.m128_i32[3] = xmmB.m128_i32[((nShuffle & 0xC0) >> 6)];
+			}
+			return xmmC;
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<!(TFeatureSet::template exists_t<XMM_FEATURE_SSE>::value), __m128> xmm_shuffle_ps(__m128 const & xmmA)
+		{
+			__m128 xmmC;
+			{
+				xmmC.m128_i32[0] = xmmA.m128_i32[((nShuffle & 0x03) >> 0)];
+				xmmC.m128_i32[1] = xmmA.m128_i32[((nShuffle & 0x0C) >> 2)];
+				xmmC.m128_i32[2] = xmmA.m128_i32[((nShuffle & 0x30) >> 4)];
+				xmmC.m128_i32[3] = xmmA.m128_i32[((nShuffle & 0xC0) >> 6)];
+			}
+			return xmmC;
+		}
+		template <int nShuffle>
+		static __m128 shuffle_ps(__m128 const & xmmA, __m128 const & xmmB)
+		{
+			return xmm_shuffle_ps<nShuffle, xmm_feature_set<vemFeature...>>(xmmA, xmmB);
+		}
+		template <int nShuffle>
+		static __m128 shuffle_ps(__m128 const & xmmA)
+		{
+			return xmm_shuffle_ps<nShuffle, xmm_feature_set<vemFeature...>>(xmmA);
+		}
+
+		template <int nShuffle>
+		static __m128d sse_2_shuffle_pd(__m128d const & xmmA, __m128d const & xmmB)
+		{
+			return _mm_shuffle_pd(xmmA, xmmB, nShuffle);
+		}
+		template <int nShuffle>
+		static __m128d sse_2_shuffle_pd(__m128d const & xmmA)
+		{
+			return _mm_shuffle_pd(xmmA, xmmA, nShuffle);
+		}
+		template <>
+		static __m128d sse_2_shuffle_pd<_MM_SHUFFLE2(0, 0)>(__m128d const & xmmA)
+		{
+			return _mm_movedup_pd(xmmA);
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128d> xmm_shuffle_pd(__m128d const & xmmA, __m128d const & xmmB)
+		{
+			return sse_2_shuffle_pd<nShuffle>(xmmA, xmmB);
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128d> xmm_shuffle_pd(__m128d const & xmmA)
+		{
+			return sse_2_shuffle_pd<nShuffle>(xmmA);
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<!(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128d> xmm_shuffle_pd(__m128d const & xmmA, __m128d const & xmmB)
+		{
+			__m128d xmmC;
+			{
+				xmmC.m128d_f64[0] = xmmA.m128d_f64[(nShuffle & 1) >> 0];
+				xmmC.m128d_f64[1] = xmmB.m128d_f64[(nShuffle & 2) >> 1];
+			}
+			return xmmC;
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<!(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128d> xmm_shuffle_pd(__m128d const & xmmA)
+		{
+			__m128d xmmC;
+			{
+				xmmC.m128d_f64[0] = xmmA.m128d_f64[(nShuffle & 1) >> 0];
+				xmmC.m128d_f64[1] = xmmA.m128d_f64[(nShuffle & 2) >> 1];
+			}
+			return xmmC;
+		}
+		template <int nShuffle>
+		static __m128d shuffle_pd(__m128d const & xmmA, __m128d const & xmmB)
+		{
+			return xmm_shuffle_pd<nShuffle, xmm_feature_set<vemFeature...>>(xmmA, xmmB);
+		}
+		template <int nShuffle>
+		static __m128d shuffle_pd(__m128d const & xmmA)
+		{
+			return xmm_shuffle_pd<nShuffle, xmm_feature_set<vemFeature...>>(xmmA);
+		}
+
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128i> xmm_shuffle_epi32(__m128i const & xmmA, __m128i const & xmmB)
+		{
+			return _mm_castps_si128(sse_shuffle_ps<nShuffle>(_mm_castsi128_ps(xmmA), _mm_castsi128_ps(xmmB)));
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128i> xmm_shuffle_epi32(__m128i const & xmmA)
+		{
+			return _mm_shuffle_epi32(xmmA, nShuffle);
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<!(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128i> xmm_shuffle_epi32(__m128i const & xmmA, __m128i const & xmmB)
+		{
+			__m128i xmmC;
+			{
+				xmmC.m128i_i32[0] = xmmA.m128i_i32[(nShuffle & 0x03) >> 0];
+				xmmC.m128i_i32[1] = xmmA.m128i_i32[(nShuffle & 0x0C) >> 2];
+				xmmC.m128i_i32[2] = xmmB.m128i_i32[(nShuffle & 0x30) >> 4];
+				xmmC.m128i_i32[3] = xmmB.m128i_i32[(nShuffle & 0xC0) >> 6];
+			}
+			return xmmC;
+		}
+		template <int nShuffle, typename TFeatureSet>
+		static std::enable_if_t<!(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128i> xmm_shuffle_epi32(__m128i const & xmmA)
+		{
+			__m128i xmmC;
+			{
+				xmmC.m128i_i32[0] = xmmA.m128i_i32[(nShuffle & 0x03) >> 0];
+				xmmC.m128i_i32[1] = xmmA.m128i_i32[(nShuffle & 0x0C) >> 2];
+				xmmC.m128i_i32[2] = xmmA.m128i_i32[(nShuffle & 0x30) >> 4];
+				xmmC.m128i_i32[3] = xmmA.m128i_i32[(nShuffle & 0xC0) >> 6];
+			}
+			return xmmC;
+		}
+		template <int nShuffle>
+		static __m128i shuffle_epi32(__m128i const & xmmA, __m128i const & xmmB)
+		{
+			return xmm_shuffle_epi32<nShuffle, xmm_feature_set<vemFeature...>>(xmmA, xmmB);
+		}
+		template <int nShuffle>
+		static __m128i shuffle_epi32(__m128i const & xmmA)
+		{
+			return xmm_shuffle_epi32<nShuffle, xmm_feature_set<vemFeature...>>(xmmA);
+		}
+
+		template <int nIndex, typename TFeatureSet>
+		static std::enable_if_t<(TFeatureSet::template exists_t<XMM_FEATURE_AVX_2>::value), std::enable_if_t<(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128i>> xmm_broadcastb_epi8(__m128i const & xmmA)
+		{
+			return _mm_broadcastb_epi8(_mm_srli_si128(xmmA, nIndex));
+		}
+		template <int nIndex, typename TFeatureSet>
+		static std::enable_if_t<!(TFeatureSet::template exists_t<XMM_FEATURE_AVX_2>::value), std::enable_if_t<(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128i>> xmm_broadcastb_epi8(__m128i const & xmmA)
+		{
+			__m128i const xmmB = _mm_srli_si128(xmmA, nIndex);
+			__m128i const xmmC = _mm_unpacklo_epi8(xmmB, xmmB);
+			__m128i const xmmD = _mm_unpacklo_epi8(xmmC, xmmC);
+			__m128i const xmmE = _mm_shuffle_epi32(xmmD, 0);
+			return xmmE;
+		}
+		template <int nIndex, typename TFeatureSet>
+		static std::enable_if_t<!(TFeatureSet::template exists_t<XMM_FEATURE_AVX_2>::value), std::enable_if_t<!(TFeatureSet::template exists_t<XMM_FEATURE_SSE_2>::value), __m128i>> xmm_broadcastb_epi8(__m128i const & xmmA)
+		{
+			__m128i xmmB;
+			{
+				std::fill(std::begin(xmmB.m128i_i8), std::end(xmmB.m128i_i8), xmmA.m128i_i8[nIndex & 0xF]);
+			}
+			return xmmB;
+		}
+		template <int nIndex>
+		static __m128i broadcastb_epi8(__m128i const & xmmA)
+		{
+			return xmm_broadcastb_epi8<nIndex, xmm_feature_set<vemFeature...>>(xmmA);
+		}
+
+	}; // xmm_traits
+
+
+#if 0
+
+	template <int nIndex>
+	static enable_if_feature_t<XMM_TRAITS_SSE_4_1, int> extract_epi32(__m128i const & xmmA)
+	{
+		return _mm_extract_epi32(xmmA, nIndex);
+	}
+	template <int nIndex>
+	static disable_if_feature_t<XMM_TRAITS_SSE_4_1, enable_if_feature_t<XMM_TRAITS_SSE_2, int>> extract_epi32(__m128i const & xmmA)
+	{
+		return _mm_cvtsi128_si32(shuffle_epi32<_MM_SHUFFLE(nIndex, nIndex, nIndex, nIndex)>(xmmA));
+	}
+	template <int nIndex>
+	static disable_if_feature_t<XMM_TRAITS_SSE_4_1, disable_if_feature_t<XMM_TRAITS_SSE_2, int>> extract_epi32(__m128i const & xmmA)
+	{
+		return xmmA.m128i_i32[nIndex & 3];
+	}
+
+#endif
 }

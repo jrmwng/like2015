@@ -60,49 +60,67 @@ namespace jrmwng
 		{}
 
 		template <unsigned u>
-		void to_string(std::wstring & str) const
+		void to_string(wchar_t *pcBuffer) const
 		{
-			to_string<0>(str);
+			to_string<0>(pcBuffer);
 
-			base_type::to_string<u - 1>(str);
+			base_type::to_string<u - 1>(pcBuffer + 8);
 		}
 		template <>
-		void to_string<0>(std::wstring & str) const
+		void to_string<0>(wchar_t *pcBuffer) const
 		{
-			// 0x87654321
+			// 0xFEDCBA98
+			// 0x76543210
 			__m128i const l4Bits0 = _mm_cvtsi32_si128(uBits);
 
-			// 0x00870065 0x00430021
+			// 0x00FE00DC 0x00BA0098
+			// 0x00760054 0x00320010
 			__m128i const w4Bits1 = _mm_unpacklo_epi8(l4Bits0, _mm_setzero_si128());
 
-			// 0x70005000 0x30001000
+			// 0xE000C000 0xA0008000
+			// 0x60004000 0x20000000
 			__m128i const w4Bits2a = _mm_slli_epi16(w4Bits1, 12);
-			// 0x00080006 0x00040002
+			// 0x000F000D 0x000B0009
+			// 0x00070005 0x00030001
 			__m128i const w4Bits2b = _mm_srli_epi16(w4Bits1, 4);
 
-			// 0x00070005 0x00030001
+			// 0x000E000C 0x000A0008
+			// 0x00060004 0x00020000
 			__m128i const w4Bits3a = _mm_srli_epi16(w4Bits2a, 12);
 
-			// 0x00080007 0x00060005 0x00040003 0x00020001
+			// 0x000F000E 0x000D000C 0x000B000A 0x00090008
+			// 0x00070006 0x00050004 0x00030002 0x00010000
 			__m128i const w8Bits5 = _mm_unpacklo_epi16(w4Bits3a, w4Bits2b);
 
+			// 0x00000000 0x00000000 0x00000000 0x00FF00FF
+			// 0x00FF00FF 0x00FF00FF 0x00FF00FF 0x00FF00FF
 			__m128i const w8Mask6 = _mm_cmplt_epi8(w8Bits5, _mm_set1_epi16(0xA));
 
+			// 0x00000000 0x00000000 0x00000000 0x000F000F
+			// 0x000F000F 0x000F000F 0x000F000F 0x000F000F
 			__m128i const w8Mask7 = _mm_srli_epi16(w8Mask6, 4);
 
+			// 0x00370037 0x00370037 0x00370037 0x00300030
+			// 0x00300030 0x00300030 0x00300030 0x00300030
 			__m128i const w8Char8 = _mm_andnot_si128(w8Mask7, _mm_set1_epi16(0x37));
 
+			//    'F' 'E'    'D' 'C'    'B' 'A'    '9' '8'
+			// 0x00460045 0x00440043 0x00420041 0x00390038
+			//    '7' '6'    '5' '4'    '3' '2'    '1' '0'
+			// 0x00370036 0x00350034 0x00330032 0x00310030
 			__m128i const w8Char9 = _mm_add_epi16(w8Char8, w8Bits5);
 
-			str.append(reinterpret_cast<wchar_t const*>(w8Char9.m128i_i16), 8);
+			_mm_storeu_si128((__m128i*)pcBuffer, w8Char9);
 		}
 		std::wstring ToString() const
 		{
 			std::wstring str;
 			{
-				str.reserve(2 + (THIS_INDEX + 1) * 8 + 1);
-				str.append(L"0x");
-				to_string<THIS_INDEX>(str);
+				str.resize(2 + (THIS_INDEX + 1) * 8 + 1);
+				str[0] = L'0';
+				str[1] = L'x';
+				to_string<THIS_INDEX>(&str[2]);
+				str[str.length() - 1] = L'\0';
 			}
 			return str;
 		}

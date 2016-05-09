@@ -51,6 +51,19 @@ struct SMain
 	: like::enable_shared_from_this<SMain>
 {};
 
+namespace
+{
+	struct test_s
+	{
+		template <int n>
+		std::enable_if_t<n == 0> method1()
+		{}
+		template <int n>
+		std::enable_if_t<n == 1> method1()
+		{}
+	};
+}
+
 int main(int nArgc)
 {
 	like::cpuid_tree_t<0x17> stCPUID;

@@ -169,6 +169,14 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="UnitTest_jrmwng_vt.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
+    <ClCompile Include="UnitTest_jrmwng_xmm_traits.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
