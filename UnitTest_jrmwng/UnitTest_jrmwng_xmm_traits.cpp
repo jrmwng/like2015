@@ -57,6 +57,7 @@ namespace UnitTest_jrmwng
 			template <int nShuffle>
 			void shuffle_epi32()
 			{
+				shuffle_epi32<nShuffle - 1>();
 				__m128i const l4A = _mm_set_epi32(3, 2, 1, 0);
 				__m128i const l4B = _mm_set_epi32(7, 6, 5, 4);
 				__m128i const l4ExpectAB = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(l4A), _mm_castsi128_ps(l4B), nShuffle));
@@ -78,6 +79,7 @@ namespace UnitTest_jrmwng
 			template <int nIndex>
 			void broadcastb_epi8()
 			{
+				broadcastb_epi8<nIndex - 1>();
 				__m128i const b16A = _mm_set_epi8(0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0);
 				__m128i const b16ExpectA = _mm_broadcastb_epi8(_mm_srli_si128(b16A, nIndex));
 				__m128i const b16ActualA = TT::broadcastb_epi8<nIndex>(b16A);
