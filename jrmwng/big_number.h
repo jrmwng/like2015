@@ -41,12 +41,32 @@ namespace jrmwng
 	{
 		return big_number_sub<decltype(Left), decltype(Right)>(Left, Right);
 	}
+	template <typename TLeft, unsigned uLeft>
+	decltype(auto) operator - (big_number<TLeft, uLeft> const & bnLeft, int nRight)
+	{
+		return big_number_sub<decltype(bnLeft), decltype(nRight)>(bnLeft, nRight);
+	}
+
+	template <typename TLeft, typename TRight>
+	struct big_number_mul
+		: std::tuple<TLeft, TRight>
+	{
+		big_number_mul(TLeft tLeft, TRight tRight)
+			: std::tuple<TLeft, TRight>(tLeft, tRight)
+		{}
+	};
+	template <typename TLeft, unsigned uLeft, typename TRight, unsigned uRight>
+	decltype(auto) operator * (big_number<TLeft, uLeft> const & Left, big_number<TRight, uRight> const & Right)
+	{
+		return big_number_mul<decltype(Left), decltype(Right)>(Left, Right);
+	}
 
 
 	template <unsigned uBitCount>
 	struct big_number<unsigned, uBitCount>
 		: big_number<unsigned, (uBitCount - 1)&~31U>
 	{
+		using this_type = big_number<unsigned, uBitCount>;
 		using base_type = big_number<unsigned, (uBitCount - 1)&~31U>;
 
 		enum { THIS_BIT_COUNT = (uBitCount + 31U)&~31U };
@@ -71,7 +91,7 @@ namespace jrmwng
 		{
 			// 0xFEDCBA98
 			// 0x76543210
-			__m128i const l4Bits0 = _mm_cvtsi32_si128(uBits);
+			__m128i const l4Bits0 = _mm_cvtsi32_si128(_byteswap_ulong(uBits));
 
 			// 0x00FE00DC 0x00BA0098
 			// 0x00760054 0x00320010
@@ -90,7 +110,7 @@ namespace jrmwng
 
 			// 0x000F000E 0x000D000C 0x000B000A 0x00090008
 			// 0x00070006 0x00050004 0x00030002 0x00010000
-			__m128i const w8Bits5 = _mm_unpacklo_epi16(w4Bits3a, w4Bits2b);
+			__m128i const w8Bits5 = _mm_unpacklo_epi16(w4Bits2b, w4Bits3a);
 
 			// 0x00000000 0x00000000 0x00000000 0x00FF00FF
 			// 0x00FF00FF 0x00FF00FF 0x00FF00FF 0x00FF00FF
@@ -116,13 +136,17 @@ namespace jrmwng
 		{
 			std::wstring str;
 			{
-				str.resize(2 + (THIS_INDEX + 1) * 8 + 1);
+				str.resize(2 + (THIS_INDEX + 1) * 8);
 				str[0] = L'0';
 				str[1] = L'x';
 				to_string<THIS_INDEX>(&str[2]);
-				str[str.length() - 1] = L'\0';
+				//str[str.length() - 1] = L'\0';
 			}
 			return str;
+		}
+		bool operator == (wchar_t const *pcThat) const
+		{
+			return ToString().compare(pcThat) == 0;
 		}
 
 		template <unsigned u>
@@ -216,6 +240,39 @@ namespace jrmwng
 		}
 
 		template <unsigned u>
+		bool assign(big_number const & bnThat)
+		{
+			uBits = bnThat.uBits;
+			return base_type::assign<u - 1>(static_cast<base_type const&>(bnThat));
+		}
+		template <>
+		bool assign<0>(big_number const & bnThat)
+		{
+			uBits = bnThat.uBits;
+			return false;
+		}
+		template <unsigned u, unsigned uThat>
+		std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < THIS_INDEX), bool> assign(big_number<unsigned, uThat> const & bnThat)
+		{
+			uBits = 0;
+			return base_type::assign<u - 1>(bnThat);
+		}
+		template <unsigned u, unsigned uThat>
+		std::enable_if_t<(THIS_INDEX < big_number<unsigned, uThat>::THIS_INDEX), bool> assign(big_number<unsigned, uThat> const & bnThat)
+		{
+			return assign<u>(static_cast<big_number<unsigned, uThat>::base_type const&>(bnThat)) || bnThat.uBits > 0;
+		}
+		template <unsigned uThat>
+		big_number & operator = (big_number<unsigned, uThat> const & bnThat)
+		{
+			if (assign<THIS_INDEX>(bnThat))
+			{
+				__debugbreak();
+			}
+			return *this;
+		}
+
+		template <unsigned u>
 		unsigned char assign_add(big_number const & bnLeft, big_number const & bnRight)
 		{
 			unsigned char const ubCarry0 = base_type::assign_add<u - 1>(static_cast<base_type const&>(bnLeft), static_cast<base_type const&>(bnRight));
@@ -227,9 +284,42 @@ namespace jrmwng
 		{
 			return _addcarryx_u32(0, bnLeft.uBits, bnRight.uBits, &uBits);
 		}
-		big_number & operator = (big_number_add<big_number const&, big_number const&> stAdd)
+		template <unsigned u, unsigned uLeft>
+		std::enable_if_t<(big_number<unsigned, uLeft>::THIS_INDEX < THIS_INDEX), unsigned char> assign_add(big_number<unsigned, uLeft> const & bnLeft, big_number const & bnRight)
 		{
-			if (assign_add<THIS_INDEX>(std::get<0>(stAdd), std::get<1>(stAdd)))
+			unsigned char const ubBaseCarry = base_type::assign_add<u - 1>(bnLeft, static_cast<base_type const&>(bnRight));
+			unsigned char const ubThisCarry = _addcarryx_u32(ubBaseCarry, 0, bnRight.uBits, &uBits);
+			return ubThisCarry;
+		}
+		template <unsigned u, unsigned uRight>
+		std::enable_if_t<(big_number<unsigned, uRight>::THIS_INDEX < THIS_INDEX), unsigned char> assign_add(big_number const & bnLeft, big_number<unsigned, uRight> const & bnRight)
+		{
+			unsigned char const ubBaseCarry = base_type::assign_add<u - 1>(static_cast<base_type const&>(bnLeft), bnRight);
+			unsigned char const ubThisCarry = _addcarryx_u32(ubBaseCarry, bnLeft.uBits, 0, &uBits);
+			return ubThisCarry;
+		}
+		template <unsigned u, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(big_number<unsigned, uLeft>::THIS_INDEX < THIS_INDEX && big_number<unsigned, uRight>::THIS_INDEX < THIS_INDEX), unsigned char> assign_add(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
+		{
+			uBits = base_type::assign_add<u - 1>(bnLeft, bnRight);
+			return 0;
+		}
+		template <unsigned u, unsigned uLeft>
+		std::enable_if_t<(THIS_INDEX < big_number<unsigned, uLeft>::THIS_TYPE), unsigned char> assign_add(big_number<unsigned, uLeft> const & bnLeft, big_number const & bnRight)
+		{
+			return assign_add<u>(static_cast<big_number<unsigned, uLeft>::base_type const&>(bnLeft), bnRight);
+		}
+		template <unsigned u, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(THIS_INDEX < big_number<unsigned, uRight>::THIS_TYPE), unsigned char> assign_add(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
+		{
+			return assign_add<u>(bnLeft, static_cast<big_number<unsigned, uRight>::base_type const&>(bnRight));
+		}
+		template <unsigned uLeft, unsigned uRight>
+		big_number & operator = (big_number_add<big_number<unsigned, uLeft>const&, big_number<unsigned, uRight>const&> stAdd)
+		{
+			auto const & bnLeft = std::get<0>(stAdd);
+			auto const & bnRight = std::get<1>(stAdd);
+			if (assign_add<THIS_INDEX>(bnLeft, bnRight))
 			{
 				__debugbreak();
 			}
@@ -239,26 +329,168 @@ namespace jrmwng
 		template <unsigned u>
 		unsigned char assign_sub(big_number const & bnLeft, big_number const & bnRight)
 		{
-			unsigned char const ubBorrow0 = base_type::assign_sub<u - 1>(static_cast<base_type const&>(bnLeft), static_cast<base_type const&>(bnRight));
+			unsigned char const ubBaseBorrow = base_type::assign_sub<u - 1>(static_cast<base_type const&>(bnLeft), static_cast<base_type const&>(bnRight));
 
-			unsigned uBits1;
-			unsigned char const ubBorrow1 = _addcarryx_u32(1U, ~bnLeft.uBits, bnRight.uBits, &uBits1);
+			unsigned uThisBits;
+			unsigned char const ubThisBorrow = _addcarryx_u32(ubBaseBorrow, ~bnLeft.uBits, bnRight.uBits, &uThisBits);
 
-			uBits = 1U - ubBorrow0 + ~uBits1;
-			return ubBorrow1;
+			uBits = ~uThisBits;
+			return ubThisBorrow;
 		}
 		template <>
 		unsigned char assign_sub<0>(big_number const & bnLeft, big_number const & bnRight)
 		{
-			unsigned uBits0;
-			unsigned char const ubBorrow0 = _addcarryx_u32(1U, ~bnLeft.uBits, bnRight.uBits, &uBits0);
+			unsigned uThisBits;
+			unsigned char const ubThisBorrow = _addcarryx_u32(0, ~bnLeft.uBits, bnRight.uBits, &uThisBits);
 
-			uBits = 1U + ~uBits0;
-			return ubBorrow0;
+			uBits = ~uThisBits;
+			return ubThisBorrow;
 		}
-		big_number & operator = (big_number_sub<big_number const&, big_number const&> stSub)
+		template <unsigned u, unsigned uLeft>
+		std::enable_if_t<(big_number<unsigned, uLeft>::THIS_INDEX < THIS_INDEX), unsigned char> assign_sub(big_number<unsigned, uLeft> const & bnLeft, big_number const & bnRight)
 		{
-			if (assign_sub<THIS_INDEX>(std::get<0>(stSub), std::get<1>(stSub)))
+			unsigned char const ubBaseBorrow = base_type::assign_sub<u - 1>(bnLeft, static_cast<base_type const&>(bnRight));
+
+			unsigned uThisBits;
+			unsigned char const ubThisBorrow = _addcarryx_u32(ubBaseBorrow, ~0, bnRight.uBits, &uThisBits);
+
+			uBits = ~uThisBits;
+			return ubThisBorrow;
+		}
+		template <unsigned u, unsigned uRight>
+		std::enable_if_t<(big_number<unsigned, uRight>::THIS_INDEX < THIS_INDEX), unsigned char> assign_sub(big_number const & bnLeft, big_number<unsigned, uRight> const & bnRight)
+		{
+			unsigned char const ubBaseBorrow = base_type::assign_sub<u - 1>(static_cast<base_type const&>(bnLeft), bnRight);
+
+			unsigned uThisBits;
+			unsigned char const ubThisBorrow = _addcarryx_u32(ubBaseBorrow, ~bnLeft.uBits, 0, &uThisBits);
+
+			uBits = ~uThisBits;
+			return ubThisBorrow;
+		}
+		template <unsigned u, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(big_number<unsigned, uLeft>::THIS_INDEX < THIS_INDEX && big_number<unsigned, uRight>::THIS_INDEX < THIS_INDEX), unsigned char> assign_sub(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
+		{
+			unsigned char const ubBaseBorrow = base_type::assign_sub<u - 1>(bnLeft, bnRight);
+
+			unsigned uThisBits;
+			unsigned char const ubThisBorrow = _addcarryx_u32(ubBaseBorrow, ~0, 0, &uThisBits);
+
+			uBits = ~uThisBits;
+			return ubThisBorrow;
+		}
+		template <unsigned u, unsigned uLeft>
+		std::enable_if_t<(THIS_INDEX < big_number<unsigned, uLeft>::THIS_INDEX), unsigned char> assign_sub(big_number<unsigned, uLeft> const & bnLeft, big_number const & bnRight)
+		{
+			return assign_sub<u>(static_cast<big_number<unsigned, uLeft>::base_type const&>(bnLeft), bnRight);
+		}
+		template <unsigned u, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(THIS_INDEX < big_number<unsigned, uRight>::THIS_INDEX), unsigned char> assign_sub(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
+		{
+			return assign_sub<u>(bnLeft, static_cast<big_number<unsigned, uRight>::base_type const&>(bnRight));
+		}
+		template <unsigned uLeft, unsigned uRight>
+		big_number & operator = (big_number_sub<big_number<unsigned, uLeft>const&, big_number<unsigned, uRight>const&> stSub)
+		{
+			auto const & bnLeft = std::get<0>(stSub);
+			auto const & bnRight = std::get<1>(stSub);
+			if (assign_sub<THIS_INDEX>(bnLeft, bnRight))
+			{
+				__debugbreak();
+			}
+			return *this;
+		}
+
+		//       ABC
+		// *     DEF
+		// ---------
+		//       CHL (C*F) 0 0
+		// +    CHL0 (B*F) 1 0
+		// +    CHL0 (C*E) 0 1
+		// +   CHL00 (A*F) 2 0
+		// +   CHL00 (B*E) 1 1
+		// +   CHL00 (C*D) 0 2
+		// +  CHL000 (A*E) 2 1
+		// +  CHL000 (B*D) 1 2
+		// + CHL0000 (A*D) 2 2
+		template <unsigned uSum, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(uSum - 1 == big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX)> assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		{
+			unsigned uMulHigh;
+			unsigned const uMulLow = _mulx_u32(bnLeft.uBits, bnRight.uBits, &uMulHigh);
+
+			unsigned char const ubCarryLow = _addcarryx_u32(0, uLow, uMulLow, &uLow);
+			unsigned char const ubCarryHigh = _addcarryx_u32(ubCarryLow, uHigh, uMulHigh, &uHigh);
+
+			if (_addcarryx_u32(ubCarryHigh, uCarry, 0, &uCarry))
+			{
+#ifdef _DEBUG
+				__debugbreak();
+#endif
+			}
+		}
+		template <unsigned uSum, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && uRight <= 32)> assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		{
+			// NOP
+		}
+		template <unsigned uSum, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uRight)> assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		{
+			assign_mul_inner_product_right<uSum>(bnLeft, static_cast<big_number<unsigned, uRight>::base_type const&>(bnRight), uCarry, uHigh, uLow);
+		}
+		template <unsigned uSum, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(uSum - 1 <= big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && uLeft <= 32)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		{
+			assign_mul_inner_product_right<uSum>(bnLeft, bnRight, uCarry, uHigh, uLow);
+		}
+		template <unsigned uSum, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(uSum - 1 == big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uLeft)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		{
+			assign_mul_inner_product_right<uSum>(bnLeft, bnRight, uCarry, uHigh, uLow);
+		}
+		template <unsigned uSum, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uLeft)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		{
+			assign_mul_inner_product_right<uSum>(bnLeft, bnRight, uCarry, uHigh, uLow);
+			assign_mul_inner_product_left<uSum>(static_cast<big_number<unsigned, uLeft>::base_type const&>(bnLeft), bnRight, uCarry, uHigh, uLow);
+		}
+		template <unsigned u, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(0 == u && THIS_INDEX == u),unsigned> assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
+		{
+			uBits = uHigh;
+			return uCarry;
+		}
+		template <unsigned u, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(0 < u && THIS_INDEX == u), unsigned> assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
+		{
+			unsigned uLocal = 0;
+			unsigned uLow = 0;
+			assign_mul_inner_product_left<u>(bnLeft, bnRight, uLocal, uHigh, uLow);
+
+			unsigned char const ubCarry = base_type::assign_mul<u - 1>(bnLeft, bnRight, uHigh, uLow);
+
+			uBits = uHigh;
+			return _addcarryx_u32(ubCarry, uLocal, uCarry, &uCarry);
+		}
+		template <unsigned u, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(0 < u && THIS_INDEX < u), unsigned> assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
+		{
+			unsigned uLocal = 0;
+			unsigned uLow = 0;
+			assign_mul_inner_product_left<u>(bnLeft, bnRight, uLocal, uHigh, uLow);
+
+			unsigned char const ubCarry = assign_mul<u - 1>(bnLeft, bnRight, uHigh, uLow);
+
+			return _addcarryx_u32(ubCarry, uLocal, uCarry, &uCarry);
+		}
+		template <unsigned uLeft, unsigned uRight>
+		big_number & operator = (big_number_mul<big_number<unsigned, uLeft>const&, big_number<unsigned, uRight>const&> stMul)
+		{
+			auto const & bnLeft = std::get<0>(stMul);
+			auto const & bnRight = std::get<1>(stMul);
+			unsigned uBaseCarry = 0;
+			if (assign_mul<big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX + 1>(bnLeft, bnRight, uBaseCarry, 0))
 			{
 				__debugbreak();
 			}
