@@ -455,6 +455,11 @@ namespace jrmwng
 			assign_mul_inner_product_right<uSum>(bnLeft, bnRight, uCarry, uHigh, uLow);
 			assign_mul_inner_product_left<uSum>(static_cast<big_number<unsigned, uLeft>::base_type const&>(bnLeft), bnRight, uCarry, uHigh, uLow);
 		}
+		template <unsigned uSum, unsigned uLeft, unsigned uRight>
+		std::enable_if_t<(big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX < uSum - 1)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		{
+			// NOP
+		}
 		template <unsigned u, unsigned uLeft, unsigned uRight>
 		std::enable_if_t<(0 == u && THIS_INDEX == u),unsigned> assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
 		{
@@ -490,7 +495,7 @@ namespace jrmwng
 			auto const & bnLeft = std::get<0>(stMul);
 			auto const & bnRight = std::get<1>(stMul);
 			unsigned uBaseCarry = 0;
-			if (assign_mul<big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX + 1>(bnLeft, bnRight, uBaseCarry, 0))
+			if (assign_mul<std::max<unsigned>(THIS_INDEX, big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX + 1)>(bnLeft, bnRight, uBaseCarry, 0))
 			{
 				__debugbreak();
 			}

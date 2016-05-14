@@ -1,16 +1,16 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 
-#include "..\jrmwng\vt.h"
+#include "..\jrmwng\vt_set.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace UnitTest_jrmwng
 {		
-	TEST_CLASS(UnitTest_jrmwng_vt)
+	TEST_CLASS(UnitTest_jrmwng_vt_set)
 	{
 	public:
-		TEST_METHOD(TestMethod_jrmwng_vt)
+		TEST_METHOD(TestMethod_jrmwng_vt_set)
 		{
 			Assert::IsFalse(jrmwng::vt_set<int>::exists_t<0>::value);
 			Assert::IsFalse(jrmwng::vt_set<int, 1>::exists_t<0>::value);

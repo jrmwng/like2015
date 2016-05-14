@@ -169,13 +169,17 @@
       <SubType>
       </SubType>
     </ClCompile>
-    <ClCompile Include="UnitTest_jrmwng_vt.cpp">
+    <ClCompile Include="UnitTest_jrmwng_vt_set.cpp">
       <SubType>
       </SubType>
     </ClCompile>
     <ClCompile Include="UnitTest_jrmwng_xmm_traits.cpp">
       <SubType>
       </SubType>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
