@@ -25,7 +25,7 @@ namespace jrmwng
 		{}
 	};
 	template <typename TTuple, typename TFunc>
-	inline void for_each_tuple(TTuple const & stTuple, TFunc const & tFunc)
+	inline void for_each(TTuple const & stTuple, TFunc const & tFunc)
 	{
 		for_each_tuple_s<std::tuple_size<TTuple>::value>::apply(stTuple, tFunc);
 	}

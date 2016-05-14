@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 
-#include "..\jrmwng\for_each_tuple.h"
+#include "..\jrmwng\tuple.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -23,15 +23,15 @@ namespace UnitTest_jrmwng
 		template <typename TInput1, typename TInput2, typename TOutcome3, typename TFunc4>
 		void TestMethod_jrmwng_big_number_unsigned_operate(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleCD, TFunc4 const & tupleE)
 		{
-			jrmwng::for_each_tuple(tupleA, [&](auto const & bnA)
+			jrmwng::for_each(tupleA, [&](auto const & bnA)
 			{
-				jrmwng::for_each_tuple(tupleB, [&](auto const & bnB)
+				jrmwng::for_each(tupleB, [&](auto const & bnB)
 				{
-					jrmwng::for_each_tuple(tupleCD, [&](auto const & elemCD)
+					jrmwng::for_each(tupleCD, [&](auto const & elemCD)
 					{
 						auto & bnC = std::get<0>(elemCD);
 						auto const & strD = std::get<1>(elemCD);
-						jrmwng::for_each_tuple(tupleE, [&](auto const & fnE)
+						jrmwng::for_each(tupleE, [&](auto const & fnE)
 						{
 							bnC.rand();
 							bnC = fnE(bnA, bnB);
