@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 
+#include "..\jrmwng\for_each_tuple.h"
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace Microsoft {
@@ -18,67 +20,26 @@ namespace UnitTest_jrmwng
 {		
 	TEST_CLASS(UnitTest_jrmwng_big_number)
 	{
-		template <unsigned uLeft, unsigned uRight, typename TOutput, typename TExpect, typename TFunc>
-		void TestMethod_jrmwng_big_number_unsigned_operate(jrmwng::big_number<unsigned, uLeft> const & bnA, jrmwng::big_number<unsigned, uRight> const & bnB, TOutput & bnC, TExpect const & strD, TFunc const & tFunc)
-		{
-			bnC.rand();
-			bnC = tFunc(bnA, bnB);
-			Assert::AreEqual(strD, bnC.ToString());
-		}
-		template <typename TInput1, size_t szIndex1, typename TInput2, size_t szIndex2, typename TOutcome3, size_t szIndex3, typename TFunc4, size_t szIndex4>
-		std::enable_if_t<(0 == szIndex1 || 0 == szIndex2 || 0 == szIndex3 || 0 == szIndex4)> TestMethod_jrmwng_big_number_unsigned_operate_1234(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleC, TFunc4 const & tupleD)
-		{
-			// NOP
-		}
-		template <typename TInput1, size_t szIndex1, typename TInput2, size_t szIndex2, typename TOutcome3, size_t szIndex3, typename TFunc4, size_t szIndex4>
-		std::enable_if_t<(0 < szIndex1 && 0 < szIndex2 && 0 < szIndex3 && 0 < szIndex4)> TestMethod_jrmwng_big_number_unsigned_operate_1234(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleC, TFunc4 const & tupleD)
-		{
-			TestMethod_jrmwng_big_number_unsigned_operate_1234<TInput1, szIndex1, TInput2, szIndex2, TOutcome3, szIndex3, TFunc4, szIndex4 - 1>(tupleA, tupleB, tupleC, tupleD);
-
-			auto const &  bnA =             std::get<szIndex1 - 1>(tupleA);
-			auto const &  bnB =             std::get<szIndex2 - 1>(tupleB);
-			auto       &  bnC = std::get<0>(std::get<szIndex3 - 1>(tupleC));
-			auto const & strC = std::get<1>(std::get<szIndex3 - 1>(tupleC));
-			auto const &  fnD =             std::get<szIndex4 - 1>(tupleD);
-			TestMethod_jrmwng_big_number_unsigned_operate(bnA, bnB, bnC, strC, fnD);
-		}
-		template <typename TInput1, size_t szIndex1, typename TInput2, size_t szIndex2, typename TOutcome3, size_t szIndex3, typename TFunc4, size_t szIndex4>
-		std::enable_if_t<(0 < szIndex3)> TestMethod_jrmwng_big_number_unsigned_operate_123(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleC, TFunc4 const & tupleD)
-		{
-			TestMethod_jrmwng_big_number_unsigned_operate_123 <TInput1, szIndex1, TInput2, szIndex2, TOutcome3, szIndex3 - 1, TFunc4, szIndex4>(tupleA, tupleB, tupleC, tupleD);
-			TestMethod_jrmwng_big_number_unsigned_operate_1234<TInput1, szIndex1, TInput2, szIndex2, TOutcome3, szIndex3    , TFunc4, szIndex4>(tupleA, tupleB, tupleC, tupleD);
-		}
-		template <typename TInput1, size_t szIndex1, typename TInput2, size_t szIndex2, typename TOutcome3, size_t szIndex3, typename TFunc4, size_t szIndex4>
-		std::enable_if_t<(0 == szIndex3)> TestMethod_jrmwng_big_number_unsigned_operate_123(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleC, TFunc4 const & tupleD)
-		{
-			// NOP
-		}
-		template <typename TInput1, size_t szIndex1, typename TInput2, size_t szIndex2, typename TOutcome3, size_t szIndex3, typename TFunc4, size_t szIndex4>
-		std::enable_if_t<(0 < szIndex2)> TestMethod_jrmwng_big_number_unsigned_operate_12(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleC, TFunc4 const & tupleD)
-		{
-			TestMethod_jrmwng_big_number_unsigned_operate_12 <TInput1, szIndex1, TInput2, szIndex2 - 1, TOutcome3, szIndex3, TFunc4, szIndex4>(tupleA, tupleB, tupleC, tupleD);
-			TestMethod_jrmwng_big_number_unsigned_operate_123<TInput1, szIndex1, TInput2, szIndex2    , TOutcome3, szIndex3, TFunc4, szIndex4>(tupleA, tupleB, tupleC, tupleD);
-		}
-		template <typename TInput1, size_t szIndex1, typename TInput2, size_t szIndex2, typename TOutcome3, size_t szIndex3, typename TFunc4, size_t szIndex4>
-		std::enable_if_t<(0 == szIndex2)> TestMethod_jrmwng_big_number_unsigned_operate_12(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleC, TFunc4 const & tupleD)
-		{
-			// NOP
-		}
-		template <typename TInput1, size_t szIndex1, typename TInput2, size_t szIndex2, typename TOutcome3, size_t szIndex3, typename TFunc4, size_t szIndex4>
-		std::enable_if_t<(0 < szIndex1)> TestMethod_jrmwng_big_number_unsigned_operate_1(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleC, TFunc4 const & tupleD)
-		{
-			TestMethod_jrmwng_big_number_unsigned_operate_1 <TInput1, szIndex1 - 1, TInput2, szIndex2, TOutcome3, szIndex3, TFunc4, szIndex4>(tupleA, tupleB, tupleC, tupleD);
-			TestMethod_jrmwng_big_number_unsigned_operate_12<TInput1, szIndex1    , TInput2, szIndex2, TOutcome3, szIndex3, TFunc4, szIndex4>(tupleA, tupleB, tupleC, tupleD);
-		}
-		template <typename TInput1, size_t szIndex1, typename TInput2, size_t szIndex2, typename TOutcome3, size_t szIndex3, typename TFunc4, size_t szIndex4>
-		std::enable_if_t<(0 == szIndex1)> TestMethod_jrmwng_big_number_unsigned_operate_1(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleC, TFunc4 const & tupleD)
-		{
-			// NOP
-		}
 		template <typename TInput1, typename TInput2, typename TOutcome3, typename TFunc4>
-		void TestMethod_jrmwng_big_number_unsigned_operate(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleC, TFunc4 const & tupleD)
+		void TestMethod_jrmwng_big_number_unsigned_operate(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleCD, TFunc4 const & tupleE)
 		{
-			TestMethod_jrmwng_big_number_unsigned_operate_1<TInput1, std::tuple_size<TInput1>::value, TInput2, std::tuple_size<TInput2>::value, TOutcome3, std::tuple_size<TOutcome3>::value, TFunc4, std::tuple_size<TFunc4>::value>(tupleA, tupleB, tupleC, tupleD);
+			jrmwng::for_each_tuple(tupleA, [&](auto const & bnA)
+			{
+				jrmwng::for_each_tuple(tupleB, [&](auto const & bnB)
+				{
+					jrmwng::for_each_tuple(tupleCD, [&](auto const & elemCD)
+					{
+						auto & bnC = std::get<0>(elemCD);
+						auto const & strD = std::get<1>(elemCD);
+						jrmwng::for_each_tuple(tupleE, [&](auto const & fnE)
+						{
+							bnC.rand();
+							bnC = fnE(bnA, bnB);
+							Assert::AreEqual(strD, bnC.ToString());
+						});
+					});
+				});
+			});
 		}
 	public:
 		TEST_METHOD(TestMethod_jrmwng_big_number_unsigned)
@@ -141,6 +102,7 @@ namespace UnitTest_jrmwng
 				Assert::AreEqual(std::wstring(L"0x00000000000000010000000000000000"), bn128_10000000000000000.ToString());
 
 				//
+
 				TestMethod_jrmwng_big_number_unsigned_operate(std::tie(bn32_1, bn64_1, bn96_1), std::tie(bn32_1, bn64_1, bn96_1),
 					std::make_tuple(
 						std::tie(bn32, std::wstring(L"0x00000002")),
