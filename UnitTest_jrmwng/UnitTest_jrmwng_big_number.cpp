@@ -21,7 +21,7 @@ namespace UnitTest_jrmwng
 	TEST_CLASS(UnitTest_jrmwng_big_number)
 	{
 		template <typename TInput1, typename TInput2, typename TOutcome3, typename TFunc4>
-		void TestMethod_jrmwng_big_number_unsigned_operate(TInput1 const & tupleA, TInput2 const & tupleB, TOutcome3 const & tupleCD, TFunc4 const & tupleE)
+		void TestMethod_jrmwng_big_number_unsigned_operate(TInput1 tupleA, TInput2 tupleB, TOutcome3 tupleCD, TFunc4 tupleE)
 		{
 			jrmwng::for_each(tupleA, [&](auto const & bnA)
 			{
@@ -55,10 +55,26 @@ namespace UnitTest_jrmwng
 			jrmwng::big_number<unsigned, 96> bn96_1;
 			jrmwng::big_number<unsigned, 64> bn64_1;
 			jrmwng::big_number<unsigned, 32> bn32_1;
+			jrmwng::big_number<unsigned, 96> bn96_0;
+			jrmwng::big_number<unsigned, 64> bn64_0;
+			jrmwng::big_number<unsigned, 32> bn32_0;
 			jrmwng::big_number<unsigned, 96> bn96;
 			jrmwng::big_number<unsigned, 64> bn64;
 			jrmwng::big_number<unsigned, 32> bn32;
 			{
+				bn32_0.rand();
+				bn32_0 = 0U;
+				Assert::AreEqual(std::wstring(L"0x00000000"), bn32_0.ToString());
+				Assert::IsTrue(bn32_0 == 0U);
+				bn64_0.rand();
+				bn64_0 = 0U;
+				Assert::AreEqual(std::wstring(L"0x0000000000000000"), bn64_0.ToString());
+				Assert::IsTrue(bn64_0 == 0U);
+				bn96_0.rand();
+				bn96_0 = 0U;
+				Assert::AreEqual(std::wstring(L"0x000000000000000000000000"), bn96_0.ToString());
+				Assert::IsTrue(bn96_0 == 0U);
+
 				bn32_1.rand();
 				bn32_1 = 1U;
 				Assert::AreEqual(std::wstring(L"0x00000001"), bn32_1.ToString());
@@ -105,6 +121,20 @@ namespace UnitTest_jrmwng
 				jrmwng::big_number<unsigned, 32> bn32_2(bn32_1 + bn32_1);
 
 				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn32_0, bn64_0, bn96_0),
+					std::tie(bn32_0, bn64_0, bn96_0),
+					std::make_tuple(
+						std::tie(bn32, std::wstring(L"0x00000000")),
+						std::tie(bn64, std::wstring(L"0x0000000000000000")),
+						std::tie(bn96, std::wstring(L"0x000000000000000000000000"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA + bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnA - bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnA * bnB; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
 					std::tie(bn32_1, bn64_1, bn96_1),
 					std::tie(bn32_1, bn64_1, bn96_1),
 					std::make_tuple(
@@ -113,8 +143,31 @@ namespace UnitTest_jrmwng
 						std::tie(bn96, std::wstring(L"0x000000000000000000000002"))
 					),
 					std::make_tuple(
-						[](auto const & bnA, auto const & bnB) { return bnA + bnB; },
-						[](auto const & bnA, auto const & bnB) { return bnB + bnA; }
+						[](auto const & bnA, auto const & bnB) { return bnA + bnB; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn32_1, bn64_1, bn96_1),
+					std::tie(bn32_1, bn64_1, bn96_1),
+					std::make_tuple(
+						std::tie(bn32, std::wstring(L"0x00000000")),
+						std::tie(bn64, std::wstring(L"0x0000000000000000")),
+						std::tie(bn96, std::wstring(L"0x000000000000000000000000"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA - bnB; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn32_1, bn64_1, bn96_1),
+					std::tie(bn32_1, bn64_1, bn96_1),
+					std::make_tuple(
+						std::tie(bn32, std::wstring(L"0x00000001")),
+						std::tie(bn64, std::wstring(L"0x0000000000000001")),
+						std::tie(bn96, std::wstring(L"0x000000000000000000000001"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA * bnB; }
 					)
 				);
 				TestMethod_jrmwng_big_number_unsigned_operate(
@@ -151,30 +204,40 @@ namespace UnitTest_jrmwng
 						std::tie(bn96, std::wstring(L"0x0000000000000000FFFFFFFF"))
 					),
 					std::make_tuple([](auto const & bnA, auto const & bnB) { return bnA - bnB; })
-					);
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_100000000, bn96_100000000),
+					std::tie(bn32_FFFFFFFF, bn64_FFFFFFFF, bn96_FFFFFFFF),
+					std::make_tuple(
+						std::tie(bn32, std::wstring(L"0x00000001")),
+						std::tie(bn64, std::wstring(L"0x0000000000000001")),
+						std::tie(bn96, std::wstring(L"0x000000000000000000000001"))
+					),
+					std::make_tuple([](auto const & bnA, auto const & bnB) { return bnA - bnB; })
+				);
 
 				//
 
-				bn64.rand();
-				bn64 = bn64_100000000 - bn64_FFFFFFFF;
-				Assert::AreEqual(bn64_1, bn64);
+				//bn64.rand();
+				//bn64 = bn64_100000000 - bn64_FFFFFFFF;
+				//Assert::AreEqual(bn64_1, bn64);
 
-				bn64.rand();
-				bn64 = bn64_100000000 - bn32_1;
-				Assert::AreEqual(bn64_FFFFFFFF, bn64);
+				//bn64.rand();
+				//bn64 = bn64_100000000 - bn32_1;
+				//Assert::AreEqual(bn64_FFFFFFFF, bn64);
 
-				//
+				////
 
-				bn64.rand();
-				bn64 = bn64_FFFFFFFF * bn32_1;
-				Assert::AreEqual(bn64_FFFFFFFF, bn64);
+				//bn64.rand();
+				//bn64 = bn64_FFFFFFFF * bn32_1;
+				//Assert::AreEqual(bn64_FFFFFFFF, bn64);
 
-				bn64.rand();
-				bn64 = bn32_1 * bn64_FFFFFFFF;
-				Assert::AreEqual(bn64_FFFFFFFF, bn64);
+				//bn64.rand();
+				//bn64 = bn32_1 * bn64_FFFFFFFF;
+				//Assert::AreEqual(bn64_FFFFFFFF, bn64);
 
-				bn96.rand();
-				bn96 = bn64_100000000 * bn64_100000000;
+				//bn96.rand();
+				//bn96 = bn64_100000000 * bn64_100000000;
 			}
 		}
 	};

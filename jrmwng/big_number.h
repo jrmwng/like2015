@@ -199,6 +199,50 @@ namespace jrmwng
 			return cmpeq<THIS_INDEX>(uxlThat);
 		}
 
+		template <unsigned uIndex, unsigned uThat>
+		static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), typename big_number<unsigned, uThat>::base_type const &> get_base(big_number<unsigned, uThat> const & bnThat)
+		{
+			return static_cast<big_number<unsigned, uThat>::base_type const &>(bnThat);
+		}
+		template <unsigned uIndex, unsigned uThat>
+		static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), big_number<unsigned, uThat> const &> get_base(big_number<unsigned, uThat> const & bnThat)
+		{
+			return bnThat;
+		}
+		template <unsigned uIndex, unsigned uThat>
+		static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), typename big_number<unsigned, uThat>::base_type &> get_base(big_number<unsigned, uThat> & bnThat)
+		{
+			return static_cast<big_number<unsigned, uThat>::base_type &>(bnThat);
+		}
+		template <unsigned uIndex, unsigned uThat>
+		static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), big_number<unsigned, uThat> &> get_base(big_number<unsigned, uThat> & bnThat)
+		{
+			return bnThat;
+		}
+		template <unsigned uIndex, unsigned uThat>
+		static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), unsigned> get_bits(big_number<unsigned, uThat> const & bnThat)
+		{
+			return bnThat.uBits;
+		}
+		template <unsigned uIndex, unsigned uThat>
+		static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), unsigned> get_bits(big_number<unsigned, uThat> const & bnThat)
+		{
+			return 0;
+		}
+		template <unsigned uIndex, unsigned uThat>
+		static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX)> set_bits(big_number<unsigned, uThat> & bnThat, unsigned uNewBits)
+		{
+			bnThat.uBits = uNewBits;
+		}
+		template <unsigned uIndex, unsigned uThat>
+		static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex)> set_bits(big_number<unsigned, uThat> & bnThat, unsigned uNewBits)
+		{
+			if (uNewBits)
+			{
+				__debugbreak();
+			}
+		}
+
 		template <unsigned u>
 		void assign(unsigned const uThat)
 		{
@@ -238,31 +282,16 @@ namespace jrmwng
 			return *this;
 		}
 
-		template <unsigned u, unsigned uThat>
-		std::enable_if_t<(0 == u && THIS_INDEX == u && big_number<unsigned, uThat>::THIS_INDEX == u)> assign(big_number<unsigned, uThat> const & bnThat)
+		template <unsigned uIndex, unsigned uThis, unsigned uThat>
+		static std::enable_if_t<(0 < uIndex)> assign(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uThat> const & bnThat)
 		{
-			uBits = bnThat.uBits;
+			assign<uIndex - 1>(get_base<uIndex>(bnThis), get_base<uIndex>(bnThat));
+			set_bits<uIndex>(bnThis, get_bits<uIndex>(bnThat));
 		}
-		template <unsigned u, unsigned uThat>
-		std::enable_if_t<(0 < u && THIS_INDEX == u && big_number<unsigned, uThat>::THIS_INDEX == u)> assign(big_number<unsigned, uThat> const & bnThat)
+		template <unsigned uIndex, unsigned uThis, unsigned uThat>
+		static std::enable_if_t<(0 == uIndex)> assign(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uThat> const & bnThat)
 		{
-			base_type::assign<u - 1>(static_cast<big_number<unsigned, uThat>::base_type const&>(bnThat));
-			uBits = bnThat.uBits;
-		}
-		template <unsigned u, unsigned uThat>
-		std::enable_if_t<(0 < u && THIS_INDEX < u && big_number<unsigned, uThat>::THIS_INDEX == u)> assign(big_number<unsigned, uThat> const & bnThat)
-		{
-			assign<u - 1>(static_cast<big_number<unsigned, uThat>::base_type const&>(bnThat));
-			if (bnThat.uBits)
-			{
-				__debugbreak();
-			}
-		}
-		template <unsigned u, unsigned uThat>
-		std::enable_if_t<(0 < u && THIS_INDEX == u && big_number<unsigned, uThat>::THIS_INDEX < u)> assign(big_number<unsigned, uThat> const & bnThat)
-		{
-			base_type::assign<u - 1>(bnThat);
-			uBits = 0;
+			set_bits<uIndex>(bnThis, get_bits<uIndex>(bnThat));
 		}
 		template <unsigned uThat>
 		big_number(big_number<unsigned, uThat> const & bnThat)
@@ -270,125 +299,60 @@ namespace jrmwng
 			assign<std::max<unsigned>(THIS_INDEX, big_number<unsigned, uThat>::THIS_INDEX)>(bnThat);
 		}
 
-		template <unsigned uIndex>
-		struct op_s
+		template <unsigned uIndex, unsigned uThis, unsigned uLeft, unsigned uRight>
+		static std::enable_if_t<(0 < uIndex), unsigned char> assign_add(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
 		{
-			template <unsigned uThat>
-			static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), typename big_number<unsigned, uThat>::base_type const &> get_base(big_number<unsigned, uThat> const & bnThat)
-			{
-				return static_cast<big_number<unsigned, uThat>::base_type const &>(bnThat);
-			}
-			template <unsigned uThat>
-			static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), big_number<unsigned, uThat> const &> get_base(big_number<unsigned, uThat> const & bnThat)
-			{
-				return bnThat;
-			}
-			template <unsigned uThat>
-			static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), typename big_number<unsigned, uThat>::base_type &> get_base(big_number<unsigned, uThat> & bnThat)
-			{
-				return static_cast<big_number<unsigned, uThat>::base_type &>(bnThat);
-			}
-			template <unsigned uThat>
-			static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), big_number<unsigned, uThat> &> get_base(big_number<unsigned, uThat> & bnThat)
-			{
-				return bnThat;
-			}
-			template <unsigned uThat>
-			static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), unsigned> get_bits(big_number<unsigned, uThat> const & bnThat)
-			{
-				return bnThat.uBits;
-			}
-			template <unsigned uThat>
-			static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), unsigned> get_bits(big_number<unsigned, uThat> const & bnThat)
-			{
-				return 0;
-			}
-			template <unsigned uThat>
-			static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX)> set_bits(big_number<unsigned, uThat> & bnThat, unsigned uNewBits)
-			{
-				bnThat.uBits = uNewBits;
-			}
-			template <unsigned uThat>
-			static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex)> set_bits(big_number<unsigned, uThat> & bnThat, unsigned uNewBits)
-			{
-				if (uNewBits)
-				{
-					__debugbreak();
-				}
-			}
-		};
-		template <unsigned uIndex>
-		struct add_s
-			: op_s<uIndex>
-		{
-			template <unsigned uThis, unsigned uLeft, unsigned uRight>
-			static unsigned char eval(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
-			{
-				unsigned char const ubBaseCarry = add_s<uIndex - 1>::eval(get_base(bnThis), get_base(bnLeft), get_base(bnRight));
-				unsigned uThisBits;
-				unsigned char const ubThisCarry = _addcarryx_u32(ubBaseCarry, get_bits(bnLeft), get_bits(bnRight), &uThisBits);
+			unsigned char const ubBaseCarry = assign_add<uIndex - 1>(get_base<uIndex>(bnThis), get_base<uIndex>(bnLeft), get_base<uIndex>(bnRight));
+			unsigned uThisBits;
+			unsigned char const ubThisCarry = _addcarryx_u32(ubBaseCarry, get_bits<uIndex>(bnLeft), get_bits<uIndex>(bnRight), &uThisBits);
 
-				set_bits(bnThis, uThisBits);
-				return ubThisCarry;
-			}
-		};
-		template <>
-		struct add_s<0>
+			set_bits<uIndex>(bnThis, uThisBits);
+			return ubThisCarry;
+		}
+		template <unsigned uIndex, unsigned uThis, unsigned uLeft, unsigned uRight>
+		static std::enable_if_t<(0 == uIndex), unsigned char> assign_add(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
 		{
-			template <unsigned uThis, unsigned uLeft, unsigned uRight>
-			static unsigned char eval(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
-			{
-				return _addcarryx_u32(0, bnLeft.uBits, bnRight.uBits, &bnThis.uBits);
-			}
-		};
+			return _addcarryx_u32(0, bnLeft.uBits, bnRight.uBits, &bnThis.uBits);
+		}
 		template <unsigned uLeft, unsigned uRight>
 		big_number(big_number_add<big_number<unsigned, uLeft>const&, big_number<unsigned, uRight>const&> stAdd)
 		{
 			auto       & bnThis = *this;
 			auto const & bnLeft = std::get<0>(stAdd);
 			auto const & bnRight = std::get<1>(stAdd);
-			if (add_s<std::max<unsigned>(THIS_INDEX, std::max<unsigned>(big_number<unsigned, uLeft>::THIS_INDEX, big_number<unsigned, uRight>::THIS_INDEX))>::eval(bnThis, bnLeft, bnRight))
+			if (assign_add<std::max<unsigned>(THIS_INDEX, std::max<unsigned>(big_number<unsigned, uLeft>::THIS_INDEX, big_number<unsigned, uRight>::THIS_INDEX))>(bnThis, bnLeft, bnRight))
 			{
 				__debugbreak();
 			}
 		}
 
-		template <unsigned uIndex>
-		struct sub_s
-			: op_s<uIndex>
+		template <unsigned uIndex, unsigned uThis, unsigned uLeft, unsigned uRight>
+		static std::enable_if_t<(0 < uIndex), unsigned char> assign_sub(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
 		{
-			template <unsigned uThis, unsigned uLeft, unsigned uRight>
-			static unsigned char eval(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
-			{
-				unsigned char const ubBaseBorrow = sub_s<uIndex - 1>::eval(get_base(bnThis), get_base(bnLeft), get_base(bnRight));
+			unsigned char const ubBaseBorrow = assign_sub<uIndex - 1>(get_base<uIndex>(bnThis), get_base<uIndex>(bnLeft), get_base<uIndex>(bnRight));
 
-				unsigned uThisBits;
-				unsigned char const ubThisBorrow = _addcarryx_u32(ubBaseBorrow, ~get_bits(bnLeft), get_bits(bnRight), &uThisBits);
+			unsigned uThisBits;
+			unsigned char const ubThisBorrow = _addcarryx_u32(ubBaseBorrow, ~get_bits<uIndex>(bnLeft), get_bits<uIndex>(bnRight), &uThisBits);
 
-				set_bits(bnThis, ~uThisBits);
-				return ubThisBorrow;
-			}
-		};
-		template <>
-		struct sub_s<0>
+			set_bits<uIndex>(bnThis, ~uThisBits);
+			return ubThisBorrow;
+		}
+		template <unsigned uIndex, unsigned uThis, unsigned uLeft, unsigned uRight>
+		static std::enable_if_t<(0 == uIndex), unsigned char> assign_sub(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
 		{
-			template <unsigned uThis, unsigned uLeft, unsigned uRight>
-			static unsigned char eval(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
-			{
-				unsigned uThisBits;
-				unsigned char const ubThisBorrow = _addcarryx_u32(0, ~bnLeft.uBits, bnRight.uBits, &uThisBits);
+			unsigned uThisBits;
+			unsigned char const ubThisBorrow = _addcarryx_u32(0, ~bnLeft.uBits, bnRight.uBits, &uThisBits);
 
-				bnThis.uBits = ~uThisBits;
-				return ubThisBorrow;
-			}
-		};
+			bnThis.uBits = ~uThisBits;
+			return ubThisBorrow;
+		}
 		template <unsigned uLeft, unsigned uRight>
-		big_number(big_number_sub<big_number<unsigned, uLeft>const&, big_number<unsigned, uRight>const&> stSub)
+		big_number(big_number_sub<big_number<unsigned, uLeft> const &, big_number<unsigned, uRight> const &> stSub)
 		{
 			auto       & bnThis = *this;
 			auto const & bnLeft = std::get<0>(stSub);
 			auto const & bnRight = std::get<1>(stSub);
-			if (sub_s<std::max<unsigned>(THIS_INDEX, std::max<unsigned>(big_number<unsigned, uLeft>::THIS_INDEX, big_number<unsigned, uRight>::THIS_INDEX))>::eval(bnThis, bnLeft, bnRight))
+			if (assign_sub<std::max<unsigned>(THIS_INDEX, std::max<unsigned>(big_number<unsigned, uLeft>::THIS_INDEX, big_number<unsigned, uRight>::THIS_INDEX))>(bnThis, bnLeft, bnRight))
 			{
 				__debugbreak();
 			}
@@ -483,7 +447,7 @@ namespace jrmwng
 			return _addcarryx_u32(ubCarry, uLocal, uCarry, &uCarry);
 		}
 		template <unsigned uLeft, unsigned uRight>
-		big_number(big_number_mul<big_number<unsigned, uLeft>const&, big_number<unsigned, uRight>const&> stMul)
+		big_number(big_number_mul<big_number<unsigned, uLeft> const &, big_number<unsigned, uRight> const &> stMul)
 		{
 			auto const & bnLeft = std::get<0>(stMul);
 			auto const & bnRight = std::get<1>(stMul);
