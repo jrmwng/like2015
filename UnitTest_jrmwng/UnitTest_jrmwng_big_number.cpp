@@ -9,9 +9,15 @@ namespace Microsoft {
 	namespace VisualStudio {
 		namespace CppUnitTestFramework
 		{
+#if 1
+			template <unsigned uBitCount> inline std::wstring ToString(jrmwng::big_number<unsigned, uBitCount> const & bn) { return bn.ToString(); }
+#else
 			template <> inline std::wstring ToString<jrmwng::big_number<unsigned, 32>>(jrmwng::big_number<unsigned, 32> const & bn) { return bn.ToString(); }
 			template <> inline std::wstring ToString<jrmwng::big_number<unsigned, 64>>(jrmwng::big_number<unsigned, 64> const & bn) { return bn.ToString(); }
 			template <> inline std::wstring ToString<jrmwng::big_number<unsigned, 96>>(jrmwng::big_number<unsigned, 96> const & bn) { return bn.ToString(); }
+			template <> inline std::wstring ToString<jrmwng::big_number<unsigned, 128>>(jrmwng::big_number<unsigned, 128> const & bn) { return bn.ToString(); }
+			template <> inline std::wstring ToString<jrmwng::big_number<unsigned, 160>>(jrmwng::big_number<unsigned, 160> const & bn) { return bn.ToString(); }
+#endif
 		}
 	}
 }
@@ -187,8 +193,6 @@ namespace UnitTest_jrmwng
 				Assert::AreEqual(std::wstring(L"0x0000000000000000000000010000000000000000"), bn160_10000000000000000.ToString());
 
 				//
-				jrmwng::big_number<unsigned, 32> bn32_2(bn32_1 + bn32_1);
-
 				TestMethod_jrmwng_big_number_unsigned_operate(
 					std::tie(bn32_0, bn64_0, bn96_0, bn128_0, bn160_0),
 					std::tie(bn32_0, bn64_0, bn96_0, bn128_0, bn160_0),
@@ -221,7 +225,7 @@ namespace UnitTest_jrmwng
 					)
 				);
 				TestMethod_jrmwng_big_number_unsigned_operate(
-					std::tie(bn32_0, bn64_0, bn96_0, bn128_0, bn160_0, bn32_1, bn64_1, bn96_1, bn128_1, bn160_1, bn32_FFFFFFFF, bn64_FFFFFFFF, bn96_FFFFFFFF, bn128_FFFFFFFF, bn160_FFFFFFFF, bn64_100000000, bn96_100000000, bn128_100000000, bn160_100000000, bn96_10000000000000000, bn128_10000000000000000, bn160_10000000000000000),
+					std::tie(bn32_1, bn64_1, bn96_1, bn128_1, bn160_1, bn32_FFFFFFFF, bn64_FFFFFFFF, bn96_FFFFFFFF, bn128_FFFFFFFF, bn160_FFFFFFFF, bn64_100000000, bn96_100000000, bn128_100000000, bn160_100000000, bn96_10000000000000000, bn128_10000000000000000, bn160_10000000000000000),
 					std::tie(bn32_0, bn64_0, bn96_0, bn128_0, bn160_0),
 					std::make_tuple(
 						std::tie(bn32 , (L"0x00000000")),
@@ -466,29 +470,181 @@ namespace UnitTest_jrmwng
 						[](auto const & bnA, auto const & bnB) { return bnB * bnA; }
 					)
 				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn32_0, bn64_0, bn96_0, bn128_0, bn160_0),
+					std::make_tuple(
+						std::tie(bn64 , (L"0xFFFFFFFFFFFFFFFF")),
+						std::tie(bn96 , (L"0x00000000FFFFFFFFFFFFFFFF")),
+						std::tie(bn128, (L"0x0000000000000000FFFFFFFFFFFFFFFF")),
+						std::tie(bn160, (L"0x000000000000000000000000FFFFFFFFFFFFFFFF"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA + bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnA - bnB; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn32_1, bn64_1, bn96_1, bn128_1, bn160_1),
+					std::make_tuple(
+						std::tie(bn96 , (L"0x000000010000000000000000")),
+						std::tie(bn128, (L"0x00000000000000010000000000000000")),
+						std::tie(bn160, (L"0x0000000000000000000000010000000000000000"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA + bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnB + bnA; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn32_1, bn64_1, bn96_1, bn128_1, bn160_1),
+					std::make_tuple(
+						std::tie(bn64 , (L"0xFFFFFFFFFFFFFFFE")),
+						std::tie(bn96 , (L"0x00000000FFFFFFFFFFFFFFFE")),
+						std::tie(bn128, (L"0x0000000000000000FFFFFFFFFFFFFFFE")),
+						std::tie(bn160, (L"0x000000000000000000000000FFFFFFFFFFFFFFFE"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA - bnB; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn32_1, bn64_1, bn96_1, bn128_1, bn160_1),
+					std::make_tuple(
+						std::tie(bn64 , (L"0xFFFFFFFFFFFFFFFF")),
+						std::tie(bn96 , (L"0x00000000FFFFFFFFFFFFFFFF")),
+						std::tie(bn128, (L"0x0000000000000000FFFFFFFFFFFFFFFF")),
+						std::tie(bn160, (L"0x000000000000000000000000FFFFFFFFFFFFFFFF"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA * bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnB * bnA; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn32_FFFFFFFF, bn64_FFFFFFFF, bn96_FFFFFFFF, bn128_FFFFFFFF, bn160_FFFFFFFF),
+					std::make_tuple(
+						std::tie(bn96 , (L"0x0000000100000000FFFFFFFE")),
+						std::tie(bn128, (L"0x000000000000000100000000FFFFFFFE")),
+						std::tie(bn160, (L"0x00000000000000000000000100000000FFFFFFFE"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA + bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnB + bnA; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn32_FFFFFFFF, bn64_FFFFFFFF, bn96_FFFFFFFF, bn128_FFFFFFFF, bn160_FFFFFFFF),
+					std::make_tuple(
+						std::tie(bn64 , (L"0xFFFFFFFF00000000")),
+						std::tie(bn96 , (L"0x00000000FFFFFFFF00000000")),
+						std::tie(bn128, (L"0x0000000000000000FFFFFFFF00000000")),
+						std::tie(bn160, (L"0x000000000000000000000000FFFFFFFF00000000"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA - bnB; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn32_FFFFFFFF, bn64_FFFFFFFF, bn96_FFFFFFFF, bn128_FFFFFFFF, bn160_FFFFFFFF),
+					std::make_tuple(
+						std::tie(bn96 , (L"0xFFFFFFFEFFFFFFFF00000001")),
+						std::tie(bn128, (L"0x00000000FFFFFFFEFFFFFFFF00000001")),
+						std::tie(bn160, (L"0x0000000000000000FFFFFFFEFFFFFFFF00000001"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA * bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnB * bnA; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn64_100000000, bn96_100000000, bn128_100000000, bn160_100000000),
+					std::make_tuple(
+						std::tie(bn96 , (L"0x0000000100000000FFFFFFFF")),
+						std::tie(bn128, (L"0x000000000000000100000000FFFFFFFF")),
+						std::tie(bn160, (L"0x00000000000000000000000100000000FFFFFFFF"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA + bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnB + bnA; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn64_100000000, bn96_100000000, bn128_100000000, bn160_100000000),
+					std::make_tuple(
+						std::tie(bn64 , (L"0xFFFFFFFEFFFFFFFF")),
+						std::tie(bn96 , (L"0x00000000FFFFFFFEFFFFFFFF")),
+						std::tie(bn128, (L"0x0000000000000000FFFFFFFEFFFFFFFF")),
+						std::tie(bn160, (L"0x000000000000000000000000FFFFFFFEFFFFFFFF"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA - bnB; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn64_100000000, bn96_100000000, bn128_100000000, bn160_100000000),
+					std::make_tuple(
+						std::tie(bn96 , (L"0xFFFFFFFFFFFFFFFF00000000")),
+						std::tie(bn128, (L"0x00000000FFFFFFFFFFFFFFFF00000000")),
+						std::tie(bn160, (L"0x0000000000000000FFFFFFFFFFFFFFFF00000000"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA * bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnB * bnA; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::make_tuple(
+						std::tie(bn96 , (L"0x00000001FFFFFFFFFFFFFFFE")),
+						std::tie(bn128, (L"0x0000000000000001FFFFFFFFFFFFFFFE")),
+						std::tie(bn160, (L"0x000000000000000000000001FFFFFFFFFFFFFFFE"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA + bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnB + bnA; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::make_tuple(
+						std::tie(bn32 , (L"0x00000000")),
+						std::tie(bn64 , (L"0x0000000000000000")),
+						std::tie(bn96 , (L"0x000000000000000000000000")),
+						std::tie(bn128, (L"0x00000000000000000000000000000000")),
+						std::tie(bn160, (L"0x0000000000000000000000000000000000000000"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA - bnB; }
+					)
+				);
+				TestMethod_jrmwng_big_number_unsigned_operate(
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::tie(bn64_FFFFFFFFFFFFFFFF, bn96_FFFFFFFFFFFFFFFF, bn128_FFFFFFFFFFFFFFFF, bn160_FFFFFFFFFFFFFFFF),
+					std::make_tuple(
+						std::tie(bn128, (L"0xFFFFFFFFFFFFFFFE0000000000000001")),
+						std::tie(bn160, (L"0x00000000FFFFFFFFFFFFFFFE0000000000000001"))
+					),
+					std::make_tuple(
+						[](auto const & bnA, auto const & bnB) { return bnA * bnB; },
+						[](auto const & bnA, auto const & bnB) { return bnB * bnA; }
+					)
+				);
 
 				//
 
-				//bn64.rand();
-				//bn64 = bn64_100000000 - bn64_FFFFFFFF;
-				//Assert::AreEqual(bn64_1, bn64);
-
-				//bn64.rand();
-				//bn64 = bn64_100000000 - bn32_1;
-				//Assert::AreEqual(bn64_FFFFFFFF, bn64);
-
-				////
-
-				//bn64.rand();
-				//bn64 = bn64_FFFFFFFF * bn32_1;
-				//Assert::AreEqual(bn64_FFFFFFFF, bn64);
-
-				//bn64.rand();
-				//bn64 = bn32_1 * bn64_FFFFFFFF;
-				//Assert::AreEqual(bn64_FFFFFFFF, bn64);
-
-				//bn96.rand();
-				//bn96 = bn64_100000000 * bn64_100000000;
+				Assert::AreEqual(bn32_0, jrmwng::big_number<unsigned, 32>(bn32_1 - bn32_1));
 			}
 		}
 	};
