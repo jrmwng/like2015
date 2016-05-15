@@ -146,7 +146,14 @@ namespace jrmwng
 		}
 		bool operator == (wchar_t const *pcThat) const
 		{
-			return ToString().compare(pcThat) == 0;
+			wchar_t acBuffer[2 + (THIS_INDEX + 1) * 8];
+			{
+				acBuffer[0] = L'0';
+				acBuffer[1] = L'x';
+				to_string<THIS_INDEX>(acBufer + 2);
+				acBuffer[2 + (THIS_INDEX + 1)] = L'\0';
+			}
+			return strcmp(acBuffer, pcThat) == 0;
 		}
 
 		template <unsigned u>
