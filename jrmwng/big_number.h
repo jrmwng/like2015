@@ -79,15 +79,7 @@ namespace jrmwng
 			: uBits(0)
 		{}
 
-		template <unsigned u>
-		void to_string(wchar_t *pcBuffer) const
-		{
-			to_string<0>(pcBuffer);
-
-			base_type::to_string<u - 1>(pcBuffer + 8);
-		}
-		template <>
-		void to_string<0>(wchar_t *pcBuffer) const
+		__m128i to_w8char() const
 		{
 			// 0xFEDCBA98
 			// 0x76543210
@@ -130,30 +122,63 @@ namespace jrmwng
 			// 0x00370036 0x00350034 0x00330032 0x00310030
 			__m128i const w8Char9 = _mm_add_epi16(w8Char8, w8Bits5);
 
-			_mm_storeu_si128((__m128i*)pcBuffer, w8Char9);
+			return w8Char9;
+		}
+		template <unsigned u>
+		void to_string(wchar_t *pcBuffer) const
+		{
+			_mm_storeu_si128((__m128i*)pcBuffer, to_w8char());
+
+			base_type::to_string<u - 1>(pcBuffer + 8);
+		}
+		template <>
+		void to_string<0>(wchar_t *pcBuffer) const
+		{
+			_mm_storeu_si128((__m128i*)pcBuffer, to_w8char());
+		}
+		void to_string(wchar_t *pcBuffer) const
+		{
+			pcBuffer[0] = L'0';
+			pcBuffer[1] = L'x';
+			to_string<THIS_INDEX>(pcBuffer + 2);
+			pcBuffer[2 + (THIS_INDEX + 1) * 8] = '\0';
 		}
 		std::wstring ToString() const
 		{
 			std::wstring str;
 			{
 				str.resize(2 + (THIS_INDEX + 1) * 8);
-				str[0] = L'0';
-				str[1] = L'x';
-				to_string<THIS_INDEX>(&str[2]);
-				//str[str.length() - 1] = L'\0';
+				to_string(&str[0]);
 			}
 			return str;
 		}
+
+		template <unsigned u>
+		__m128i cmpeq(wchar_t const *pcThat) const
+		{
+			__m128i const w8CmpEq0 = base_type::cmpeq<u - 1>(pcThat + 8);
+			__m128i const w8That0 = _mm_loadu_si128((__m128i const*)pcThat);
+			__m128i const w8This0 = to_w8char();
+
+			__m128i const w8CmpEq1 = _mm_cmpeq_epi16(w8This0, w8That0);
+
+			__m128i const w8CmpEq2 = _mm_and_si128(w8CmpEq0, w8CmpEq1);
+
+			return w8CmpEq2;
+		}
+		template <>
+		__m128i cmpeq<0>(wchar_t const *pcThat) const
+		{
+			__m128i const w8That0 = _mm_loadu_si128((__m128i const*)pcThat);
+			__m128i const w8This0 = to_w8char();
+
+			__m128i const w8CmpEq1 = _mm_cmpeq_epi16(w8This0, w8That0);
+
+			return w8CmpEq1;
+		}
 		bool operator == (wchar_t const *pcThat) const
 		{
-			wchar_t acBuffer[2 + (THIS_INDEX + 1) * 8];
-			{
-				acBuffer[0] = L'0';
-				acBuffer[1] = L'x';
-				to_string<THIS_INDEX>(acBufer + 2);
-				acBuffer[2 + (THIS_INDEX + 1)] = L'\0';
-			}
-			return strcmp(acBuffer, pcThat) == 0;
+			return pcThat[0] == L'0' && pcThat[1] == L'x' && 0xFFFF == _mm_movemask_epi8(cmpeq<THIS_INDEX>(pcThat + 2));
 		}
 
 		template <unsigned u>
@@ -286,7 +311,6 @@ namespace jrmwng
 		big_number(unsigned long long const uxlThat)
 		{
 			assign<THIS_INDEX>(uxlThat);
-			return *this;
 		}
 
 		template <unsigned uIndex, unsigned uThis, unsigned uThat>
