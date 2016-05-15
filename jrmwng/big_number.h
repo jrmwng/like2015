@@ -428,7 +428,7 @@ namespace jrmwng
 		std::enable_if_t<(0 == u && THIS_INDEX == u),unsigned> assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
 		{
 			uBits = uHigh;
-			return uCarry;
+			return 0;
 		}
 		template <unsigned u, unsigned uLeft, unsigned uRight>
 		std::enable_if_t<(0 < u && THIS_INDEX == u), unsigned> assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
