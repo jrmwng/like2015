@@ -271,7 +271,9 @@ namespace jrmwng
 		{
 			if (uNewBits)
 			{
+#ifdef _DEBUG
 				__debugbreak();
+#endif
 			}
 		}
 
@@ -353,7 +355,9 @@ namespace jrmwng
 			auto const & bnRight = std::get<1>(stAdd);
 			if (assign_add<std::max<unsigned>(THIS_INDEX, std::max<unsigned>(big_number<unsigned, uLeft>::THIS_INDEX, big_number<unsigned, uRight>::THIS_INDEX))>(bnThis, bnLeft, bnRight))
 			{
+#ifdef _DEBUG
 				__debugbreak();
+#endif
 			}
 		}
 
@@ -385,7 +389,9 @@ namespace jrmwng
 			auto const & bnRight = std::get<1>(stSub);
 			if (assign_sub<std::max<unsigned>(THIS_INDEX, std::max<unsigned>(big_number<unsigned, uLeft>::THIS_INDEX, big_number<unsigned, uRight>::THIS_INDEX))>(bnThis, bnLeft, bnRight))
 			{
+#ifdef _DEBUG
 				__debugbreak();
+#endif
 			}
 		}
 
@@ -520,6 +526,9 @@ namespace jrmwng
 		enum { THIS_BIT_COUNT = 0 };
 		enum { BASE_BIT_COUNT = 0 };
 	};
+
+	template <unsigned uBitCount>
+	using big_unsigned = big_number<unsigned, uBitCount>;
 
 	//template <unsigned uBitCount>
 	//struct big_number<__m128i, uBitCount>
