@@ -3,7 +3,9 @@
 /* Author: jrmwng @ 2016 */
 
 #include <intrin.h>
+#include <algorithm>
 #include <string>
+#include <tuple>
 
 namespace jrmwng
 {
@@ -134,7 +136,7 @@ namespace jrmwng
 		{
 			_mm_storeu_si128((__m128i*)pcBuffer, to_w8char());
 
-			base_type::to_string<u - 1>(pcBuffer + 8);
+			base_type::template to_string<u - 1>(pcBuffer + 8);
 		}
 		template <>
 		void to_string<0>(wchar_t *pcBuffer) const
@@ -161,7 +163,7 @@ namespace jrmwng
 		template <unsigned u>
 		__m128i cmpeq(wchar_t const *pcThat) const
 		{
-			__m128i const w8CmpEq0 = base_type::cmpeq<u - 1>(pcThat + 8);
+			__m128i const w8CmpEq0 = base_type::template cmpeq<u - 1>(pcThat + 8);
 			__m128i const w8That0 = _mm_loadu_si128((__m128i const*)pcThat);
 			__m128i const w8This0 = to_w8char();
 
@@ -189,7 +191,7 @@ namespace jrmwng
 		template <unsigned u>
 		bool cmpeq(big_number const & that) const
 		{
-			return uBits == that.uBits && base_type::cmpeq<u - 1>(static_cast<big_number const&>(that));
+			return uBits == that.uBits && base_type::template cmpeq<u - 1>(static_cast<big_number const&>(that));
 		}
 		template <>
 		bool cmpeq<0>(big_number const & that) const
@@ -204,7 +206,7 @@ namespace jrmwng
 		template <unsigned u>
 		bool cmpeq(unsigned const uThat) const
 		{
-			return uBits == 0 && base_type::cmpeq<u - 1>(uThat);
+			return uBits == 0 && base_type::template cmpeq<u - 1>(uThat);
 		}
 		template <>
 		bool cmpeq<0>(unsigned const uThat) const
@@ -219,12 +221,12 @@ namespace jrmwng
 		template <unsigned u>
 		bool cmpeq(unsigned long long const uxlThat) const
 		{
-			return uBits == 0 && base_type::cmpeq<u - 1>(uxlThat);
+			return uBits == 0 && base_type::template cmpeq<u - 1>(uxlThat);
 		}
 		template <>
 		bool cmpeq<1>(unsigned long long const uxlThat) const
 		{
-			return uBits == static_cast<unsigned>(uxlThat >> 32) && base_type::cmpeq<0>(uxlThat);
+			return uBits == static_cast<unsigned>(uxlThat >> 32) && base_type::template cmpeq<0>(uxlThat);
 		}
 		template <>
 		bool cmpeq<0>(unsigned long long const uxlThat) const
@@ -239,12 +241,12 @@ namespace jrmwng
 		template <unsigned uIndex, unsigned uThat>
 		static decltype(auto) get_base(big_number<unsigned, uThat> const & bnThat)
 		{
-			return static_cast<std::conditional_t<(bnThat.THIS_INDEX < uIndex), big_number<unsigned, uThat>, big_number<unsigned, uThat>::base_type> const &>(bnThat);
+			return static_cast<std::conditional_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), big_number<unsigned, uThat>, typename big_number<unsigned, uThat>::base_type> const &>(bnThat);
 		}
 		template <unsigned uIndex, unsigned uThat>
 		static decltype(auto) get_base(big_number<unsigned, uThat> & bnThat)
 		{
-			return static_cast<std::conditional_t<(bnThat.THIS_INDEX < uIndex), big_number<unsigned, uThat>, big_number<unsigned, uThat>::base_type> &>(bnThat);
+			return static_cast<std::conditional_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), big_number<unsigned, uThat>, typename big_number<unsigned, uThat>::base_type> &>(bnThat);
 		}
 		template <unsigned uIndex, unsigned uThat>
 		static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), unsigned> get_bits(big_number<unsigned, uThat> const & bnThat)
@@ -275,7 +277,7 @@ namespace jrmwng
 		template <unsigned u>
 		void assign(unsigned const uThat)
 		{
-			base_type::assign<u - 1>(uThat);
+			base_type::template assign<u - 1>(uThat);
 			uBits = 0;
 		}
 		template <>
@@ -291,13 +293,13 @@ namespace jrmwng
 		template <unsigned u>
 		void assign(unsigned long long const uxlThat)
 		{
-			base_type::assign<u - 1>(uxlThat);
+			base_type::template assign<u - 1>(uxlThat);
 			uBits = 0;
 		}
 		template <>
 		void assign<1>(unsigned long long const uxlThat)
 		{
-			base_type::assign<0>(uxlThat);
+			base_type::template assign<0>(uxlThat);
 			uBits = static_cast<unsigned>(uxlThat >> 32);
 		}
 		template <>
@@ -426,7 +428,7 @@ namespace jrmwng
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
 		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uRight)> assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
-			assign_mul_inner_product_right<uSum>(bnLeft, static_cast<big_number<unsigned, uRight>::base_type const&>(bnRight), uCarry, uHigh, uLow);
+			assign_mul_inner_product_right<uSum>(bnLeft, static_cast<typename big_number<unsigned, uRight>::base_type const&>(bnRight), uCarry, uHigh, uLow);
 		}
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
 		std::enable_if_t<(uSum - 1 <= big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && uLeft <= 32)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
@@ -442,7 +444,7 @@ namespace jrmwng
 		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uLeft)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
 			assign_mul_inner_product_right<uSum>(bnLeft, bnRight, uCarry, uHigh, uLow);
-			assign_mul_inner_product_left<uSum>(static_cast<big_number<unsigned, uLeft>::base_type const&>(bnLeft), bnRight, uCarry, uHigh, uLow);
+			assign_mul_inner_product_left<uSum>(static_cast<typename big_number<unsigned, uLeft>::base_type const&>(bnLeft), bnRight, uCarry, uHigh, uLow);
 		}
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
 		std::enable_if_t<(big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX < uSum - 1)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
@@ -462,7 +464,7 @@ namespace jrmwng
 			unsigned uLow = 0;
 			assign_mul_inner_product_left<u>(bnLeft, bnRight, uLocal, uHigh, uLow);
 
-			unsigned char const ubCarry = base_type::assign_mul<u - 1>(bnLeft, bnRight, uHigh, uLow);
+			unsigned char const ubCarry = base_type::template assign_mul<u - 1>(bnLeft, bnRight, uHigh, uLow);
 
 			uBits = uHigh;
 			return _addcarryx_u32(ubCarry, uLocal, uCarry, &uCarry);
@@ -501,29 +503,14 @@ namespace jrmwng
 			}
 		}
 
-		template <unsigned u>
 		int rand()
 		{
-			int n = base_type::rand<u - 1>();
+			int n = base_type::rand();
 			while (_rdrand32_step(&uBits) == 0 && ++n)
 			{
 				_mm_pause();
 			}
 			return n;
-		}
-		template <>
-		int rand<0>()
-		{
-			int n = 0;
-			while (_rdrand32_step(&uBits) == 0 && ++n)
-			{
-				_mm_pause();
-			}
-			return n;
-		}
-		int rand()
-		{
-			return rand<THIS_INDEX>();
 		}
 	};
 	template <>
@@ -532,6 +519,11 @@ namespace jrmwng
 	{
 		enum { THIS_BIT_COUNT = 0 };
 		enum { BASE_BIT_COUNT = 0 };
+
+		int rand()
+		{
+			return 0;
+		}
 	};
 
 	template <unsigned uBitCount>
