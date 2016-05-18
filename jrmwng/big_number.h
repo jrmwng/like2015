@@ -13,54 +13,59 @@ namespace jrmwng
 	struct big_number<T, 0>
 	{};
 
+	struct big_number_expr
+	{};
+	struct big_number_op
+		: big_number_expr
+	{};
+
+	template <typename TExpr>
+	using big_number_expr_t = std::conditional_t<(std::is_base_of<big_number_op, TExpr>::value), TExpr, std::add_lvalue_reference_t< std::add_const_t<TExpr> > >;
 
 	template <typename TLeft, typename TRight>
 	struct big_number_add
 		: std::tuple<TLeft, TRight>
+		, big_number_op
 	{
 		big_number_add(TLeft tLeft, TRight tRight)
 			: std::tuple<TLeft, TRight>(tLeft, tRight)
 		{}
 	};
-	template <typename TLeft, unsigned uLeft, typename TRight, unsigned uRight>
-	decltype(auto) operator + (big_number<TLeft, uLeft> const & Left, big_number<TRight, uRight> const & Right)
+	template <typename TLeft, typename TRight, typename TEnableIf = std::enable_if_t<std::is_base_of<big_number_expr, TLeft>::value && std::is_base_of<big_number_expr, TRight>::value>>
+	decltype(auto) operator + (TLeft const & tLeft, TRight const & tRight)
 	{
-		return big_number_add<decltype(Left), decltype(Right)>(Left, Right);
+		return big_number_add< big_number_expr_t<TLeft>, big_number_expr_t<TRight> >(tLeft, tRight);
 	}
 
 	template <typename TLeft, typename TRight>
 	struct big_number_sub
 		: std::tuple<TLeft, TRight>
+		, big_number_op
 	{
 		big_number_sub(TLeft tLeft, TRight tRight)
 			: std::tuple<TLeft, TRight>(tLeft, tRight)
 		{}
 	};
-	template <typename TLeft, unsigned uLeft, typename TRight, unsigned uRight>
-	decltype(auto) operator - (big_number<TLeft, uLeft> const & Left, big_number<TRight, uRight> const & Right)
+	template <typename TLeft, typename TRight, typename TEnableIf = std::enable_if_t<std::is_base_of<big_number_expr, TLeft>::value && std::is_base_of<big_number_expr, TRight>::value>>
+	decltype(auto) operator - (TLeft const & tLeft, TRight const & tRight)
 	{
-		return big_number_sub<decltype(Left), decltype(Right)>(Left, Right);
-	}
-	template <typename TLeft, unsigned uLeft>
-	decltype(auto) operator - (big_number<TLeft, uLeft> const & bnLeft, int nRight)
-	{
-		return big_number_sub<decltype(bnLeft), decltype(nRight)>(bnLeft, nRight);
+		return big_number_sub< big_number_expr_t<TLeft>, big_number_expr_t<TRight> >(tLeft, tRight);
 	}
 
 	template <typename TLeft, typename TRight>
 	struct big_number_mul
 		: std::tuple<TLeft, TRight>
+		, big_number_op
 	{
 		big_number_mul(TLeft tLeft, TRight tRight)
 			: std::tuple<TLeft, TRight>(tLeft, tRight)
 		{}
 	};
-	template <typename TLeft, unsigned uLeft, typename TRight, unsigned uRight>
-	decltype(auto) operator * (big_number<TLeft, uLeft> const & Left, big_number<TRight, uRight> const & Right)
+	template <typename TLeft, typename TRight, typename TEnableIf = std::enable_if_t<std::is_base_of<big_number_expr, TLeft>::value && std::is_base_of<big_number_expr, TRight>::value>>
+	decltype(auto) operator * (TLeft const & tLeft, TRight const & tRight)
 	{
-		return big_number_mul<decltype(Left), decltype(Right)>(Left, Right);
+		return big_number_mul< big_number_expr_t<TLeft>, big_number_expr_t<TRight> >(tLeft, tRight);
 	}
-
 
 	template <unsigned uBitCount>
 	struct big_number<unsigned, uBitCount>
@@ -232,24 +237,14 @@ namespace jrmwng
 		}
 
 		template <unsigned uIndex, unsigned uThat>
-		static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), typename big_number<unsigned, uThat>::base_type const &> get_base(big_number<unsigned, uThat> const & bnThat)
+		static decltype(auto) get_base(big_number<unsigned, uThat> const & bnThat)
 		{
-			return static_cast<big_number<unsigned, uThat>::base_type const &>(bnThat);
+			return static_cast<std::conditional_t<(bnThat.THIS_INDEX < uIndex), big_number<unsigned, uThat>, big_number<unsigned, uThat>::base_type> const &>(bnThat);
 		}
 		template <unsigned uIndex, unsigned uThat>
-		static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), big_number<unsigned, uThat> const &> get_base(big_number<unsigned, uThat> const & bnThat)
+		static decltype(auto) get_base(big_number<unsigned, uThat> & bnThat)
 		{
-			return bnThat;
-		}
-		template <unsigned uIndex, unsigned uThat>
-		static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), typename big_number<unsigned, uThat>::base_type &> get_base(big_number<unsigned, uThat> & bnThat)
-		{
-			return static_cast<big_number<unsigned, uThat>::base_type &>(bnThat);
-		}
-		template <unsigned uIndex, unsigned uThat>
-		static std::enable_if_t<(big_number<unsigned, uThat>::THIS_INDEX < uIndex), big_number<unsigned, uThat> &> get_base(big_number<unsigned, uThat> & bnThat)
-		{
-			return bnThat;
+			return static_cast<std::conditional_t<(bnThat.THIS_INDEX < uIndex), big_number<unsigned, uThat>, big_number<unsigned, uThat>::base_type> &>(bnThat);
 		}
 		template <unsigned uIndex, unsigned uThat>
 		static std::enable_if_t<(uIndex <= big_number<unsigned, uThat>::THIS_INDEX), unsigned> get_bits(big_number<unsigned, uThat> const & bnThat)
@@ -494,6 +489,17 @@ namespace jrmwng
 				__debugbreak();
 			}
 		}
+		template <unsigned uLeftLeft, unsigned uLeftRight, unsigned uRightLeft, unsigned uRightRight>
+		big_number(big_number_mul< big_number_sub<big_number<unsigned, uLeftLeft> const &, big_number<unsigned, uLeftRight> const &>, big_number_sub< big_number<unsigned, uRightLeft> const &, big_number<unsigned, uRightRight> const &> > stExpr)
+		{
+			big_number<unsigned, std::max<unsigned>(uLeftLeft, uLeftRight)> const bnLeft(std::get<0>(stExpr));
+			big_number<unsigned, std::max<unsigned>(uRightLeft, uRightRight)> const bnRight(std::get<1>(stExpr));
+			unsigned uBaseCarry = 0;
+			if (assign_mul<std::max<unsigned>(THIS_INDEX, bnLeft.THIS_INDEX + bnRight.THIS_INDEX + 1)>(bnLeft, bnRight, uBaseCarry, 0))
+			{
+				__debugbreak();
+			}
+		}
 
 		template <unsigned u>
 		int rand()
@@ -522,13 +528,14 @@ namespace jrmwng
 	};
 	template <>
 	struct big_number<unsigned, 0>
+		: big_number_expr
 	{
 		enum { THIS_BIT_COUNT = 0 };
 		enum { BASE_BIT_COUNT = 0 };
 	};
 
 	template <unsigned uBitCount>
-	using big_unsigned = big_number<unsigned, uBitCount>;
+	using big_uint32 = big_number<unsigned, uBitCount>;
 
 	//template <unsigned uBitCount>
 	//struct big_number<__m128i, uBitCount>
