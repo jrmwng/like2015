@@ -131,112 +131,6 @@ namespace jrmwng
 
 			return w8Char9;
 		}
-		template <unsigned u>
-		void to_string(wchar_t *pcBuffer) const
-		{
-			_mm_storeu_si128((__m128i*)pcBuffer, to_w8char());
-
-			base_type::template to_string<u - 1>(pcBuffer + 8);
-		}
-		template <>
-		void to_string<0>(wchar_t *pcBuffer) const
-		{
-			_mm_storeu_si128((__m128i*)pcBuffer, to_w8char());
-		}
-		void to_string(wchar_t *pcBuffer) const
-		{
-			pcBuffer[0] = L'0';
-			pcBuffer[1] = L'x';
-			to_string<THIS_INDEX>(pcBuffer + 2);
-			pcBuffer[2 + (THIS_INDEX + 1) * 8] = '\0';
-		}
-		std::wstring ToString() const
-		{
-			std::wstring str;
-			{
-				str.resize(2 + (THIS_INDEX + 1) * 8);
-				to_string(&str[0]);
-			}
-			return str;
-		}
-
-		template <unsigned u>
-		__m128i cmpeq(wchar_t const *pcThat) const
-		{
-			__m128i const w8CmpEq0 = base_type::template cmpeq<u - 1>(pcThat + 8);
-			__m128i const w8That0 = _mm_loadu_si128((__m128i const*)pcThat);
-			__m128i const w8This0 = to_w8char();
-
-			__m128i const w8CmpEq1 = _mm_cmpeq_epi16(w8This0, w8That0);
-
-			__m128i const w8CmpEq2 = _mm_and_si128(w8CmpEq0, w8CmpEq1);
-
-			return w8CmpEq2;
-		}
-		template <>
-		__m128i cmpeq<0>(wchar_t const *pcThat) const
-		{
-			__m128i const w8That0 = _mm_loadu_si128((__m128i const*)pcThat);
-			__m128i const w8This0 = to_w8char();
-
-			__m128i const w8CmpEq1 = _mm_cmpeq_epi16(w8This0, w8That0);
-
-			return w8CmpEq1;
-		}
-		bool operator == (wchar_t const *pcThat) const
-		{
-			return pcThat[0] == L'0' && pcThat[1] == L'x' && 0xFFFF == _mm_movemask_epi8(cmpeq<THIS_INDEX>(pcThat + 2));
-		}
-
-		template <unsigned u>
-		bool cmpeq(big_number const & that) const
-		{
-			return uBits == that.uBits && base_type::template cmpeq<u - 1>(static_cast<big_number const&>(that));
-		}
-		template <>
-		bool cmpeq<0>(big_number const & that) const
-		{
-			return uBits == that.uBits;
-		}
-		bool operator == (big_number const & that) const
-		{
-			return cmpeq<THIS_INDEX>(that);
-		}
-
-		template <unsigned u>
-		bool cmpeq(unsigned const uThat) const
-		{
-			return uBits == 0 && base_type::template cmpeq<u - 1>(uThat);
-		}
-		template <>
-		bool cmpeq<0>(unsigned const uThat) const
-		{
-			return uBits == uThat;
-		}
-		bool operator == (unsigned const uThat) const
-		{
-			return cmpeq<THIS_INDEX>(uThat);
-		}
-
-		template <unsigned u>
-		bool cmpeq(unsigned long long const uxlThat) const
-		{
-			return uBits == 0 && base_type::template cmpeq<u - 1>(uxlThat);
-		}
-		template <>
-		bool cmpeq<1>(unsigned long long const uxlThat) const
-		{
-			return uBits == static_cast<unsigned>(uxlThat >> 32) && base_type::template cmpeq<0>(uxlThat);
-		}
-		template <>
-		bool cmpeq<0>(unsigned long long const uxlThat) const
-		{
-			return uBits == static_cast<unsigned>(uxlThat);
-		}
-		bool operator == (unsigned long long const uxlThat) const
-		{
-			return cmpeq<THIS_INDEX>(uxlThat);
-		}
 
 		template <unsigned uIndex, unsigned uThat>
 		static decltype(auto) get_base(big_number<unsigned, uThat> const & bnThat)
@@ -274,43 +168,15 @@ namespace jrmwng
 			}
 		}
 
-		template <unsigned u>
-		void assign(unsigned const uThat)
-		{
-			base_type::template assign<u - 1>(uThat);
-			uBits = 0;
-		}
-		template <>
-		void assign<0>(unsigned const uThat)
-		{
-			uBits = uThat;
-		}
 		big_number(unsigned const uThat)
-		{
-			assign<THIS_INDEX>(uThat);
-		}
+			: base_type(uThat)
+			, uBits(THIS_INDEX == 0 ? uThat : 0U)
+		{}
 
-		template <unsigned u>
-		void assign(unsigned long long const uxlThat)
-		{
-			base_type::template assign<u - 1>(uxlThat);
-			uBits = 0;
-		}
-		template <>
-		void assign<1>(unsigned long long const uxlThat)
-		{
-			base_type::template assign<0>(uxlThat);
-			uBits = static_cast<unsigned>(uxlThat >> 32);
-		}
-		template <>
-		void assign<0>(unsigned long long const uxlThat)
-		{
-			uBits = static_cast<unsigned>(uxlThat);
-		}
 		big_number(unsigned long long const uxlThat)
-		{
-			assign<THIS_INDEX>(uxlThat);
-		}
+			: base_type(uxlThat)
+			, uBits(THIS_INDEX == 0 ? uxlThat : THIS_INDEX == 1 ? (uxlThat >> 32) : 0U)
+		{}
 
 		template <unsigned uIndex, unsigned uThis, unsigned uThat>
 		static std::enable_if_t<(0 < uIndex)> assign(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uThat> const & bnThat)
@@ -520,6 +386,12 @@ namespace jrmwng
 		enum { THIS_BIT_COUNT = 0 };
 		enum { BASE_BIT_COUNT = 0 };
 
+		big_number()
+		{}
+		template <typename T1>
+		big_number(T1)
+		{}
+
 		int rand()
 		{
 			return 0;
@@ -528,6 +400,82 @@ namespace jrmwng
 
 	template <unsigned uBitCount>
 	using big_uint32 = big_number<unsigned, uBitCount>;
+
+	template <unsigned uThat>
+	inline void ToString(big_uint32<uThat> const & bnThat, wchar_t *pcBuffer)
+	{
+		_mm_storeu_si128((__m128i*)pcBuffer, bnThat.to_w8char());
+
+		ToString(static_cast<typename big_uint32<uThat>::base_type const &>(bnThat), pcBuffer + 8);
+	}
+	template <>
+	inline void ToString<0>(big_uint32<0> const &, wchar_t *)
+	{
+		// NOP
+	}
+	template <unsigned uThat>
+	static std::wstring ToString(big_uint32<uThat> const & bnThat)
+	{
+		std::wstring str;
+		{
+			str.resize(2 + (big_uint32<uThat>::THIS_INDEX + 1) * 8);
+			str[0] = L'0';
+			str[1] = L'x';
+			ToString(bnThat, &str[2]);
+			str[2 + (big_uint32<uThat>::THIS_INDEX + 1) * 8] = '\0';
+		}
+		return str;
+	}
+
+
+	template <unsigned uThat>
+	inline __m128i CmpEq(big_uint32<uThat> const & bnThat, wchar_t const *pcThat)
+	{
+		__m128i const w8CmpEq0 = CmpEq(static_cast<typename big_uint32<uThat>::base_type const &>(bnThat), pcThat + 8);
+		__m128i const w8That0 = _mm_loadu_si128((__m128i const*)pcThat);
+		__m128i const w8This0 = bnThat.to_w8char();
+
+		__m128i const w8CmpEq1 = _mm_cmpeq_epi16(w8This0, w8That0);
+
+		__m128i const w8CmpEq2 = _mm_and_si128(w8CmpEq0, w8CmpEq1);
+
+		return w8CmpEq2;
+	}
+	template <>
+	inline __m128i CmpEq<0>(big_uint32<0> const &, wchar_t const *)
+	{
+		return _mm_cmpeq_epi16(_mm_setzero_si128(), _mm_setzero_si128());
+	}
+	template <unsigned uThat>
+	static bool operator == (big_uint32<uThat> const & bnThat, wchar_t const *pcThat)
+	{
+		return pcThat[0] == L'0' && pcThat[1] == L'x' && 0xFFFF == _mm_movemask_epi8(CmpEq(bnThat, pcThat + 2));
+	}
+
+
+	template <unsigned uThat>
+	inline bool CmpEq(big_uint32<uThat> const & bnLeft, big_uint32<uThat> const & bnRight)
+	{
+		auto const & bnLeftBase = static_cast<typename big_uint32<uThat>::base_type const &>(bnLeft);
+		auto const & bnRightBase = static_cast<typename big_uint32<uThat>::base_type const &>(bnRight);
+		return bnLeft.uBits == bnRight.uBits && CmpEq(bnLeftBase, bnRightBase);
+	}
+	template <>
+	inline bool CmpEq<0>(big_uint32<0> const &, big_uint32<0> const &)
+	{
+		return true;
+	}
+	template <unsigned uThat>
+	static bool operator == (big_uint32<uThat> const & bnLeft, big_uint32<uThat> const & bnRight)
+	{
+		return CmpEq(bnLeft, bnRight);
+	}
+	template <unsigned uLeft, typename TRight>
+	static bool operator == (big_uint32<uLeft> const & bnLeft, TRight const & tRight)
+	{
+		return CmpEq(bnLeft, big_uint32<uLeft>(tRight));
+	}
+
 
 	//template <unsigned uBitCount>
 	//struct big_number<__m128i, uBitCount>
