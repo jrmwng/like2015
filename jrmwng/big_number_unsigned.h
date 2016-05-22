@@ -302,7 +302,9 @@ namespace jrmwng
 			unsigned uBaseCarry = 0;
 			if (assign_mul<std::max<unsigned>(THIS_INDEX, big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX + 1)>(bnLeft, bnRight, uBaseCarry, 0))
 			{
+#ifdef _DEBUG
 				__debugbreak();
+#endif
 			}
 		}
 		template <unsigned uLeftLeft, unsigned uLeftRight, unsigned uRightLeft, unsigned uRightRight>
@@ -313,7 +315,9 @@ namespace jrmwng
 			unsigned uBaseCarry = 0;
 			if (assign_mul<std::max<unsigned>(THIS_INDEX, bnLeft.THIS_INDEX + bnRight.THIS_INDEX + 1)>(bnLeft, bnRight, uBaseCarry, 0))
 			{
+#ifdef _DEBUG
 				__debugbreak();
+#endif
 			}
 		}
 
