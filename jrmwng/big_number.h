@@ -160,7 +160,11 @@ namespace jrmwng
 	template <unsigned uIndex, unsigned uThis, unsigned uLeft, unsigned uRight>
 	static std::enable_if_t<(0 == uIndex), unsigned char> assign_add(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
 	{
-		return _addcarryx_u32(0, bnLeft.uBits, bnRight.uBits, &bnThis.uBits);
+		unsigned uThisBits;
+		unsigned char const ubThisCarry = _addcarryx_u32(0, get_bits<0>(bnLeft), get_bits<0>(bnRight), &uThisBits);
+
+		set_bits<0>(bnThis, uThisBits);
+		return ubThisCarry;
 	}
 
 	template <unsigned uIndex, unsigned uThis, unsigned uLeft, unsigned uRight>
@@ -178,9 +182,9 @@ namespace jrmwng
 	static std::enable_if_t<(0 == uIndex), unsigned char> assign_sub(big_number<unsigned, uThis> & bnThis, big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight)
 	{
 		unsigned uThisBits;
-		unsigned char const ubThisBorrow = _addcarryx_u32(0, ~bnLeft.uBits, bnRight.uBits, &uThisBits);
+		unsigned char const ubThisBorrow = _addcarryx_u32(0, ~get_bits<0>(bnLeft), get_bits<0>(bnRight), &uThisBits);
 
-		bnThis.uBits = ~uThisBits;
+		set_bits<0>(bnThis, ~uThisBits);
 		return ubThisBorrow;
 	}
 
@@ -307,7 +311,7 @@ namespace jrmwng
 		std::enable_if_t<(uSum - 1 == big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX)> assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
 			unsigned uMulHigh;
-			unsigned const uMulLow = _mulx_u32(bnLeft.uBits, bnRight.uBits, &uMulHigh);
+			unsigned const uMulLow = _mulx_u32(get_bits<big_number<unsigned, uLeft>::THIS_INDEX>(bnLeft), get_bits<big_number<unsigned, uRight>::THIS_INDEX>(bnRight), &uMulHigh);
 
 			unsigned char const ubCarryLow = _addcarryx_u32(0, uLow, uMulLow, &uLow);
 			unsigned char const ubCarryHigh = _addcarryx_u32(ubCarryLow, uHigh, uMulHigh, &uHigh);
@@ -499,7 +503,7 @@ namespace jrmwng
 	{
 		auto const & bnLeftBase = static_cast<typename big_uint32<uThat>::base_type const &>(bnLeft);
 		auto const & bnRightBase = static_cast<typename big_uint32<uThat>::base_type const &>(bnRight);
-		return bnLeft.uBits == bnRight.uBits && CmpEq(bnLeftBase, bnRightBase);
+		return get_bits<big_uint32<uThat>::THIS_INDEX>(bnLeft) == get_bits<big_uint32<uThat>::THIS_INDEX>(bnRight) && CmpEq(bnLeftBase, bnRightBase);
 	}
 	template <>
 	inline bool CmpEq<0>(big_uint32<0> const &, big_uint32<0> const &)
