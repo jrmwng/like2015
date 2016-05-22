@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "big_number.h"
+#include "big_number_unsigned.h"
 
 template <unsigned uA, unsigned uB, unsigned uC>
 void BN_AmulB_minusA_minusB_minus1(jrmwng::big_uint32<uA> const *pbnA, jrmwng::big_uint32<uB> const *pbnB, jrmwng::big_uint32<uC> *pbnC)
