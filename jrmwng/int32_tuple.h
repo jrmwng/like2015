@@ -84,11 +84,11 @@ namespace jrmwng
 		}
 	};
 	template <typename TInt32Tuple, unsigned uIndex>
-	struct int32_ref
+	struct int32_tuple_ref
 	{
 		TInt32Tuple & m_refTuple;
 
-		int32_ref(TInt32Tuple & refTuple)
+		int32_tuple_ref(TInt32Tuple & refTuple)
 			: m_refTuple(refTuple)
 		{}
 
@@ -96,7 +96,7 @@ namespace jrmwng
 		{
 			return m_refTuple.get<uIndex>();
 		}
-		int32_ref & operator = (int nNewValue)
+		int32_tuple_ref & operator = (int nNewValue)
 		{
 			m_refTuple.set<uIndex>(nNewValue);
 			return *this;
@@ -106,6 +106,6 @@ namespace jrmwng
 	template <unsigned uIndex, unsigned uCount, typename T>
 	static decltype(auto) get_int32(int32_tuple<uCount, T> const & refTuple)
 	{
-		return int32_ref<decltype(refTuple), uIndex>(refTuple);
+		return int32_tuple_ref<decltype(refTuple), uIndex>(refTuple);
 	}
 }
