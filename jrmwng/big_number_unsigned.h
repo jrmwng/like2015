@@ -219,7 +219,8 @@ namespace jrmwng
 		// +  CHL000 (B*D) 1 2
 		// + CHL0000 (A*D) 2 2
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(uSum - 1 == big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX)> assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		std::enable_if_t<(uSum - 1 == big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX)>
+			assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
 			unsigned uMulHigh;
 			unsigned const uMulLow = _mulx_u32(get_bits<big_number<unsigned, uLeft>::THIS_INDEX>(bnLeft), get_bits<big_number<unsigned, uRight>::THIS_INDEX>(bnRight), &uMulHigh);
@@ -235,44 +236,52 @@ namespace jrmwng
 			}
 		}
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && uRight <= 32)> assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && uRight <= 32)>
+			assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
 			// NOP
 		}
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uRight)> assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uRight)>
+			assign_mul_inner_product_right(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
 			assign_mul_inner_product_right<uSum>(bnLeft, static_cast<typename big_number<unsigned, uRight>::base_type const&>(bnRight), uCarry, uHigh, uLow);
 		}
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(uSum - 1 <= big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && uLeft <= 32)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		std::enable_if_t<(uSum - 1 <= big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && uLeft <= 32)>
+			assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
 			assign_mul_inner_product_right<uSum>(bnLeft, bnRight, uCarry, uHigh, uLow);
 		}
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(uSum - 1 == big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uLeft)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		std::enable_if_t<(uSum - 1 == big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uLeft)>
+			assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
 			assign_mul_inner_product_right<uSum>(bnLeft, bnRight, uCarry, uHigh, uLow);
 		}
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uLeft)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		std::enable_if_t<(uSum - 1 < big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX && 32 < uLeft)>
+			assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
 			assign_mul_inner_product_right<uSum>(bnLeft, bnRight, uCarry, uHigh, uLow);
 			assign_mul_inner_product_left<uSum>(static_cast<typename big_number<unsigned, uLeft>::base_type const&>(bnLeft), bnRight, uCarry, uHigh, uLow);
 		}
 		template <unsigned uSum, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX < uSum - 1)> assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
+		std::enable_if_t<(big_number<unsigned, uLeft>::THIS_INDEX + big_number<unsigned, uRight>::THIS_INDEX < uSum - 1)>
+			assign_mul_inner_product_left(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned & uHigh, unsigned & uLow)
 		{
 			// NOP
 		}
 		template <unsigned u, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(0 == u && THIS_INDEX == u), unsigned> assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
+		std::enable_if_t<(0 == u && THIS_INDEX == u), unsigned>
+			assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
 		{
 			uBits = uHigh;
 			return 0;
 		}
 		template <unsigned u, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(0 < u && THIS_INDEX == u), unsigned> assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
+		std::enable_if_t<(0 < u && THIS_INDEX == u), unsigned>
+			assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
 		{
 			unsigned uLocal = 0;
 			unsigned uLow = 0;
@@ -284,7 +293,8 @@ namespace jrmwng
 			return _addcarryx_u32(ubCarry, uLocal, uCarry, &uCarry);
 		}
 		template <unsigned u, unsigned uLeft, unsigned uRight>
-		std::enable_if_t<(0 < u && THIS_INDEX < u), unsigned> assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
+		std::enable_if_t<(0 < u && THIS_INDEX < u), unsigned>
+			assign_mul(big_number<unsigned, uLeft> const & bnLeft, big_number<unsigned, uRight> const & bnRight, unsigned & uCarry, unsigned uHigh)
 		{
 			unsigned uLocal = 0;
 			unsigned uLow = 0;
