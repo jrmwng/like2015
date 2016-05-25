@@ -56,6 +56,17 @@ namespace jrmwng
 		set_value<uIndex>(bnThat, _mm_xor_si128(u4LaddR, _mm_set1_epi32(nXor));
 		return ubCarry3;
 	}
+	//   ABCDEFGH
+	// * IJKLMNOP
+	// ----------
+	//   ABCD0000
+	// * IJKL0000
+	// + ABCD0000
+	// * 0000MNOP
+	// + 0000EFGH
+	// * IJKL0000
+	// + 0000EFGH
+	// * 0000MNOP
 	template <>
 	struct big_number<__m128i, 0U>
 	{};

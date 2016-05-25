@@ -135,13 +135,13 @@ namespace
 		unsigned char m_aubBuffer[szCapacity];
 
 		std::unique_ptr<void, win32_close_handle_deleter<INVALID_HANDLE_VALUE> > m_upFile;
-		ptrdiff_t m_lBegin;
-		ptrdiff_t m_lEnd;
+		size_t m_uBegin;
+		size_t m_uEnd;
 
 		win32_file(std::unique_ptr<void, win32_close_handle_deleter<INVALID_HANDLE_VALUE> > && upFile)
 			: m_upFile(std::move(upFile))
-			, m_lBegin(0)
-			, m_lEnd(0)
+			, m_uBegin(0)
+			, m_uEnd(0)
 		{}
 
 		template <typename T>
@@ -151,32 +151,32 @@ namespace
 			{
 				return FALSE;
 			}
-			if (m_lEnd - m_lBegin < std::max({ sizeof(T), szAdvance, szPeek }))
+			if (m_uEnd - m_uBegin < std::max({ sizeof(T), szAdvance, szPeek }))
 			{
-				if (m_lEnd >= szCapacity)
+				if (m_uEnd >= szCapacity)
 				{
-					__movsb(std::begin(m_aubBuffer) - (m_lEnd - m_lBegin), std::end(m_aubBuffer) - (m_lEnd - m_lBegin), m_lEnd - m_lBegin);
+					__movsb(std::begin(m_aubBuffer) - (m_uEnd - m_uBegin), std::end(m_aubBuffer) - (m_uEnd - m_uBegin), m_uEnd - m_uBegin);
 
-					m_lBegin -= szCapacity;
-					m_lEnd -= szCapacity;
+					m_uBegin -= szCapacity;
+					m_uEnd -= szCapacity;
 				}
 				DWORD dwNumberOfBytesRead;
 				{
-					if (ReadFile(m_upFile.get(), m_aubBuffer + m_lEnd, static_cast<DWORD>(szCapacity - m_lEnd), &dwNumberOfBytesRead, NULL) == FALSE)
+					if (ReadFile(m_upFile.get(), m_aubBuffer + m_uEnd, static_cast<DWORD>(szCapacity - m_uEnd), &dwNumberOfBytesRead, NULL) == FALSE)
 					{
 						__debugbreak();
 						return FALSE;
 					}
 				}
-				m_lEnd += dwNumberOfBytesRead;
+				m_uEnd += dwNumberOfBytesRead;
 
-				if (m_lEnd - m_lBegin < sizeof(T))
+				if (m_uEnd - m_uBegin < sizeof(T))
 				{
 					return FALSE;
 				}
 			}
-			T & t = *reinterpret_cast<T*>(m_aubBuffer + m_lBegin);
-			m_lBegin += szAdvance;
+			T & t = *reinterpret_cast<T*>(m_aubBuffer + m_uBegin);
+			m_uBegin += szAdvance;
 			return tFunc(t);
 		}
 	};
