@@ -38,5 +38,8 @@
     <ClCompile Include="UnitTest_jrmwng_vt_set.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UnitTest_jrmwng_r.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -22,6 +22,11 @@ namespace jrmwng
 	{
 		return Rtype<T>(t);
 	}
+	template <typename T>
+	Rtype<T const> r(T const & t)
+	{
+		return Rtype<T const>(t);
+	}
 
 	template <typename T>
 	struct Rvar
@@ -39,6 +44,9 @@ namespace jrmwng
 			return static_cast<TR>(m_t);
 		}
 
+		template <typename T1, typename TEnableIf = std::enable_if_t<std::is_base_of<Rexpr, T1>::value>> Rvar(T1 t1)
+			: m_t(t1.eval<std::decay_t<T>>())
+		{}
 		template <typename T1> Rvar & operator = (T1 t1)
 		{
 			m_t = r(t1).eval<std::decay_t<T>>();
