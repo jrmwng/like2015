@@ -29,4 +29,28 @@ namespace jrmwng
 	{
 		for_each_tuple_s<std::tuple_size<TTuple>::value>::apply(stTuple, tFunc);
 	}
+
+	template <size_t szIndex>
+	struct unpack_tuple_s
+		: unpack_tuple_s<szIndex - 1>
+	{
+		template <typename TTuple, typename TFunc, typename Ttransform, typename... TArgs>
+		static auto apply(TTuple const & stTuple, TFunc const & tFunc, Ttransform const & tTransform, TArgs &&... tArgs)
+		{
+			return unpack_tuple_s<szIndex - 1>::apply(stTuple, tFunc, tTransform, tTransform(std::get<szIndex - 1>(stTuple)), std::forward<TArgs>(tArgs)...);
+		}
+	};
+	template <> struct unpack_tuple_s<0>
+	{
+		template <typename TTuple, typename TFunc, typename Ttransform, typename... TArgs>
+		static auto apply(TTuple const & stTuple, TFunc const & tFunc, Ttransform const & tTransform, TArgs &&... tArgs)
+		{
+			return tFunc(std::forward<TArgs>(tArgs)...);
+		}
+	};
+	template <typename TTuple, typename TFunc, typename Ttransform>
+	auto unpack(TTuple const & stTuple, TFunc const & tFunc, Ttransform const & tTransform)
+	{
+		return unpack_tuple_s<std::tuple_size<TTuple>::value>::apply(stTuple, tFunc, tTransform);
+	}
 }

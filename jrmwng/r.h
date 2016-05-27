@@ -5,7 +5,10 @@
 // R for random
 
 #include <type_traits>
+#include <functional>
 #include <tuple>
+
+#include "tuple.h"
 
 namespace jrmwng
 {
@@ -72,6 +75,11 @@ namespace jrmwng
 			m_t /= r(t1).eval<std::decay_t<T>>();
 			return *this;
 		}
+		template <typename T1> Rvar & operator %= (T1 t1)
+		{
+			m_t %= r(t1).eval<std::decay_t<T>>();
+			return *this;
+		}
 		template <typename T1> Rvar & operator &= (T1 t1)
 		{
 			m_t &= r(t1).eval<std::decay_t<T>>();
@@ -89,86 +97,56 @@ namespace jrmwng
 		}
 	};
 
-	enum r_op2_e
-	{
-		R_PLUS,
-		R_MINUS,
-		R_TIMES,
-		R_DIVIDES,
-		R_BITAND,
-		R_BITOR,
-		R_BITXOR
-	};
-	template <r_op2_e emOp2> struct Rop2Traits;
-	template <> struct Rop2Traits<R_PLUS>
-	{
-		template <typename T> static T eval(T t1, T t2) { return t1 + t2; }
-	};
-	template <> struct Rop2Traits<R_MINUS>
-	{
-		template <typename T> static T eval(T t1, T t2) { return t1 - t2; }
-	};
-	template <> struct Rop2Traits<R_TIMES>
-	{
-		template <typename T> static T eval(T t1, T t2) { return t1 * t2; }
-	};
-	template <> struct Rop2Traits<R_DIVIDES>
-	{
-		template <typename T> static T eval(T t1, T t2) { return t1 / t2; }
-	};
-	template <> struct Rop2Traits<R_BITAND>
-	{
-		template <typename T> static T eval(T t1, T t2) { return t1 & t2; }
-	};
-	template <> struct Rop2Traits<R_BITOR>
-	{
-		template <typename T> static T eval(T t1, T t2) { return t1 | t2; }
-	};
-	template <> struct Rop2Traits<R_BITXOR>
-	{
-		template <typename T> static T eval(T t1, T t2) { return t1 ^ t2; }
-	};
-	template <typename T1, typename T2, r_op2_e emOp2>
-	struct Rop2
-		: std::tuple<T1, T2>
+	template <template <typename T> typename Top, typename... TArgs>
+	struct Rop
+		: std::tuple<TArgs...>
 		, Rexpr
 	{
-		Rop2(T1 t1, T2 t2)
-			: std::tuple<T1, T2>(t1, t2)
+		template <typename... TParams>
+		Rop(TParams &&... tParams)
+			: std::tuple<TArgs...>(std::forward<TParams>(tParams)...)
 		{}
 
 		template <typename TR>
 		TR eval() const
 		{
-			return Rop2Traits<emOp2>::eval(std::get<0>(*this).eval<TR>(), std::get<1>(*this).eval<TR>());
+			return unpack(static_cast<std::tuple<TArgs...> const &>(*this), Top<TR>(), [](auto const &refExpr)->TR { return refExpr.eval<TR>(); });
 		}
 	};
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator + (T1 t1, T2 t2)
 	{
-		return Rop2<Rtype<T1>, Rtype<T2>, R_PLUS>(t1, t2);
+		return Rop<std::plus, Rtype<T1>, Rtype<T2>>(t1, t2);
 	}
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator - (T1 t1, T2 t2)
 	{
-		return Rop2<Rtype<T1>, Rtype<T2>, R_MINUS>(t1, t2);
+		return Rop<std::minus, Rtype<T1>, Rtype<T2>>(t1, t2);
 	}
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator * (T1 t1, T2 t2)
 	{
-		return Rop2<Rtype<T1>, Rtype<T2>, R_TIMES>(t1, t2);
+		return Rop<std::multiplies, Rtype<T1>, Rtype<T2>>(t1, t2);
 	}
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator / (T1 t1, T2 t2)
 	{
-		return Rop2<Rtype<T1>, Rtype<T2>, R_DIVIDES>(t1, t2);
+		return Rop<std::divides, Rtype<T1>, Rtype<T2>>(t1, t2);
+	}
+	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator % (T1 t1, T2 t2)
+	{
+		return Rop<std::modulus, Rtype<T1>, Rtype<T2>>(t1, t2);
 	}
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator & (T1 t1, T2 t2)
 	{
-		return Rop2<Rtype<T1>, Rtype<T2>, R_BITAND>(t1, t2);
+		return Rop<std::bit_and, Rtype<T1>, Rtype<T2>>(t1, t2);
 	}
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator | (T1 t1, T2 t2)
 	{
-		return Rop2<Rtype<T1>, Rtype<T2>, R_BITOR>(t1, t2);
+		return Rop<std::bit_or, Rtype<T1>, Rtype<T2>>(t1, t2);
 	}
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator ^ (T1 t1, T2 t2)
 	{
-		return Rop2<Rtype<T1>, Rtype<T2>, R_BITXOR>(t1, t2);
+		return Rop<std::bit_xor, Rtype<T1>, Rtype<T2>>(t1, t2);
+	}
+	template <typename T1, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value)>> auto operator ~ (T1 t1)
+	{
+		return Rop<std::bit_not, Rtype<T1>>(t1);
 	}
 }

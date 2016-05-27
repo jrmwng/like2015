@@ -16,7 +16,7 @@ namespace UnitTest_jrmwng
 			jrmwng::Rvar<long> lB = 1L;
 			jrmwng::Rvar<short> wC = 2;
 
-			jrmwng::Rvar<long long> xlZ = nA + lB - wC * jrmwng::r(-1);
+			jrmwng::Rvar<long long> xlZ = ~nA + lB - wC * jrmwng::r(-1);
 			// TODO: Your test code here
 		}
 	};
