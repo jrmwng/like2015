@@ -24,10 +24,10 @@ namespace jrmwng
 		static void apply(TTuple const & stTuple, TFunc const & tFunc)
 		{}
 	};
-	template <typename TTuple, typename TFunc>
-	void for_each(TTuple const & stTuple, TFunc const & tFunc)
+	template <typename TFunc, typename... Ttuple>
+	void for_each(std::tuple<Ttuple...> const & stTuple, TFunc const & tFunc)
 	{
-		for_each_tuple_s<std::tuple_size<TTuple>::value>::apply(stTuple, tFunc);
+		for_each_tuple_s<std::tuple_size<std::tuple<Ttuple...>>::value>::apply(stTuple, tFunc);
 	}
 
 	template <size_t szIndex>
