@@ -177,6 +177,10 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="UnitTest_jrmwng_tuple.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="UnitTest_jrmwng_vt_set.cpp">
       <SubType>
       </SubType>
