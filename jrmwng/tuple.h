@@ -23,7 +23,6 @@ namespace jrmwng
 		template <size_t uStart, size_t uEnd>
 		struct for_each_tuple_s<uStart, uEnd, 1>
 		{
-			static_assert(uStart + 1 == uEnd, "Logical error");
 			template <typename TTuple, typename TFunc>
 			static void apply(TTuple const & stTuple, TFunc const & tFunc)
 			{
@@ -33,7 +32,6 @@ namespace jrmwng
 		template <size_t uStart, size_t uEnd>
 		struct for_each_tuple_s<uStart, uEnd, 0>
 		{
-			static_assert(uStart == uEnd, "Logical error");
 			template <typename TTuple, typename TFunc>
 			static void apply(TTuple const & stTuple, TFunc const & tFunc)
 			{}
@@ -52,18 +50,31 @@ namespace jrmwng
 
 	namespace internals
 	{
-		template <size_t szIndex>
+		template <size_t uStart, size_t uEnd, size_t uSize = uEnd - uStart>
 		struct transform_tuple_s
-			: transform_tuple_s<szIndex - 1>
+			: transform_tuple_s<uStart, (uStart + uEnd) / 2>
+			, transform_tuple_s<(uStart + uEnd) / 2, uEnd>
 		{
 			template <typename Ttuple, typename Tfunc>
 			static auto apply(Ttuple const & tTuple, Tfunc const & tFunc)
 			{
-				return std::tuple_cat(transform_tuple_s<szIndex - 1>::apply(tTuple, tFunc), tFunc(std::get<szIndex - 1>(tTuple)));
+				return std::tuple_cat(
+					transform_tuple_s<uStart, (uStart + uEnd) / 2>::apply(tTuple, tFunc),
+					transform_tuple_s<(uStart + uEnd) / 2, uEnd>::apply(stTuple, tFunc)
+				);
 			}
 		};
-		template <>
-		struct transform_tuple_s<0>
+		template <size_t uStart, size_t uEnd>
+		struct transform_tuple_s<uStart, uEnd, 1>
+		{
+			template <typename Ttuple, typename Tfunc>
+			static auto apply(Ttuple const & tTuple, Tfunc const & tFunc)
+			{
+				return std::make_tuple(tFunc(std::get<uStart>(tTuple)));
+			}
+		};
+		template <size_t uStart, size_t uEnd>
+		struct transform_tuple_s<uStart, uEnd, 0>
 		{
 			template <typename Ttuple, typename Tfunc>
 			static auto apply(Ttuple const & tTuple, Tfunc const & tFunc)
