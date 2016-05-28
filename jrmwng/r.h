@@ -35,6 +35,8 @@ namespace jrmwng
 	struct Rvar
 		: Rexpr
 	{
+		using type = T;
+
 		T m_t;
 
 		Rvar(T t)
@@ -50,69 +52,109 @@ namespace jrmwng
 		template <typename T1, typename TEnableIf = std::enable_if_t<std::is_base_of<Rexpr, T1>::value>> Rvar(T1 t1)
 			: m_t(t1.eval<std::decay_t<T>>())
 		{}
-		template <typename T1> Rvar & operator = (T1 t1)
-		{
-			m_t = r(t1).eval<std::decay_t<T>>();
-			return *this;
-		}
-		template <typename T1> Rvar & operator += (T1 t1)
-		{
-			m_t += r(t1).eval<std::decay_t<T>>();
-			return *this;
-		}
-		template <typename T1> Rvar & operator -= (T1 t1)
-		{
-			m_t -= r(t1).eval<std::decay_t<T>>();
-			return *this;
-		}
-		template <typename T1> Rvar & operator *= (T1 t1)
-		{
-			m_t *= r(t1).eval<std::decay_t<T>>();
-			return *this;
-		}
-		template <typename T1> Rvar & operator /= (T1 t1)
-		{
-			m_t /= r(t1).eval<std::decay_t<T>>();
-			return *this;
-		}
-		template <typename T1> Rvar & operator %= (T1 t1)
-		{
-			m_t %= r(t1).eval<std::decay_t<T>>();
-			return *this;
-		}
-		template <typename T1> Rvar & operator &= (T1 t1)
-		{
-			m_t &= r(t1).eval<std::decay_t<T>>();
-			return *this;
-		}
-		template <typename T1> Rvar & operator |= (T1 t1)
-		{
-			m_t |= r(t1).eval<std::decay_t<T>>();
-			return *this;
-		}
-		template <typename T1> Rvar & operator ^= (T1 t1)
-		{
-			m_t ^= r(t1).eval<std::decay_t<T>>();
-			return *this;
-		}
 	};
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator += (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t += r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator -= (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t -= r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator *= (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t *= r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator /= (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t /= r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator %= (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t %= r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator &= (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t &= r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator |= (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t |= r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator ^= (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t ^= r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator <<= (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t <<= r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
+	template <typename T1, typename T2>
+	std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value), T1 &> operator >>= (T1 &t1, T2 const &t2)
+	{
+		r(t1).m_t >>= r(t2).eval<std::decay_t<typename Rtype<T1>::type>>();
+		return t1;
+	}
 
 	template <template <typename T> typename Top, typename... TArgs>
 	struct Rop
-		: std::tuple<TArgs...>
-		, Rexpr
+		: Rexpr
 	{
+		std::tuple<TArgs...> m_Tuple;
+
 		template <typename... TParams>
-		Rop(TParams &&... tParams)
-			: std::tuple<TArgs...>(std::forward<TParams>(tParams)...)
+		Rop(TParams ... tParams)
+			: m_Tuple((tParams)...)
 		{}
 
 		template <typename TR>
-		TR eval() const
+		auto eval() const
 		{
-			return unpack(static_cast<std::tuple<TArgs...> const &>(*this), Top<TR>(), [](auto const &refExpr)->TR { return refExpr.eval<TR>(); });
+			return unpack_tuple(m_Tuple, Top<TR>(), [](auto const &refExpr)->TR { return refExpr.eval<TR>(); });
 		}
 	};
+	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value)>> bool operator < (T1 t1, T2 t2)
+	{
+		return Rop<std::less, Rtype<T1>, Rtype<T2>>(t1, t2).eval<std::conditional_t<std::is_base_of<Rexpr, T1>::value, T2, T1>>();
+	}
+	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value)>> bool operator <= (T1 t1, T2 t2)
+	{
+		return Rop<std::less_equal, Rtype<T1>, Rtype<T2>>(t1, t2).eval<std::conditional_t<std::is_base_of<Rexpr, T1>::value, T2, T1>>();
+	}
+	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value)>> bool operator > (T1 t1, T2 t2)
+	{
+		return Rop<std::greater, Rtype<T1>, Rtype<T2>>(t1, t2).eval<std::conditional_t<std::is_base_of<Rexpr, T1>::value, T2, T1>>();
+	}
+	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value)>> bool operator >= (T1 t1, T2 t2)
+	{
+		return Rop<std::greater_equal, Rtype<T1>, Rtype<T2>>(t1, t2).eval<std::conditional_t<std::is_base_of<Rexpr, T1>::value, T2, T1>>();
+	}
+	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value)>> bool operator != (T1 t1, T2 t2)
+	{
+		return Rop<std::not_equal_to, Rtype<T1>, Rtype<T2>>(t1, t2).eval<std::conditional_t<std::is_base_of<Rexpr, T1>::value, T2, T1>>();
+	}
+	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value)>> bool operator == (T1 t1, T2 t2)
+	{
+		return Rop<std::equal_to, Rtype<T1>, Rtype<T2>>(t1, t2).eval<std::conditional_t<std::is_base_of<Rexpr, T1>::value, T2, T1>>();
+	}
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator + (T1 t1, T2 t2)
 	{
 		return Rop<std::plus, Rtype<T1>, Rtype<T2>>(t1, t2);
@@ -145,8 +187,36 @@ namespace jrmwng
 	{
 		return Rop<std::bit_xor, Rtype<T1>, Rtype<T2>>(t1, t2);
 	}
+	template <typename T>
+	struct r_shiftleft
+	{
+		T operator() (T const &t1, T const &t2) const
+		{
+			return t1 << t2;
+		}
+	};
+	template <typename T>
+	struct r_shiftright
+	{
+		T operator() (T const &t1, T const &t2) const
+		{
+			return t1 >> t2;
+		}
+	};
+	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator << (T1 t1, T2 t2)
+	{
+		return Rop<r_shiftleft, Rtype<T1>, Rtype<T2>>(t1, t2);
+	}
+	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value || std::is_base_of<Rexpr, T2>::value)>> auto operator >> (T1 t1, T2 t2)
+	{
+		return Rop<r_shiftright, Rtype<T1>, Rtype<T2>>(t1, t2);
+	}
 	template <typename T1, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value)>> auto operator ~ (T1 t1)
 	{
 		return Rop<std::bit_not, Rtype<T1>>(t1);
+	}
+	template <typename T1, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value)>> auto operator - (T1 t1)
+	{
+		return Rop<std::negate, Rtype<T1>>(t1);
 	}
 }

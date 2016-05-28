@@ -25,7 +25,7 @@ namespace jrmwng
 		{}
 	};
 	template <typename TTuple, typename TFunc>
-	inline void for_each(TTuple const & stTuple, TFunc const & tFunc)
+	void for_each(TTuple const & stTuple, TFunc const & tFunc)
 	{
 		for_each_tuple_s<std::tuple_size<TTuple>::value>::apply(stTuple, tFunc);
 	}
@@ -49,7 +49,7 @@ namespace jrmwng
 		}
 	};
 	template <typename TTuple, typename TFunc, typename Ttransform>
-	auto unpack(TTuple const & stTuple, TFunc const & tFunc, Ttransform const & tTransform)
+	auto unpack_tuple(TTuple const & stTuple, TFunc const & tFunc, Ttransform const & tTransform)
 	{
 		return unpack_tuple_s<std::tuple_size<TTuple>::value>::apply(stTuple, tFunc, tTransform);
 	}
