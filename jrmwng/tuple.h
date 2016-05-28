@@ -86,7 +86,7 @@ namespace jrmwng
 	template <typename Ttuple, typename Tfunc>
 	auto transform_tuple(Ttuple const & stTuple, Tfunc const & tFunc)
 	{
-		return internals::transform_tuple_s::apply(stTuple, tFunc);
+		return internals::transform_tuple_s<0, std::tuple_size<Ttuple>::value>::apply(stTuple, tFunc);
 	}
 	template <typename Ttuple, typename Tfunc, typename... Toutput>
 	void transform(Ttuple const & stInput, std::tuple<Toutput...> & stOutput, Tfunc const & stFunc)
