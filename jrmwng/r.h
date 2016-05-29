@@ -8,8 +8,6 @@
 #include <functional>
 #include <tuple>
 
-#include "tuple.h"
-
 namespace jrmwng
 {
 	struct Rexpr
@@ -125,16 +123,16 @@ namespace jrmwng
 			: m_Tuple((tParams)...)
 		{}
 
+		template <typename TR, size_t... uIndex>
+		auto eval(std::index_sequence<uIndex...>) const
+		{
+			return Top<TR>()(std::get<uIndex>(m_Tuple).eval<TR>()...);
+		}
+
 		template <typename TR>
 		auto eval() const
 		{
-			return apply_tuple(
-				Top<TR>(),
-				transform_tuple(
-					m_Tuple,
-					[](auto const & rExpr)->TR { return rExpr.eval<TR>(); }
-				)
-			);
+			return eval<TR>(std::index_sequence_for<TArgs...>());
 		}
 	};
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value)>> bool operator < (T1 t1, T2 t2)
