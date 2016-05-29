@@ -12,20 +12,14 @@ namespace UnitTest_jrmwng
 		template <typename TT>
 		struct jrmwng_xmm_traits
 		{
-			template <int nStart, int nEnd, int nSize = nEnd - nStart>
-			struct test_shuffle_ps
+			bool bPass;
+
+			jrmwng_xmm_traits()
+				: bPass(true)
 			{
-				void operator () (bool & bPass) const
+				jrmwng::for_each(std::make_integer_sequence<int, 0x100>(), [this](auto const tIndex)
 				{
-					test_shuffle_ps<nStart, (nStart + nEnd) / 2>()(bPass);
-					test_shuffle_ps<(nStart + nEnd) / 2, nEnd>()(bPass);
-				}
-			};
-			template <int nShuffle, int nEnd>
-			struct test_shuffle_ps<nShuffle, nEnd, 1>
-			{
-				void operator () (bool & bPass) const
-				{
+					int constexpr nShuffle = tIndex.value;
 					__m128 const r4A = _mm_set_ps(3.0F, 2.0F, 1.0F, 0.0F);
 					__m128 const r4B = _mm_set_ps(7.0F, 6.0F, 5.0F, 4.0F);
 					__m128 const r4ExpectAB = _mm_shuffle_ps(r4A, r4B, nShuffle);
@@ -40,29 +34,11 @@ namespace UnitTest_jrmwng
 					bPass &= (0xF == nEqualAA);
 					//Assert::AreEqual(0xF, nEqualAB);
 					//Assert::AreEqual(0xF, nEqualAA);
-				}
-			};
-			template <int nShuffle>
-			void shuffle_ps()
-			{
-				test_shuffle_ps<0, nShuffle>()(bPass);
-			}
+				});
 
-
-			template <int nStart, int nEnd, int nSize = nEnd - nStart>
-			struct test_shuffle_pd
-			{
-				void operator () (bool & bPass) const
+				jrmwng::for_each(std::make_integer_sequence<int, 4>(), [this](auto const tIndex)
 				{
-					test_shuffle_pd<nStart, (nStart + nEnd) / 2>()(bPass);
-					test_shuffle_pd<(nStart + nEnd) / 2, nEnd>()(bPass);
-				}
-			};
-			template <int nShuffle, int nEnd>
-			struct test_shuffle_pd<nShuffle, nEnd, 1>
-			{
-				void operator () (bool & bPass) const
-				{
+					int constexpr nShuffle = tIndex.value;
 					__m128d const lr2A = _mm_set_pd(3.0, 2.0);
 					__m128d const lr2B = _mm_set_pd(1.0, 0.0);
 					__m128d const lr2ExpectAB = _mm_shuffle_pd(lr2A, lr2B, nShuffle);
@@ -77,29 +53,11 @@ namespace UnitTest_jrmwng
 					bPass &= (0x3 == nEqualAB);
 					//Assert::AreEqual(0x3, nEqualAB);
 					//Assert::AreEqual(0x3, nEqualAA);
-				}
-			};
-			template <int nShuffle>
-			void shuffle_pd()
-			{
-				test_shuffle_pd<0, nShuffle>()(bPass);
-			}
+				});
 
-
-			template <int nStart, int nEnd, int nSize = nEnd - nStart>
-			struct test_shuffle_epi32
-			{
-				void operator () (bool & bPass) const
+				jrmwng::for_each(std::make_integer_sequence<int, 0x100>(), [this](auto const tIndex)
 				{
-					test_shuffle_epi32<nStart, (nStart + nEnd) / 2>()(bPass);
-					test_shuffle_epi32<(nStart + nEnd) / 2, nEnd>()(bPass);
-				}
-			};
-			template <int nShuffle, int nEnd>
-			struct test_shuffle_epi32<nShuffle, nEnd, 1>
-			{
-				void operator () (bool & bPass) const
-				{
+					int constexpr nShuffle = tIndex.value;
 					__m128i const l4A = _mm_set_epi32(3, 2, 1, 0);
 					__m128i const l4B = _mm_set_epi32(7, 6, 5, 4);
 					__m128i const l4ExpectAB = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(l4A), _mm_castsi128_ps(l4B), nShuffle));
@@ -114,19 +72,9 @@ namespace UnitTest_jrmwng
 					bPass &= (0xFFFF == nEqualAA);
 					//Assert::AreEqual(0xFFFF, nEqualAB);
 					//Assert::AreEqual(0xFFFF, nEqualAA);
-				}
-			};
-			template <int nShuffle>
-			void shuffle_epi32()
-			{
-				test_shuffle_epi32<0, nShuffle>()(bPass);
-			}
+				});
 
-
-			template <int nIndex>
-			void broadcastb_epi8()
-			{
-				jrmwng::for_each_integer_sequence(std::make_integer_sequence<int, nIndex>(), [this](auto const tIndex)
+				jrmwng::for_each(std::make_integer_sequence<int, 0x10>(), [this](auto const tIndex)
 				{
 					int constexpr nIndex = tIndex.value;
 					__m128i const b16A = _mm_set_epi8(0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0);
@@ -137,15 +85,6 @@ namespace UnitTest_jrmwng
 					bPass &= (0xFFFF == nEqualA);
 					//Assert::AreEqual(0xFFFF, nEqualA);
 				});
-			}
-			bool bPass;
-			jrmwng_xmm_traits()
-				: bPass(true)
-			{
-				shuffle_epi32<0xFF>();
-				shuffle_ps<0xFF>();
-				shuffle_pd<3>();
-				broadcastb_epi8<0xF>();
 			}
 		};
 	public:
