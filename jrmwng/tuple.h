@@ -60,60 +60,21 @@ namespace jrmwng
 
 	namespace internals
 	{
-		template <size_t uStart, size_t uEnd, size_t uSize = uEnd - uStart>
-		struct transform_tuple_s
-			: transform_tuple_s<uStart, (uStart + uEnd) / 2>
-			, transform_tuple_s<(uStart + uEnd) / 2, uEnd>
+		template <typename Ttuple, typename Tfunc, size_t... uIndex>
+		auto transform_tuple(Ttuple && tTuple, Tfunc && tFunc, std::index_sequence<uIndex...>)
 		{
-			template <typename Ttuple, typename Tfunc>
-			static auto apply(Ttuple const & tTuple, Tfunc const & tFunc)
-			{
-				return std::tuple_cat(
-					transform_tuple_s<uStart, (uStart + uEnd) / 2>::apply(tTuple, tFunc),
-					transform_tuple_s<(uStart + uEnd) / 2, uEnd>::apply(tTuple, tFunc)
-				);
-			}
-		};
-		template <size_t uStart, size_t uEnd>
-		struct transform_tuple_s<uStart, uEnd, 2>
-		{
-			template <typename Ttuple, typename Tfunc>
-			static auto apply(Ttuple const & tTuple, Tfunc const & tFunc)
-			{
-				return std::make_tuple(
-					tFunc(std::get<uStart + 0>(tTuple)),
-					tFunc(std::get<uStart + 1>(tTuple))
-				);
-			}
-		};
-		template <size_t uStart, size_t uEnd>
-		struct transform_tuple_s<uStart, uEnd, 1>
-		{
-			template <typename Ttuple, typename Tfunc>
-			static auto apply(Ttuple const & tTuple, Tfunc const & tFunc)
-			{
-				return std::make_tuple(tFunc(std::get<uStart>(tTuple)));
-			}
-		};
-		template <size_t uStart, size_t uEnd>
-		struct transform_tuple_s<uStart, uEnd, 0>
-		{
-			template <typename Ttuple, typename Tfunc>
-			static auto apply(Ttuple const & tTuple, Tfunc const & tFunc)
-			{
-				return std::tuple<>();
-			}
-		};
+			return std::make_tuple(std::forward<Tfunc>(tFunc)(std::get<uIndex>(tTuple))...);
+		}
 	}
 	template <typename Ttuple, typename Tfunc>
-	auto transform_tuple(Ttuple const & stTuple, Tfunc const & tFunc)
+	auto transform_tuple(Ttuple && tTuple, Tfunc && tFunc)
 	{
-		return internals::transform_tuple_s<0, std::tuple_size<Ttuple>::value>::apply(stTuple, tFunc);
+		return internals::transform_tuple(std::forward<Ttuple>(tTuple), std::forward<Tfunc>(tFunc), std::make_index_sequence<std::tuple_size<std::decay_t<Ttuple>>::value>());
 	}
-	template <typename Ttuple, typename Tfunc, typename... Toutput>
-	void transform(Ttuple const & stInput, std::tuple<Toutput...> & stOutput, Tfunc const & stFunc)
+	template <typename Tinput, typename Tfunc, typename... Toutput>
+	void transform(Tinput && tInput, std::tuple<Toutput...> & tOutput, Tfunc && tFunc)
 	{
-		stOutput = transform_tuple(stInput, tFunc);
+		tOutput = internals::transform_tuple(std::forward<Tinput>(tInput), std::forward<Tfunc>(tFunc), std::index_sequence_for<Toutput...>());
 	}
 
 	namespace internals
