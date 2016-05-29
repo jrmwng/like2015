@@ -13,7 +13,6 @@ namespace UnitTest_jrmwng
 			template <int nShuffle>
 			void shuffle_ps()
 			{
-				shuffle_ps<nShuffle - 1>();
 				__m128 const r4A = _mm_set_ps(3.0F, 2.0F, 1.0F, 0.0F);
 				__m128 const r4B = _mm_set_ps(7.0F, 6.0F, 5.0F, 4.0F);
 				__m128 const r4ExpectAB = _mm_shuffle_ps(r4A, r4B, nShuffle);
@@ -29,9 +28,11 @@ namespace UnitTest_jrmwng
 				//Assert::AreEqual(0xF, nEqualAB);
 				//Assert::AreEqual(0xF, nEqualAA);
 			}
-			template <>
-			void shuffle_ps<-1>()
-			{}
+			template <int... nShuffle>
+			void shuffle_ps(std::integer_sequence<int, nShuffle...>)
+			{
+				int an [] = { 0, (shuffle_ps<nShuffle>(), 0)... };
+			}
 			template <int nShuffle>
 			void shuffle_pd()
 			{
@@ -96,7 +97,7 @@ namespace UnitTest_jrmwng
 				: bPass(true)
 			{
 				shuffle_epi32<0xFF>();
-				shuffle_ps<0xFF>();
+				shuffle_ps(std::make_integer_sequence<int, 0xFF>());
 				shuffle_pd<3>();
 				broadcastb_epi8<0xF>();
 			}
