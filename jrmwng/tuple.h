@@ -93,6 +93,6 @@ namespace jrmwng
 	template <typename Tfunc, typename... Ttuple>
 	auto apply(Tfunc && tFunc, std::tuple<Ttuple...> && tTuple)
 	{
-		return apply_tuple(tFunc, tTuple);
+		return internals::apply_tuple(std::forward<Tfunc>(tFunc), std::forward<Ttuple>(tTuple), std::index_sequence_for<Ttuple...>());
 	}
 }
