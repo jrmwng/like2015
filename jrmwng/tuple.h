@@ -60,7 +60,7 @@ namespace jrmwng
 			{
 				return std::tuple_cat(
 					transform_tuple_s<uStart, (uStart + uEnd) / 2>::apply(tTuple, tFunc),
-					transform_tuple_s<(uStart + uEnd) / 2, uEnd>::apply(stTuple, tFunc)
+					transform_tuple_s<(uStart + uEnd) / 2, uEnd>::apply(tTuple, tFunc)
 				);
 			}
 		};
@@ -100,24 +100,24 @@ namespace jrmwng
 		struct unpack_tuple_s
 			: unpack_tuple_s<szIndex - 1>
 		{
-			template <typename TTuple, typename TFunc, typename Ttransform, typename... TArgs>
-			static auto apply(TTuple const & stTuple, TFunc const & tFunc, Ttransform const & tTransform, TArgs &&... tArgs)
+			template <typename TTuple, typename TFunc, typename... TArgs>
+			static auto apply(TTuple const & stTuple, TFunc const & tFunc, TArgs &&... tArgs)
 			{
-				return unpack_tuple_s<szIndex - 1>::apply(stTuple, tFunc, tTransform, tTransform(std::get<szIndex - 1>(stTuple)), std::forward<TArgs>(tArgs)...);
+				return unpack_tuple_s<szIndex - 1>::apply(stTuple, tFunc, std::get<szIndex - 1>(stTuple), std::forward<TArgs>(tArgs)...);
 			}
 		};
 		template <> struct unpack_tuple_s<0>
 		{
-			template <typename TTuple, typename TFunc, typename Ttransform, typename... TArgs>
-			static auto apply(TTuple const & stTuple, TFunc const & tFunc, Ttransform const & tTransform, TArgs &&... tArgs)
+			template <typename TTuple, typename TFunc, typename... TArgs>
+			static auto apply(TTuple const & stTuple, TFunc const & tFunc, TArgs &&... tArgs)
 			{
 				return tFunc(std::forward<TArgs>(tArgs)...);
 			}
 		};
 	}
-	template <typename TTuple, typename TFunc, typename Ttransform>
-	auto unpack_tuple(TTuple const & stTuple, TFunc const & tFunc, Ttransform const & tTransform)
+	template <typename TTuple, typename TFunc>
+	auto unpack_tuple(TTuple const & stTuple, TFunc const & tFunc)
 	{
-		return internals::unpack_tuple_s<std::tuple_size<TTuple>::value>::apply(stTuple, tFunc, tTransform);
+		return internals::unpack_tuple_s<std::tuple_size<TTuple>::value>::apply(stTuple, tFunc);
 	}
 }

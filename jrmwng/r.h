@@ -128,7 +128,13 @@ namespace jrmwng
 		template <typename TR>
 		auto eval() const
 		{
-			return unpack_tuple(m_Tuple, Top<TR>(), [](auto const &refExpr)->TR { return refExpr.eval<TR>(); });
+			return unpack_tuple(
+				transform_tuple(
+					m_Tuple,
+					[](auto const & rExpr)->TR { return rExpr.eval<TR>(); }
+				),
+				Top<TR>()
+			);
 		}
 	};
 	template <typename T1, typename T2, typename TEnableIf = std::enable_if_t<(std::is_base_of<Rexpr, T1>::value != std::is_base_of<Rexpr, T2>::value)>> bool operator < (T1 t1, T2 t2)
