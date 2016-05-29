@@ -75,6 +75,18 @@ namespace jrmwng
 			}
 		};
 		template <size_t uStart, size_t uEnd>
+		struct transform_tuple_s<uStart, uEnd, 2>
+		{
+			template <typename Ttuple, typename Tfunc>
+			static auto apply(Ttuple const & tTuple, Tfunc const & tFunc)
+			{
+				return std::make_tuple(
+					tFunc(std::get<uStart + 0>(tTuple)),
+					tFunc(std::get<uStart + 1>(tTuple))
+				);
+			}
+		};
+		template <size_t uStart, size_t uEnd>
 		struct transform_tuple_s<uStart, uEnd, 1>
 		{
 			template <typename Ttuple, typename Tfunc>
