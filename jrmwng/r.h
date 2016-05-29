@@ -128,12 +128,12 @@ namespace jrmwng
 		template <typename TR>
 		auto eval() const
 		{
-			return unpack_tuple(
+			return apply_tuple(
+				Top<TR>(),
 				transform_tuple(
 					m_Tuple,
 					[](auto const & rExpr)->TR { return rExpr.eval<TR>(); }
-				),
-				Top<TR>()
+				)
 			);
 		}
 	};

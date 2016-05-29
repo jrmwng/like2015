@@ -119,27 +119,32 @@ namespace jrmwng
 	namespace internals
 	{
 		template <size_t szIndex>
-		struct unpack_tuple_s
-			: unpack_tuple_s<szIndex - 1>
+		struct apply_tuple_s
+			: apply_tuple_s<szIndex - 1>
 		{
-			template <typename TTuple, typename TFunc, typename... TArgs>
-			static auto apply(TTuple const & stTuple, TFunc const & tFunc, TArgs &&... tArgs)
+			template <typename TFunc, typename TTuple, typename... TArgs>
+			static auto apply(TFunc const & tFunc, TTuple const & stTuple, TArgs &&... tArgs)
 			{
-				return unpack_tuple_s<szIndex - 1>::apply(stTuple, tFunc, std::get<szIndex - 1>(stTuple), std::forward<TArgs>(tArgs)...);
+				return apply_tuple_s<szIndex - 1>::apply(tFunc, stTuple, std::get<szIndex - 1>(stTuple), std::forward<TArgs>(tArgs)...);
 			}
 		};
-		template <> struct unpack_tuple_s<0>
+		template <> struct apply_tuple_s<0>
 		{
-			template <typename TTuple, typename TFunc, typename... TArgs>
-			static auto apply(TTuple const & stTuple, TFunc const & tFunc, TArgs &&... tArgs)
+			template <typename TFunc, typename TTuple, typename... TArgs>
+			static auto apply(TFunc const & tFunc, TTuple const & stTuple, TArgs &&... tArgs)
 			{
 				return tFunc(std::forward<TArgs>(tArgs)...);
 			}
 		};
 	}
-	template <typename TTuple, typename TFunc>
-	auto unpack_tuple(TTuple const & stTuple, TFunc const & tFunc)
+	template <typename TFunc, typename TTuple>
+	auto apply_tuple(TFunc const & tFunc, TTuple const & stTuple)
 	{
-		return internals::unpack_tuple_s<std::tuple_size<TTuple>::value>::apply(stTuple, tFunc);
+		return internals::apply_tuple_s<std::tuple_size<TTuple>::value>::apply(tFunc, stTuple);
+	}
+	template <typename Tfunc, typename... Ttuple>
+	auto apply(Tfunc const & tFunc, std::tuple<Ttuple...> const & stTuple)
+	{
+		return apply_tuple(tFunc, stTuple);
 	}
 }
