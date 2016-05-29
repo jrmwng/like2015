@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 
+#include "..\jrmwng\xmm_traits.h"
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace UnitTest_jrmwng
@@ -119,21 +121,23 @@ namespace UnitTest_jrmwng
 			{
 				test_shuffle_epi32<0, nShuffle>()(bPass);
 			}
+
+
 			template <int nIndex>
 			void broadcastb_epi8()
 			{
-				broadcastb_epi8<nIndex - 1>();
-				__m128i const b16A = _mm_set_epi8(0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0);
-				__m128i const b16ExpectA = _mm_broadcastb_epi8(_mm_srli_si128(b16A, nIndex));
-				__m128i const b16ActualA = TT::broadcastb_epi8<nIndex>(b16A);
-				__m128i const b16EqualA = _mm_cmpeq_epi8(b16ExpectA, b16ActualA);
-				int const nEqualA = _mm_movemask_epi8(b16EqualA);
-				bPass &= (0xFFFF == nEqualA);
-				//Assert::AreEqual(0xFFFF, nEqualA);
+				jrmwng::for_each_integer_sequence(std::make_integer_sequence<int, nIndex>(), [this](auto const tIndex)
+				{
+					int constexpr nIndex = tIndex.value;
+					__m128i const b16A = _mm_set_epi8(0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0);
+					__m128i const b16ExpectA = _mm_broadcastb_epi8(_mm_srli_si128(b16A, nIndex));
+					__m128i const b16ActualA = TT::broadcastb_epi8<nIndex>(b16A);
+					__m128i const b16EqualA = _mm_cmpeq_epi8(b16ExpectA, b16ActualA);
+					int const nEqualA = _mm_movemask_epi8(b16EqualA);
+					bPass &= (0xFFFF == nEqualA);
+					//Assert::AreEqual(0xFFFF, nEqualA);
+				});
 			}
-			template <>
-			void broadcastb_epi8<-1>()
-			{}
 			bool bPass;
 			jrmwng_xmm_traits()
 				: bPass(true)

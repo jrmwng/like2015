@@ -9,6 +9,7 @@
 #include "atomic.h"
 #include "member.h"
 #include "xmm_traits.h"
+#include "integer_sequence.h"
 #include "atomic_shared_ptr.h"
 
 #include "big_number.h"

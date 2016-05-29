@@ -20,6 +20,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)big_number_mm.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)big_number_unsigned.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)int32_tuple.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)integer_sequence.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)r.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)tuple.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)jpeg.h" />
