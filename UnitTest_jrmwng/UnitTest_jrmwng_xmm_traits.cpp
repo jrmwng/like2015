@@ -10,73 +10,115 @@ namespace UnitTest_jrmwng
 		template <typename TT>
 		struct jrmwng_xmm_traits
 		{
+			template <int nStart, int nEnd, int nSize = nEnd - nStart>
+			struct test_shuffle_ps
+			{
+				void operator () (bool & bPass) const
+				{
+					test_shuffle_ps<nStart, (nStart + nEnd) / 2>()(bPass);
+					test_shuffle_ps<(nStart + nEnd) / 2, nEnd>()(bPass);
+				}
+			};
+			template <int nShuffle, int nEnd>
+			struct test_shuffle_ps<nShuffle, nEnd, 1>
+			{
+				void operator () (bool & bPass) const
+				{
+					__m128 const r4A = _mm_set_ps(3.0F, 2.0F, 1.0F, 0.0F);
+					__m128 const r4B = _mm_set_ps(7.0F, 6.0F, 5.0F, 4.0F);
+					__m128 const r4ExpectAB = _mm_shuffle_ps(r4A, r4B, nShuffle);
+					__m128 const r4ExpectAA = _mm_shuffle_ps(r4A, r4A, nShuffle);
+					__m128 const r4ActualAB = TT::shuffle_ps<nShuffle>(r4A, r4B);
+					__m128 const r4ActualAA = TT::shuffle_ps<nShuffle>(r4A);
+					__m128 const r4EqualAB = _mm_cmpeq_ps(r4ExpectAB, r4ActualAB);
+					__m128 const r4EqualAA = _mm_cmpeq_ps(r4ExpectAA, r4ActualAA);
+					int const nEqualAB = _mm_movemask_ps(r4EqualAB);
+					int const nEqualAA = _mm_movemask_ps(r4EqualAA);
+					bPass &= (0xF == nEqualAB);
+					bPass &= (0xF == nEqualAA);
+					//Assert::AreEqual(0xF, nEqualAB);
+					//Assert::AreEqual(0xF, nEqualAA);
+				}
+			};
 			template <int nShuffle>
 			void shuffle_ps()
 			{
-				__m128 const r4A = _mm_set_ps(3.0F, 2.0F, 1.0F, 0.0F);
-				__m128 const r4B = _mm_set_ps(7.0F, 6.0F, 5.0F, 4.0F);
-				__m128 const r4ExpectAB = _mm_shuffle_ps(r4A, r4B, nShuffle);
-				__m128 const r4ExpectAA = _mm_shuffle_ps(r4A, r4A, nShuffle);
-				__m128 const r4ActualAB = TT::shuffle_ps<nShuffle>(r4A, r4B);
-				__m128 const r4ActualAA = TT::shuffle_ps<nShuffle>(r4A);
-				__m128 const r4EqualAB = _mm_cmpeq_ps(r4ExpectAB, r4ActualAB);
-				__m128 const r4EqualAA = _mm_cmpeq_ps(r4ExpectAA, r4ActualAA);
-				int const nEqualAB = _mm_movemask_ps(r4EqualAB);
-				int const nEqualAA = _mm_movemask_ps(r4EqualAA);
-				bPass &= (0xF == nEqualAB);
-				bPass &= (0xF == nEqualAA);
-				//Assert::AreEqual(0xF, nEqualAB);
-				//Assert::AreEqual(0xF, nEqualAA);
+				test_shuffle_ps<0, nShuffle>()(bPass);
 			}
-			template <int... nShuffle>
-			void shuffle_ps(std::integer_sequence<int, nShuffle...>)
+
+
+			template <int nStart, int nEnd, int nSize = nEnd - nStart>
+			struct test_shuffle_pd
 			{
-				int an [] = { 0, (shuffle_ps<nShuffle>(), 0)... };
-			}
+				void operator () (bool & bPass) const
+				{
+					test_shuffle_pd<nStart, (nStart + nEnd) / 2>()(bPass);
+					test_shuffle_pd<(nStart + nEnd) / 2, nEnd>()(bPass);
+				}
+			};
+			template <int nShuffle, int nEnd>
+			struct test_shuffle_pd<nShuffle, nEnd, 1>
+			{
+				void operator () (bool & bPass) const
+				{
+					__m128d const lr2A = _mm_set_pd(3.0, 2.0);
+					__m128d const lr2B = _mm_set_pd(1.0, 0.0);
+					__m128d const lr2ExpectAB = _mm_shuffle_pd(lr2A, lr2B, nShuffle);
+					__m128d const lr2ExpectAA = _mm_shuffle_pd(lr2A, lr2A, nShuffle);
+					__m128d const lr2ActualAB = TT::shuffle_pd<nShuffle>(lr2A, lr2B);
+					__m128d const lr2ActualAA = TT::shuffle_pd<nShuffle>(lr2A, lr2A);
+					__m128d const lr2EqualAB = _mm_cmpeq_pd(lr2ExpectAB, lr2ActualAB);
+					__m128d const lr2EqualAA = _mm_cmpeq_pd(lr2ExpectAA, lr2ActualAA);
+					int const nEqualAB = _mm_movemask_pd(lr2EqualAB);
+					int const nEqualAA = _mm_movemask_pd(lr2EqualAA);
+					bPass &= (0x3 == nEqualAB);
+					bPass &= (0x3 == nEqualAB);
+					//Assert::AreEqual(0x3, nEqualAB);
+					//Assert::AreEqual(0x3, nEqualAA);
+				}
+			};
 			template <int nShuffle>
 			void shuffle_pd()
 			{
-				shuffle_pd<nShuffle - 1>();
-				__m128d const lr2A = _mm_set_pd(3.0, 2.0);
-				__m128d const lr2B = _mm_set_pd(1.0, 0.0);
-				__m128d const lr2ExpectAB = _mm_shuffle_pd(lr2A, lr2B, nShuffle);
-				__m128d const lr2ExpectAA = _mm_shuffle_pd(lr2A, lr2A, nShuffle);
-				__m128d const lr2ActualAB = TT::shuffle_pd<nShuffle>(lr2A, lr2B);
-				__m128d const lr2ActualAA = TT::shuffle_pd<nShuffle>(lr2A, lr2A);
-				__m128d const lr2EqualAB = _mm_cmpeq_pd(lr2ExpectAB, lr2ActualAB);
-				__m128d const lr2EqualAA = _mm_cmpeq_pd(lr2ExpectAA, lr2ActualAA);
-				int const nEqualAB = _mm_movemask_pd(lr2EqualAB);
-				int const nEqualAA = _mm_movemask_pd(lr2EqualAA);
-				bPass &= (0x3 == nEqualAB);
-				bPass &= (0x3 == nEqualAB);
-				//Assert::AreEqual(0x3, nEqualAB);
-				//Assert::AreEqual(0x3, nEqualAA);
+				test_shuffle_pd<0, nShuffle>()(bPass);
 			}
-			template <>
-			void shuffle_pd<-1>()
-			{}
+
+
+			template <int nStart, int nEnd, int nSize = nEnd - nStart>
+			struct test_shuffle_epi32
+			{
+				void operator () (bool & bPass) const
+				{
+					test_shuffle_epi32<nStart, (nStart + nEnd) / 2>()(bPass);
+					test_shuffle_epi32<(nStart + nEnd) / 2, nEnd>()(bPass);
+				}
+			};
+			template <int nShuffle, int nEnd>
+			struct test_shuffle_epi32<nShuffle, nEnd, 1>
+			{
+				void operator () (bool & bPass) const
+				{
+					__m128i const l4A = _mm_set_epi32(3, 2, 1, 0);
+					__m128i const l4B = _mm_set_epi32(7, 6, 5, 4);
+					__m128i const l4ExpectAB = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(l4A), _mm_castsi128_ps(l4B), nShuffle));
+					__m128i const l4ExpectAA = _mm_shuffle_epi32(l4A, nShuffle);
+					__m128i const l4ActualAB = TT::shuffle_epi32<nShuffle>(l4A, l4B);
+					__m128i const l4ActualAA = TT::shuffle_epi32<nShuffle>(l4A);
+					__m128i const l4EqualAB = _mm_cmpeq_epi32(l4ExpectAB, l4ActualAB);
+					__m128i const l4EqualAA = _mm_cmpeq_epi32(l4ExpectAA, l4ActualAA);
+					int const nEqualAB = _mm_movemask_epi8(l4EqualAB);
+					int const nEqualAA = _mm_movemask_epi8(l4EqualAA);
+					bPass &= (0xFFFF == nEqualAB);
+					bPass &= (0xFFFF == nEqualAA);
+					//Assert::AreEqual(0xFFFF, nEqualAB);
+					//Assert::AreEqual(0xFFFF, nEqualAA);
+				}
+			};
 			template <int nShuffle>
 			void shuffle_epi32()
 			{
-				shuffle_epi32<nShuffle - 1>();
-				__m128i const l4A = _mm_set_epi32(3, 2, 1, 0);
-				__m128i const l4B = _mm_set_epi32(7, 6, 5, 4);
-				__m128i const l4ExpectAB = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(l4A), _mm_castsi128_ps(l4B), nShuffle));
-				__m128i const l4ExpectAA = _mm_shuffle_epi32(l4A, nShuffle);
-				__m128i const l4ActualAB = TT::shuffle_epi32<nShuffle>(l4A, l4B);
-				__m128i const l4ActualAA = TT::shuffle_epi32<nShuffle>(l4A);
-				__m128i const l4EqualAB = _mm_cmpeq_epi32(l4ExpectAB, l4ActualAB);
-				__m128i const l4EqualAA = _mm_cmpeq_epi32(l4ExpectAA, l4ActualAA);
-				int const nEqualAB = _mm_movemask_epi8(l4EqualAB);
-				int const nEqualAA = _mm_movemask_epi8(l4EqualAA);
-				bPass &= (0xFFFF == nEqualAB);
-				bPass &= (0xFFFF == nEqualAA);
-				//Assert::AreEqual(0xFFFF, nEqualAB);
-				//Assert::AreEqual(0xFFFF, nEqualAA);
+				test_shuffle_epi32<0, nShuffle>()(bPass);
 			}
-			template <>
-			void shuffle_epi32<-1>()
-			{}
 			template <int nIndex>
 			void broadcastb_epi8()
 			{
@@ -97,7 +139,7 @@ namespace UnitTest_jrmwng
 				: bPass(true)
 			{
 				shuffle_epi32<0xFF>();
-				shuffle_ps(std::make_integer_sequence<int, 0xFF>());
+				shuffle_ps<0xFF>();
 				shuffle_pd<3>();
 				broadcastb_epi8<0xF>();
 			}
