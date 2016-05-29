@@ -21,6 +21,16 @@ namespace jrmwng
 			}
 		};
 		template <size_t uStart, size_t uEnd>
+		struct for_each_tuple_s<uStart, uEnd, 2>
+		{
+			template <typename TTuple, typename TFunc>
+			static void apply(TTuple const & stTuple, TFunc const & tFunc)
+			{
+				tFunc(std::get<uStart + 0>(stTuple));
+				tFunc(std::get<uStart + 1>(stTuple));
+			}
+		};
+		template <size_t uStart, size_t uEnd>
 		struct for_each_tuple_s<uStart, uEnd, 1>
 		{
 			template <typename TTuple, typename TFunc>
