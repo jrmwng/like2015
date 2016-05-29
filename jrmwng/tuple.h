@@ -118,33 +118,20 @@ namespace jrmwng
 
 	namespace internals
 	{
-		template <size_t szIndex>
-		struct apply_tuple_s
-			: apply_tuple_s<szIndex - 1>
+		template <typename Tfunc, typename Ttuple, size_t... uIndex>
+		static auto apply_tuple(Tfunc && tFunc, Ttuple && tTuple, std::index_sequence<uIndex...>)
 		{
-			template <typename TFunc, typename TTuple, typename... TArgs>
-			static auto apply(TFunc const & tFunc, TTuple const & stTuple, TArgs &&... tArgs)
-			{
-				return apply_tuple_s<szIndex - 1>::apply(tFunc, stTuple, std::get<szIndex - 1>(stTuple), std::forward<TArgs>(tArgs)...);
-			}
-		};
-		template <> struct apply_tuple_s<0>
-		{
-			template <typename TFunc, typename TTuple, typename... TArgs>
-			static auto apply(TFunc const & tFunc, TTuple const & stTuple, TArgs &&... tArgs)
-			{
-				return tFunc(std::forward<TArgs>(tArgs)...);
-			}
-		};
+			return std::forward<Tfunc>(tFunc)(std::get<uIndex>(std::forward<Ttuple>(tTuple))...);
+		}
 	}
-	template <typename TFunc, typename TTuple>
-	auto apply_tuple(TFunc const & tFunc, TTuple const & stTuple)
+	template <typename Tfunc, typename Ttuple>
+	auto apply_tuple(Tfunc && tFunc, Ttuple && tTuple)
 	{
-		return internals::apply_tuple_s<std::tuple_size<TTuple>::value>::apply(tFunc, stTuple);
+		return internals::apply_tuple(std::forward<Tfunc>(tFunc), std::forward<Ttuple>(tTuple), std::make_index_sequence<std::tuple_size<std::decay_t<Ttuple>>::value>());
 	}
 	template <typename Tfunc, typename... Ttuple>
-	auto apply(Tfunc const & tFunc, std::tuple<Ttuple...> const & stTuple)
+	auto apply(Tfunc && tFunc, std::tuple<Ttuple...> && tTuple)
 	{
-		return apply_tuple(tFunc, stTuple);
+		return apply_tuple(tFunc, tTuple);
 	}
 }
