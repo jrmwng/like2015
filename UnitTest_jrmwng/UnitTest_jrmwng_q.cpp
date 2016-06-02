@@ -14,10 +14,12 @@ namespace UnitTest_jrmwng
 		{
 			using namespace jrmwng;
 
-			Qrange<char, '0', '9'> const qDecimal;
+			auto const qAlpha = q_range<__m128i>('A', 'Z', 'a', 'z');
+			auto const qDecimal = q_range<__m128i>('0', '9');
 
-			qDecimal.match(_mm_setzero_si128());
-			// TODO: Your test code here
+			int const nMask = qDecimal.match("0123456789ABCDEF");
+
+			Assert::AreEqual(0x3FF, nMask);
 		}
 	};
 }
