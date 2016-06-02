@@ -173,6 +173,10 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/bigobj %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="UnitTest_jrmwng_q.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="UnitTest_jrmwng_r.cpp">
       <SubType>
       </SubType>

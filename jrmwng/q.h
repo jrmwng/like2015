@@ -1,7 +1,132 @@
 #pragma once
 
+#include <intrin.h>
+
 namespace jrmwng
 {
+	struct Qbase;
+
+	template <typename Tchar, Tchar... vcRange>
+	struct Qrange;
+
+	namespace internals
+	{
+		template <typename Tchar, Tchar... vChar>
+		struct Qchar;
+
+		template <char... vChar>
+		struct Qchar<char, vChar...>
+		{
+			static __m128i xmm()
+			{
+				return Qchar<char, vChar..., '\0'>::xmm();
+			}
+		};
+		template <char c0, char c1, char c2, char c3, char c4, char c5, char c6, char c7, char c8, char c9, char cA, char cB, char cC, char cD, char cE, char cF, char... vChar>
+		struct Qchar<char, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, cA, cB, cC, cD, cE, cF, vChar...>
+		{
+			static __m128i xmm()
+			{
+				return _mm_set_epi8(cF, cE, cD, cC, cB, cA, c9, c8, c7, c6, c5, c4, c3, c2, c1, c0);
+			}
+		};
+		template <typename... Tchar>
+		static __m128i q_char_xmm(Tchar... vc)
+		{
+			return q_char_xmm(vc..., '\0');
+		}
+		template <typename... Tchar>
+		static __m128i q_char_xmm<char, char, char, char, char, char, char, char, char, char, char, char, char, char, char, char, Tchar...>
+			(char c0, char c1, char c2, char c3, char c4, char c5, char c6, char c7, char c8, char c9, char cA, char cB, char cC, char cD, char cE, char cF, char... vChar)
+		{
+			return _mm_set_epi8(cF, cE, cD, cC, cB, cA, c9, c8, c7, c6, c5, c4, c3, c2, c1, c0);
+		}
+	}
+
+	template <> struct Qrange<char>
+	{
+		__m128i const m_xmmPattern;
+		int const m_nCount;
+
+		Qrange(__m128i const & xmmPattern, int const nCount)
+			: m_xmmPattern(xmmPattern)
+			, m_nCount(nCount)
+		{}
+
+		Qrange(char const *pcPattern)
+			: m_xmmPattern(_mm_loadu_si128(reinterpret_cast<__m128i const*>(pcPattern)))
+			, m_nCount(std::min<int>(16, strlen(pcPattern)))
+		{}
+
+		template <typename Tchar...>
+		Qrange(Tchar... vcParam)
+			: m_xmmPattern(internals::Qchar<char>::xmm(vcParam...))
+			, m_nCount(std::min<int>(16, sizeof...(Tchar)))
+		{}
+
+		int match(__m128i const & xmmInput) const
+		{
+			return _mm_cmpestri(xmmInput, 16, m_xmmPattern, m_nCount, _SIDD_UBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_BIT_MASK | _SIDD_MASKED_POSITIVE_POLARITY);
+		}
+	};
+	template <char... vcRange>
+	struct Qrange<char, vcRange...>
+	{
+		int match(__m128i const & xmmInput0) const
+		{
+			__m128i xmmPattern0 = internals::Qchar<char, vcRange...>::xmm();
+
+			Qrange<char> qRange1(xmmPattern0);
+
+			int nMask2 = qRange1.match(xmmInput0);
+
+			return nMask2;
+		}
+	};
+	template <char c0, char c1, char c2, char c3, char c4, char c5, char c6, char c7, char c8, char c9, char cA, char cB, char cC, char cD, char cE, char cF, char cG, char... vcRange>
+	struct Qrange<char, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, cA, cB, cC, cD, cE, cF, cG, vcRange...>
+	{
+		int match(__m128i const & xmmInput0) const
+		{
+			return
+				Qrange<char, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, cA, cB, cC, cD, cE, cF>().match(xmmInput0)
+				|
+				Qrange<char, cG, vcRange...>().match(xmmInput0);
+		}
+	};
+	template <typename... Tchar>
+	Qrange<char> q_range(Tchar... vChar)
+	{
+		return Qrange<char>(vChar...);
+	}
+
+	template <typename Tchar, Tchar... vcSet>
+	struct Qset;
+
+	template <char... vcSet>
+	struct Qset<char, vcSet...>
+	{
+		int match(__m128i const & xmmInput0, __m128i const & xmmPattern0)
+		{
+			return _mm_cmpestri(xmmInput0, 16, xmmPattern0, sizeof...(vcSet), _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK | _SIDD_MASKED_POSITIVE_POLARITY);
+		}
+	};
+
+	template <typename Tchar, Tchar... vcExact>
+	struct Qexact;
+
+	template <typename Texpr, size_t uMin, size_t uMax = 0>
+	struct Qtimes;
+
+	template <typename... vtExpr>
+	struct Qexpr;
+
+	template <typename... vtExpr>
+	struct Qor;
+
+	template <typename Texpr>
+	struct Qnot;
+
 	// using Qdecimal        = Qrange<char, '0','9'>;
 	// using Qalpha          = Qrange<char, 'a','z', 'A','Z'>;
 	// using Qhexadecimal    = Qrange<char, 'a','z', 'A','Z', '0','9'>;
