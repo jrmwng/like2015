@@ -4,7 +4,8 @@
 
 namespace jrmwng
 {
-	struct Qbase;
+	struct Qbase
+	{};
 
 	template <typename Tchar, typename Tmm>
 	struct Qtraits
@@ -67,6 +68,7 @@ namespace jrmwng
 
 		template <int nMode>
 		struct Qpattern<nMode, 0, char, __m128i>
+			: Qbase
 		{
 			int match(__m128i const &) const
 			{
@@ -99,7 +101,7 @@ namespace jrmwng
 			int match(__m128i const & xmmInput) const
 			{
 				return
-					_mm_cmpestri(xmmInput, 16, m_xmmPattern, (uSize > 16U ? 16 : uSize), (nMode & ~3) | _SIDD_UBYTE_OPS)
+					_mm_cvtsi128_si32(_mm_cmpestrm(m_xmmPattern, (uSize > 16U ? 16 : uSize), xmmInput, 16, (nMode & ~3) | _SIDD_UBYTE_OPS | _SIDD_BIT_MASK))
 					|
 					base_type::match(xmmInput);
 			}
@@ -126,9 +128,11 @@ namespace jrmwng
 	{
 		return internals::Qpattern<(_SIDD_CMP_EQUAL_ANY), 1 + sizeof...(Tchar), char, Tmm>(c0, vArgs...);
 	}
-
-	template <typename Tchar, Tchar... vcExact>
-	struct Qexact;
+	template <typename Tmm, typename... Tchar>
+	auto q_exact(char c0, Tchar... vArgs)
+	{
+		return internals::Qpattern<(_SIDD_CMP_EQUAL_ORDERED), 1 + sizeof...(Tchar), char, Tmm>(c0, vArgs...);
+	}
 
 	template <typename Texpr, size_t uMin, size_t uMax = 0>
 	struct Qtimes;
