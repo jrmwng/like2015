@@ -19,6 +19,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)big_number.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)big_number_mm.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)big_number_unsigned.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)allocator32x.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)int32_tuple.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)integer_sequence.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)q.h" />

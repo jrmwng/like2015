@@ -47,5 +47,8 @@
     <ClCompile Include="UnitTest_jrmwng_q.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UnitTest_jrmwng_allocator32x.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
