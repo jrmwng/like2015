@@ -32,6 +32,14 @@ namespace jrmwng
 			{
 				return that.m_uBitmap;
 			}
+			static unsigned get_base(unsigned uBitmap)
+			{
+				return uBitmap;
+			}
+			static base_type get_base(allocator32x_bitmap const & that)
+			{
+				return that;
+			}
 
 			allocator32x_bitmap()
 				: m_uBitmap(0)
@@ -56,7 +64,7 @@ namespace jrmwng
 
 			template <typename Top, typename T1, typename T2>
 			allocator32x_bitmap(Top const & tOp, T1 const & t1, T2 const & t2)
-				: base_type(tOp, t1, t2)
+				: base_type(tOp, get_base(t1), get_base(t2))
 				, m_uBitmap(tOp(get_bitmap(t1), get_bitmap(t2)))
 			{}
 			template <typename T1>
