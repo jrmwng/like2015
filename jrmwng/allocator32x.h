@@ -302,7 +302,7 @@ namespace jrmwng
 					bitmap_type const XorBitmap1 = OldBitmap0 ^ uAlignMask;
 					// case A: 1000 ^ 0110 = 1110
 					// case B: 1100 ^ 0010 = 1110
-					bitmap_type const XorBitmap2 = AddBitmap1 ^ XorBitmap1;
+					bitmap_type const XorBitmap2 = AddBitmap1 ^ avg(XorBitmap1, 0);
 					// case A: 1110 & 0101 = 0100
 					// case B: 1110 & 0101 = 0100
 					bitmap_type const AndBitmap3 = XorBitmap2 & (uAlignMask << (uLength - 1));
@@ -316,7 +316,7 @@ namespace jrmwng
 							unsigned uOldBitmap = m_auBitmap[uIndex32];
 							//if (_bextr_u32(uOldBitmap, uIndex1 - uLength, uLength) == uPattern)
 							{
-								unsigned uMask = uPattern << (uIndex1 - uLength);
+								unsigned uMask = uPattern << (uIndex1 - (uLength - 1));
 
 								unsigned uNewBitmap = uOldBitmap ^ uMask;
 								if ((uOldBitmap & uMask) != uMask)
@@ -343,7 +343,7 @@ namespace jrmwng
 		{
 			unsigned const uIndex32 = uIndex / 32;
 			unsigned const uIndex1 = uIndex % 32;
-			unsigned const uPattern = (1 << uLength);
+			unsigned const uPattern = (1 << uLength) - 1;
 
 			unsigned const uMask = uPattern << uIndex1;
 
