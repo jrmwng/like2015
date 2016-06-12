@@ -14,7 +14,7 @@ namespace UnitTest_jrmwng
 		{
 			jrmwng::allocator32x<1> stAllocator;
 
-			for (unsigned j = 1; j < 3; j++)
+			for (unsigned j = 16; j > 0; j >>= 1)
 			{
 				for (unsigned i = 0; i < 32; i+=j)
 				{

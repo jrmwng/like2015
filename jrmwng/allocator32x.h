@@ -248,6 +248,7 @@ namespace jrmwng
 			0x00010001U, // 0x0D
 			0x00010001U, // 0x0E
 			0x00010001U, // 0x0F
+			0x00010001U, // 0x10
 		};
 	}
 	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<internals::allocator32x_base, T1>::value || std::is_base_of<internals::allocator32x_base, T2>::value)> >
@@ -266,7 +267,7 @@ namespace jrmwng
 		return internals::allocator32x_op<std::bit_and, internals::allocator32x_op_t<T1>, internals::allocator32x_op_t<T2> >(t1, t2);
 	}
 	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<internals::allocator32x_base, T1>::value || std::is_base_of<internals::allocator32x_base, T2>::value)> >
-	auto avg (T1 const & t1, T2 const & t2)
+	auto avg16(T1 const & t1, T2 const & t2)
 	{
 		return internals::allocator32x_op<internals::allocator32x_avg16, internals::allocator32x_op_t<T1>, internals::allocator32x_op_t<T2> >(t1, t2);
 	}
@@ -294,24 +295,27 @@ namespace jrmwng
 				if (0 < uLength)
 				{
 					bitmap_type const OldBitmap0(m_auBitmap);
-					// case A: 0011 + 0101 = 1000
-					// case B: 0111 + 0101 = 1100
-					bitmap_type const AddBitmap1 = avg(OldBitmap0, uAlignMask);
+					// case A: avg(0011, 0101) = 0100
+					// case B: avg(0111, 0101) = 0110
+					bitmap_type const AddBitmap1 = avg16(OldBitmap0, uAlignMask);
 					// case A: 0011 ^ 0101 = 0110
 					// case B: 0111 ^ 0101 = 0010
 					bitmap_type const XorBitmap1 = OldBitmap0 ^ uAlignMask;
+					// case A: avg(0110, 0000) = 0011
+					// case B: avg(0010, 0000) = 0001
+					bitmap_type const AvgBitmap2 = avg16(XorBitmap1, 0);
 					// case A: 1000 ^ 0110 = 1110
 					// case B: 1100 ^ 0010 = 1110
-					bitmap_type const XorBitmap2 = AddBitmap1 ^ avg(XorBitmap1, 0);
+					bitmap_type const XorBitmap3 = AddBitmap1 ^ AvgBitmap2;
 					// case A: 1110 & 0101 = 0100
 					// case B: 1110 & 0101 = 0100
-					bitmap_type const AndBitmap3 = XorBitmap2 & (uAlignMask << (uLength - 1));
+					bitmap_type const AndBitmap4 = XorBitmap3 & (uAlignMask << (uLength - 1));
 
 					unsigned const uPattern = (1 << uLength) - 1;
 
 					unsigned uReturnIndex = u32x * 32;
 					{
-						AndBitmap3.find_bit([=, &uReturnIndex](unsigned uIndex32, unsigned uIndex1)->bool
+						AndBitmap4.find_bit([=, &uReturnIndex](unsigned uIndex32, unsigned uIndex1)->bool
 						{
 							unsigned uOldBitmap = m_auBitmap[uIndex32];
 							//if (_bextr_u32(uOldBitmap, uIndex1 - uLength, uLength) == uPattern)
