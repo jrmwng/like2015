@@ -14,19 +14,22 @@ namespace UnitTest_jrmwng
 		{
 			jrmwng::allocator32x<1> stAllocator;
 
-			for (unsigned j = 16; j > 0; j >>= 1)
+			for (unsigned k = 16; k > 0; k >>= 1)
 			{
-				for (unsigned i = 0; i < 32; i+=j)
+				for (unsigned j = (k >> 1) + 1; j <= k; j++)
 				{
-					unsigned uIndex = stAllocator.allocate(j);
-					if (uIndex != i)
+					for (unsigned i = 0; i < 32; i += k)
 					{
-						Assert::AreEqual<unsigned>(i, uIndex);
+						unsigned uIndex = stAllocator.allocate(j);
+						if (uIndex != i)
+						{
+							Assert::AreEqual<unsigned>(i, uIndex);
+						}
 					}
-				}
-				for (unsigned i = 0; i < 32; i+=j)
-				{
-					stAllocator.deallocate(i, j);
+					for (unsigned i = 0; i < 32; i += k)
+					{
+						stAllocator.deallocate(i, j);
+					}
 				}
 			}
 
