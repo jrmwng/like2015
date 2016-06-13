@@ -284,7 +284,7 @@ namespace jrmwng
 			{
 				unsigned const uAlignMask = internals::g_auAlignMask[uLength];
 
-				if (0 < uLength)
+				//if (0 < uLength)
 				{
 					bitmap_type const OldBitmap0(m_auBitmap);
 					// case A: avg(0011, 0101) = 0100

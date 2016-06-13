@@ -33,7 +33,11 @@ namespace UnitTest_jrmwng
 				}
 			}
 
-
+			unsigned uIndex = stAllocator.allocate(0);
+			if (uIndex != 32)
+			{
+				Assert::AreEqual<unsigned>(32, uIndex);
+			}
 			// TODO: Your test code here
 		}
 	};
