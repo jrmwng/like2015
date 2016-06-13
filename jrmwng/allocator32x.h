@@ -111,7 +111,7 @@ namespace jrmwng
 			template <typename Tfunc>
 			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
 			{
-				return find_bits(m_u4Bitmap, uLength, tFunc);
+				return base_type::find_bits(uLength, tFunc) || find_bits(m_u4Bitmap, uLength, tFunc);
 			}
 		};
 		template <>
@@ -192,11 +192,7 @@ namespace jrmwng
 			template <typename Tfunc>
 			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
 			{
-				if (base_type::find_bits(uLength, tFunc))
-				{
-					return true;
-				}
-				return find_bits(m_uBitmap, uLength, tFunc);
+				return base_type::find_bits(uLength, tFunc) || find_bits(m_uBitmap, uLength, tFunc);
 			}
 		};
 		template <>
