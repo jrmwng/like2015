@@ -57,14 +57,14 @@ namespace jrmwng
 			template <typename T, size_t uSize, typename TenableIf = std::enable_if_t<(sizeof(__m128i) <= sizeof(T) * uSize)> >
 			allocator32x4_bitmap(T(&auThat)[uSize])
 				: base_type(auThat)
-				, m_u4Bitmap(_mm_loadu_si128(reinterpret_cast<__m128i const*>(const_cast<std::remove_volatile_t<T>*>(auThat)) + u128x))
+				, m_u4Bitmap(_mm_loadu_si128(reinterpret_cast<__m128i const*>(const_cast<std::remove_volatile_t<T>*>(auThat)) + (u128x - 1)))
 			{
 				static_assert((sizeof(__m128i) * u128x <= sizeof(T) * uSize), "Bounds exception");
 			}
 			template <typename T, size_t uSize>
 			allocator32x4_bitmap(std::array<T, uSize> const & that)
 				: base_type(that)
-				, m_u4Bitmap(_mm_loadu_si128(reinterpret_cast<__m128i const*>(that.data()) + u128x))
+				, m_u4Bitmap(_mm_loadu_si128(reinterpret_cast<__m128i const*>(that.data()) + (u128x - 1)))
 			{
 				static_assert((sizeof(__m128i) * u128x <= sizeof(T) * uSize), "Bounds exception");
 			}
@@ -275,6 +275,18 @@ namespace jrmwng
 		{
 			std::fill(std::begin(m_auBitmap), std::end(m_auBitmap), 0xFFFFFFFF);
 		}
+		allocator32x(allocator32x && that)
+		{
+			std::transform(std::begin(that.m_auBitmap), std::end(that.m_auBitmap), m_auBitmap, [=](std::atomic<unsigned> & uBitmap)->unsigned
+			{
+				return uBitmap.exchange(std::memory_order_relaxed);
+			});
+		}
+
+		constexpr unsigned end() const
+		{
+			return u32x * 32;
+		}
 
 		unsigned allocate(unsigned uLength)
 		{
@@ -303,7 +315,7 @@ namespace jrmwng
 
 					//unsigned const uPattern = _bzhi_u32(~0, uLength); // (1 << uLength) - 1;
 
-					unsigned uReturnIndex = u32x * 32;
+					unsigned uReturnIndex = end();
 					{
 						AndBitmap4.find_bits(uLength, [=, &uReturnIndex](unsigned uIndex32, unsigned uMask)->bool
 						{
@@ -332,7 +344,7 @@ namespace jrmwng
 					return uReturnIndex;
 				}
 			}
-			return u32x * 32;
+			return end();
 		}
 		void deallocate(unsigned uIndex, unsigned uLength)
 		{

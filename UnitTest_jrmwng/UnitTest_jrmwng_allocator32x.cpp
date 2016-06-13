@@ -2,6 +2,7 @@
 #include "CppUnitTest.h"
 
 #include "..\jrmwng\allocator32x.h"
+#include "..\jrmwng\tuple.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -12,33 +13,35 @@ namespace UnitTest_jrmwng
 	public:
 		TEST_METHOD(TestMethod_jrmwng_allocator32x)
 		{
-			jrmwng::allocator32x<1> stAllocator;
-
-			for (unsigned k = 16; k > 0; k >>= 1)
+			jrmwng::for_each(
+				std::make_tuple(jrmwng::allocator32x<1>(), jrmwng::allocator32x<4>(), jrmwng::allocator32x<8>()),
+				[=](auto & stAllocator)
 			{
-				for (unsigned j = (k >> 1) + 1; j <= k; j++)
+				for (unsigned k = 16; k > 0; k >>= 1)
 				{
-					for (unsigned i = 0; i < 32; i += k)
+					for (unsigned j = (k >> 1) + 1; j <= k; j++)
 					{
-						unsigned uIndex = stAllocator.allocate(j);
-						if (uIndex != i)
+						for (unsigned i = 0; i < stAllocator.end(); i += k)
 						{
-							Assert::AreEqual<unsigned>(i, uIndex);
+							unsigned uIndex = stAllocator.allocate(j);
+							if (uIndex != i)
+							{
+								Assert::AreEqual<unsigned>(i, uIndex);
+							}
+						}
+						for (unsigned i = 0; i < stAllocator.end(); i += k)
+						{
+							stAllocator.deallocate(i, j);
 						}
 					}
-					for (unsigned i = 0; i < 32; i += k)
-					{
-						stAllocator.deallocate(i, j);
-					}
 				}
-			}
 
-			unsigned uIndex = stAllocator.allocate(0);
-			if (uIndex != 32)
-			{
-				Assert::AreEqual<unsigned>(32, uIndex);
-			}
-			// TODO: Your test code here
+				unsigned uIndex = stAllocator.allocate(0);
+				if (uIndex != stAllocator.end())
+				{
+					Assert::AreEqual<unsigned>(32, uIndex);
+				}
+			});
 		}
 	};
 }
