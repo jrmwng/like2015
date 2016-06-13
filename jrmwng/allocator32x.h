@@ -94,9 +94,10 @@ namespace jrmwng
 				__m128i u4Bitmap = u4Bitmap0;
 				for (unsigned u32x = 0; u32x < 4; u32x++)
 				{
-					for (unsigned uBitmap = _mm_cvtsi128_si32(u4Bitmap), uIndex1 = _tzcnt_u32(uBitmap); uIndex1 < 32; uIndex1 = _tzcnt_u32(_blsr_u32(uBitmap)))
+					for (unsigned long ulIndex1, ulBitmap = _mm_cvtsi128_si32(u4Bitmap); _BitScanForward(&ulIndex1, ulBitmap); )
 					{
-						if (tFunc((u128x - 1) * 4 + u32x, uIndex1))
+						ulBitmap = _blsr_u32(ulBitmap);
+						if (tFunc((u128x - 1) * 4 + u32x, ulIndex1))
 						{
 							return true;
 						}
@@ -176,9 +177,10 @@ namespace jrmwng
 			template <typename Tfunc>
 			static bool find_bit(unsigned uBitmap, Tfunc const & tFunc)
 			{
-				for (unsigned uIndex = _tzcnt_u32(uBitmap); uIndex < 32; uIndex = _tzcnt_u32(_blsr_u32(uBitmap)))
+				for (unsigned long ulIndex1; _BitScanForward(&ulIndex1, uBitmap);)
 				{
-					if (tFunc((u32x - 1), uIndex))
+					uBitmap = _blsr_u32(uBitmap);
+					if (tFunc((u32x - 1), ulIndex1))
 					{
 						return true;
 					}
