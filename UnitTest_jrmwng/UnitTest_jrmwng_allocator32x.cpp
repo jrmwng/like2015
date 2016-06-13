@@ -14,7 +14,7 @@ namespace UnitTest_jrmwng
 		TEST_METHOD(TestMethod_jrmwng_allocator32x)
 		{
 			jrmwng::for_each(
-				std::make_tuple(jrmwng::allocator32x<1>(), jrmwng::allocator32x<4>(), jrmwng::allocator32x<8>()),
+				std::make_tuple(jrmwng::allocator32x<1>(), jrmwng::allocator32x<4>(), jrmwng::allocator32x<8>(), jrmwng::allocator32x<16>()),
 				[=](auto & stAllocator)
 			{
 				for (unsigned k = 16; k > 0; k >>= 1)

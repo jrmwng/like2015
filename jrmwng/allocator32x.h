@@ -34,54 +34,138 @@ namespace jrmwng
 		struct allocator32x_base
 		{};
 
-		template <unsigned u128x>
+		template <typename Tmm, unsigned uX>
 		struct allocator32x4_bitmap
-			: allocator32x4_bitmap<u128x - 1>
+			: allocator32x4_bitmap<Tmm, uX - 1>
 		{
-			using base_type = allocator32x4_bitmap<u128x - 1>;
+			using base_type = allocator32x4_bitmap<Tmm, uX - 1>;
 
-			__m128i m_u4Bitmap;
+			Tmm m_u4Bitmap;
 
-			static __m128i get_bitmap(unsigned uBitmap)
+			template <typename T>
+			struct Ttraits;
+
+			template <> struct Ttraits<__m128i>
 			{
-				return _mm_set1_epi32(uBitmap);
-			}
-			static __m128i get_bitmap(allocator32x4_bitmap const & that)
+				static __m128i get_bitmap(unsigned uBitmap)
+				{
+					return _mm_set1_epi32(uBitmap);
+				}
+				static Tmm get_bitmap(allocator32x4_bitmap const & that)
+				{
+					return that.m_u4Bitmap;
+				}
+				static __m128i setzero()
+				{
+					return _mm_setzero_si128();
+				}
+				template <typename T>
+				static __m128i load(T *pt)
+				{
+					return _mm_loadu_si128(reinterpret_cast<__m128i const*>(const_cast<std::remove_volatile_t<T>*>(pt)) + (uX - 1));
+				}
+				static __m128i xor (__m128i const & t1, __m128i const & t2)
+				{
+					return _mm_xor_si128(t1, t2);
+				}
+				static __m128i and (__m128i const & t1, __m128i const & t2)
+				{
+					return _mm_and_si128(t1, t2);
+				}
+				static __m128i avg16(__m128i const & t1, __m128i const & t2)
+				{
+					return _mm_avg_epu16(t1, t2);
+				}
+				static __m128i srli16(__m128i const & t1, int nCount)
+				{
+					return _mm_srli_epi16(t1, nCount);
+				}
+				static int cvt_si32(__m128i const & t1)
+				{
+					return _mm_cvtsi128_si32(t1);
+				}
+				static __m128i rotate32(__m128i const & t1)
+				{
+					return _mm_shuffle_epi32(t1, _MM_SHUFFLE(0, 3, 2, 1));
+				}
+			};
+			template <> struct Ttraits<__m256i>
 			{
-				return that.m_u4Bitmap;
-			}
+				static __m256i get_bitmap(unsigned uBitmap)
+				{
+					return _mm256_set1_epi32(uBitmap);
+				}
+				static Tmm get_bitmap(allocator32x4_bitmap const & that)
+				{
+					return that.m_u4Bitmap;
+				}
+				static __m256i setzero()
+				{
+					return _mm256_setzero_si256();
+				}
+				template <typename T>
+				static __m256i load(T *pt)
+				{
+					return _mm256_loadu_si256(reinterpret_cast<__m256i const*>(const_cast<std::remove_volatile_t<T>*>(pt)) + (uX - 1));
+				}
+				static __m256i xor (__m256i const & t1, __m256i const & t2)
+				{
+					return _mm256_xor_si256(t1, t2);
+				}
+				static __m256i and (__m256i const & t1, __m256i const & t2)
+				{
+					return _mm256_and_si256(t1, t2);
+				}
+				static __m256i avg16(__m256i const & t1, __m256i const & t2)
+				{
+					return _mm256_avg_epu16(t1, t2);
+				}
+				static __m256i srli16(__m256i const & t1, int nCount)
+				{
+					return _mm256_srli_epi16(t1, nCount);
+				}
+				static int cvt_si32(__m256i const & t1)
+				{
+					return _mm_cvtsi128_si32(_mm256_castsi256_si128(t1));
+				}
+				static __m256i rotate32(__m256i const & t1)
+				{
+					return _mm256_permutevar8x32_epi32(t1, _mm256_set_epi32(0, 7, 6, 5, 4, 3, 2, 1));
+				}
+			};
+			using TT = Ttraits<Tmm>;
 
 			allocator32x4_bitmap()
-				: m_u4Bitmap(_mm_setzero_si128())
+				: m_u4Bitmap(TT::setzero())
 			{}
-			template <typename T, size_t uSize, typename TenableIf = std::enable_if_t<(sizeof(__m128i) <= sizeof(T) * uSize)> >
+			template <typename T, size_t uSize>
 			allocator32x4_bitmap(T(&auThat)[uSize])
 				: base_type(auThat)
-				, m_u4Bitmap(_mm_loadu_si128(reinterpret_cast<__m128i const*>(const_cast<std::remove_volatile_t<T>*>(auThat)) + (u128x - 1)))
+				, m_u4Bitmap(TT::load(auThat))
 			{
-				static_assert((sizeof(__m128i) * u128x <= sizeof(T) * uSize), "Bounds exception");
+				static_assert((sizeof(Tmm) * uX <= sizeof(T) * uSize), "Bounds exception");
 			}
 			template <typename T, size_t uSize>
 			allocator32x4_bitmap(std::array<T, uSize> const & that)
 				: base_type(that)
-				, m_u4Bitmap(_mm_loadu_si128(reinterpret_cast<__m128i const*>(that.data()) + (u128x - 1)))
+				, m_u4Bitmap(TT::load(that.data()))
 			{
-				static_assert((sizeof(__m128i) * u128x <= sizeof(T) * uSize), "Bounds exception");
+				static_assert((sizeof(Tmm) * uX <= sizeof(T) * uSize), "Bounds exception");
 			}
 			template <typename T1, typename T2>
 			allocator32x4_bitmap(std::bit_xor<unsigned> const & tOp, T1 const & t1, T2 const & t2)
 				: base_type(tOp, t1, t2)
-				, m_u4Bitmap(_mm_xor_si128(get_bitmap(t1), get_bitmap(t2)))
+				, m_u4Bitmap(TT::xor(TT::get_bitmap(t1), TT::get_bitmap(t2)))
 			{}
 			template <typename T1, typename T2>
 			allocator32x4_bitmap(std::bit_and<unsigned> const & tOp, T1 const & t1, T2 const & t2)
 				: base_type(tOp, t1, t2)
-				, m_u4Bitmap(_mm_and_si128(get_bitmap(t1), get_bitmap(t2)))
+				, m_u4Bitmap(TT::and(TT::get_bitmap(t1), TT::get_bitmap(t2)))
 			{}
 			template <typename T1, typename T2>
 			allocator32x4_bitmap(allocator32x_avg16<unsigned> const & tOp, T1 const & t1, T2 const & t2)
 				: base_type(tOp, t1, t2)
-				, m_u4Bitmap(_mm_avg_epu16(get_bitmap(t1), get_bitmap(t2)))
+				, m_u4Bitmap(TT::avg16(TT::get_bitmap(t1), TT::get_bitmap(t2)))
 			{}
 			template <template <typename T> class Top, typename T1, typename T2>
 			allocator32x4_bitmap(allocator32x_op<Top, T1, T2> const & stOp)
@@ -89,22 +173,22 @@ namespace jrmwng
 			{}
 
 			template <typename Tfunc>
-			static bool find_bits(__m128i const & u4Bitmap0, unsigned uLength, Tfunc const & tFunc)
+			static bool find_bits(Tmm const & u4Bitmap0, unsigned uLength, Tfunc const & tFunc)
 			{
-				__m128i u4BitmapH = u4Bitmap0;
-				__m128i u4BitmapL = _mm_srli_epi16(u4Bitmap0, uLength - 1);
-				for (unsigned u32x = 0; u32x < 4; u32x++)
+				Tmm u4BitmapH = u4Bitmap0;
+				Tmm u4BitmapL = TT::srli16(u4Bitmap0, uLength - 1);
+				for (unsigned u32x = 0; u32x < sizeof(Tmm) / sizeof(unsigned); u32x++)
 				{
-					for (unsigned uBitmapH = _mm_cvtsi128_si32(u4BitmapH), uBitmapL = _mm_cvtsi128_si32(u4BitmapL); uBitmapH; uBitmapH = _blsr_u32(uBitmapH), uBitmapL = _blsr_u32(uBitmapL))
+					for (unsigned uBitmapH = TT::cvt_si32(u4BitmapH), uBitmapL = TT::cvt_si32(u4BitmapL); uBitmapH; uBitmapH = _blsr_u32(uBitmapH), uBitmapL = _blsr_u32(uBitmapL))
 					{
 						unsigned uMask = (_blsi_u32(uBitmapH) - _blsi_u32(uBitmapL)) + _blsi_u32(uBitmapH);
-						if (tFunc((u128x - 1) * 4 + u32x, uMask))
+						if (tFunc((uX - 1) * sizeof(Tmm) / sizeof(unsigned) + u32x, uMask))
 						{
 							return true;
 						}
 					}
-					u4BitmapH = _mm_shuffle_epi32(u4BitmapH, _MM_SHUFFLE(0, 3, 2, 1));
-					u4BitmapL = _mm_shuffle_epi32(u4BitmapL, _MM_SHUFFLE(0, 3, 2, 1));
+					u4BitmapH = TT::rotate32(u4BitmapH);
+					u4BitmapL = TT::rotate32(u4BitmapL);
 				}
 				return false;
 			}
@@ -114,8 +198,8 @@ namespace jrmwng
 				return base_type::find_bits(uLength, tFunc) || find_bits(m_u4Bitmap, uLength, tFunc);
 			}
 		};
-		template <>
-		struct allocator32x4_bitmap<0>
+		template <typename Tmm>
+		struct allocator32x4_bitmap<Tmm, 0>
 			: allocator32x_base
 		{
 			template <typename... Targs>
@@ -265,9 +349,10 @@ namespace jrmwng
 	struct __declspec(dllexport) allocator32x
 	{
 		using bitmap32x_type = internals::allocator32x_bitmap<u32x>;
-		using bitmap32x4_type = internals::allocator32x4_bitmap<((u32x + 3) / 4)>;
+		using bitmap32x4_type = internals::allocator32x4_bitmap<__m128i, ((u32x + 3) / 4)>;
+		using bitmap32x8_type = internals::allocator32x4_bitmap<__m256i, ((u32x + 7) / 8)>;
 
-		using bitmap_type = std::conditional_t<(u32x == 1), bitmap32x_type, bitmap32x4_type>;
+		using bitmap_type = std::conditional_t<(u32x == 1), bitmap32x_type, std::conditional_t<(u32x <= 4), bitmap32x4_type, bitmap32x8_type> >;
 
 		std::atomic<unsigned> m_auBitmap[u32x];
 
