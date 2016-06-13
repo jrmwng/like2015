@@ -346,7 +346,7 @@ namespace jrmwng
 		return internals::allocator32x_op<internals::allocator32x_avg16, internals::allocator32x_op_t<T1>, internals::allocator32x_op_t<T2> >(t1, t2);
 	}
 	template <size_t u32x>
-	struct __declspec(dllexport) allocator32x
+	struct allocator32x
 	{
 		using bitmap32x_type = internals::allocator32x_bitmap<u32x>;
 		using bitmap32x4_type = internals::allocator32x4_bitmap<__m128i, ((u32x + 3) / 4)>;
