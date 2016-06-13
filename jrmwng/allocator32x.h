@@ -69,11 +69,6 @@ namespace jrmwng
 				static_assert((sizeof(__m128i) * u128x <= sizeof(T) * uSize), "Bounds exception");
 			}
 			template <typename T1, typename T2>
-			allocator32x4_bitmap(std::plus<unsigned> const & tOp, T1 const & t1, T2 const & t2)
-				: base_type(tOp, t1, t2)
-				, m_u4Bitmap(_mm_add_epi32(get_bitmap(t1), get_bitmap(t2)))
-			{}
-			template <typename T1, typename T2>
 			allocator32x4_bitmap(std::bit_xor<unsigned> const & tOp, T1 const & t1, T2 const & t2)
 				: base_type(tOp, t1, t2)
 				, m_u4Bitmap(_mm_xor_si128(get_bitmap(t1), get_bitmap(t2)))
@@ -250,11 +245,6 @@ namespace jrmwng
 			0x00010001U, // 0x0F
 			0x00010001U, // 0x10
 		};
-	}
-	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<internals::allocator32x_base, T1>::value || std::is_base_of<internals::allocator32x_base, T2>::value)> >
-	auto operator + (T1 const & t1, T2 const & t2)
-	{
-		return internals::allocator32x_op<std::plus, internals::allocator32x_op_t<T1>, internals::allocator32x_op_t<T2> >(t1, t2);
 	}
 	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<internals::allocator32x_base, T1>::value || std::is_base_of<internals::allocator32x_base, T2>::value)> >
 	auto operator ^ (T1 const & t1, T2 const & t2)
