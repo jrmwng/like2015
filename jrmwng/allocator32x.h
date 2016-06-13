@@ -57,7 +57,7 @@ namespace jrmwng
 			template <typename T, size_t uSize, typename TenableIf = std::enable_if_t<(sizeof(__m128i) <= sizeof(T) * uSize)> >
 			allocator32x4_bitmap(T(&auThat)[uSize])
 				: base_type(auThat)
-				, m_u4Bitmap(_mm_loadu_si128(reinterpret_cast<__m128i const*>(auThat) + u128x))
+				, m_u4Bitmap(_mm_loadu_si128(reinterpret_cast<__m128i const*>(const_cast<std::remove_volatile_t<T>*>(auThat)) + u128x))
 			{
 				static_assert((sizeof(__m128i) * u128x <= sizeof(T) * uSize), "Bounds exception");
 			}
@@ -89,27 +89,29 @@ namespace jrmwng
 			{}
 
 			template <typename Tfunc>
-			static bool find_bit(__m128i const & u4Bitmap0, Tfunc const & tFunc)
+			static bool find_bits(__m128i const & u4Bitmap0, unsigned uLength, Tfunc const & tFunc)
 			{
-				__m128i u4Bitmap = u4Bitmap0;
+				__m128i u4BitmapH = u4Bitmap0;
+				__m128i u4BitmapL = _mm_srli_epi16(u4Bitmap0, uLength - 1);
 				for (unsigned u32x = 0; u32x < 4; u32x++)
 				{
-					for (unsigned long ulIndex1, ulBitmap = _mm_cvtsi128_si32(u4Bitmap); _BitScanForward(&ulIndex1, ulBitmap); )
+					for (unsigned uBitmapH = _mm_cvtsi128_si32(u4BitmapH), uBitmapL = _mm_cvtsi128_si32(u4BitmapL); uBitmapH; uBitmapH = _blsr_u32(uBitmapH), uBitmapL = _blsr_u32(uBitmapL))
 					{
-						ulBitmap = _blsr_u32(ulBitmap);
-						if (tFunc((u128x - 1) * 4 + u32x, ulIndex1))
+						unsigned uMask = (_blsi_u32(uBitmapH) - _blsi_u32(uBitmapL)) + _blsi_u32(uBitmapH);
+						if (tFunc((u128x - 1) * 4 + u32x, uMask))
 						{
 							return true;
 						}
 					}
-					u4Bitmap = _mm_shuffle_epi32(u4Bitmap, _MM_SHUFFLE(0, 3, 2, 1));
+					u4BitmapH = _mm_shuffle_epi32(u4BitmapH, _MM_SHUFFLE(0, 3, 2, 1));
+					u4BitmapL = _mm_shuffle_epi32(u4BitmapL, _MM_SHUFFLE(0, 3, 2, 1));
 				}
 				return false;
 			}
 			template <typename Tfunc>
-			bool find_bit(Tfunc const & tFunc) const
+			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
 			{
-				return find_bit(m_u4Bitmap, tFunc);
+				return find_bits(m_u4Bitmap, uLength, tFunc);
 			}
 		};
 		template <>
@@ -120,7 +122,7 @@ namespace jrmwng
 			allocator32x4_bitmap(Targs const &... tArgs)
 			{}
 			template <typename Tfunc>
-			bool find_bit(Tfunc const & tFunc) const
+			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
 			{
 				return false;
 			}
@@ -175,12 +177,12 @@ namespace jrmwng
 			{}
 
 			template <typename Tfunc>
-			static bool find_bit(unsigned uBitmap, Tfunc const & tFunc)
+			static bool find_bits(unsigned uBitmap, unsigned uLength, Tfunc const & tFunc)
 			{
-				for (unsigned long ulIndex1; _BitScanForward(&ulIndex1, uBitmap);)
+				for (unsigned uBitmapH = uBitmap, uBitmapL = uBitmap >> (uLength - 1); uBitmapH; uBitmapH = _blsr_u32(uBitmapH), uBitmapL = _blsr_u32(uBitmapL))
 				{
-					uBitmap = _blsr_u32(uBitmap);
-					if (tFunc((u32x - 1), ulIndex1))
+					unsigned uMask = (_blsi_u32(uBitmapH) - _blsi_u32(uBitmapL)) + _blsi_u32(uBitmapH);
+					if (tFunc((u32x - 1), uMask))
 					{
 						return true;
 					}
@@ -188,13 +190,13 @@ namespace jrmwng
 				return false;
 			}
 			template <typename Tfunc>
-			bool find_bit(Tfunc const & tFunc) const
+			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
 			{
-				if (base_type::find_bit(tFunc))
+				if (base_type::find_bits(uLength, tFunc))
 				{
 					return true;
 				}
-				return find_bit(m_uBitmap, tFunc);
+				return find_bits(m_uBitmap, uLength, tFunc);
 			}
 		};
 		template <>
@@ -205,7 +207,7 @@ namespace jrmwng
 			allocator32x_bitmap(Targs const &...)
 			{}
 			template <typename Tfunc>
-			bool find_bit(Tfunc const & tFunc) const
+			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
 			{
 				return false;
 			}
@@ -271,11 +273,11 @@ namespace jrmwng
 
 		using bitmap_type = std::conditional_t<(u32x == 1), bitmap32x_type, bitmap32x4_type>;
 
-		std::array<std::atomic<unsigned>, u32x> m_auBitmap;
+		std::atomic<unsigned> m_auBitmap[u32x];
 
 		allocator32x()
 		{
-			std::fill(m_auBitmap.begin(), m_auBitmap.end(), 0xFFFFFFFF);
+			std::fill(std::begin(m_auBitmap), std::end(m_auBitmap), 0xFFFFFFFF);
 		}
 
 		unsigned allocate(unsigned uLength)
@@ -303,16 +305,16 @@ namespace jrmwng
 					// case B: 1110 & 0101 = 0100
 					bitmap_type const AndBitmap4 = XorBitmap3 & (uAlignMask << (uLength - 1));
 
-					unsigned const uPattern = _bzhi_u32(~0, uLength); // (1 << uLength) - 1;
+					//unsigned const uPattern = _bzhi_u32(~0, uLength); // (1 << uLength) - 1;
 
 					unsigned uReturnIndex = u32x * 32;
 					{
-						AndBitmap4.find_bit([=, &uReturnIndex](unsigned uIndex32, unsigned uIndex1)->bool
+						AndBitmap4.find_bits(uLength, [=, &uReturnIndex](unsigned uIndex32, unsigned uMask)->bool
 						{
 							unsigned uOldBitmap = m_auBitmap[uIndex32];
 							//if (_bextr_u32(uOldBitmap, uIndex1 - uLength, uLength) == uPattern)
 							{
-								unsigned uMask = uPattern << (uIndex1 - (uLength - 1));
+								//unsigned uMask = uPattern << (uIndex1 - (uLength - 1));
 
 								unsigned uNewBitmap = uOldBitmap ^ uMask;
 								if ((uOldBitmap & uMask) != uMask)
@@ -322,8 +324,9 @@ namespace jrmwng
 #endif
 								}
 								else if (std::atomic_compare_exchange_strong_explicit(&m_auBitmap[uIndex32], &uOldBitmap, uNewBitmap, std::memory_order_acquire, std::memory_order_relaxed))
+								//else if (_InterlockedCompareExchange(reinterpret_cast<long volatile*>(&m_auBitmap[uIndex32]), uNewBitmap, uOldBitmap) == uOldBitmap)
 								{
-									uReturnIndex = uIndex32 * 32 + (uIndex1 - (uLength - 1));
+									uReturnIndex = uIndex32 * 32 + _tzcnt_u32(uMask);// (uIndex1 - (uLength - 1));
 									return true;
 								}
 							}
@@ -344,6 +347,7 @@ namespace jrmwng
 			unsigned const uMask = uPattern << uIndex1;
 
 			std::atomic_fetch_or_explicit(&m_auBitmap[uIndex32], uMask, std::memory_order_release);
+			//_InterlockedOr(reinterpret_cast<long volatile*>(&m_auBitmap[uIndex32]), uMask);
 		}
 	};
 }
