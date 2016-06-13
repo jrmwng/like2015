@@ -301,7 +301,7 @@ namespace jrmwng
 					// case B: 1110 & 0101 = 0100
 					bitmap_type const AndBitmap4 = XorBitmap3 & (uAlignMask << (uLength - 1));
 
-					unsigned const uPattern = (1 << uLength) - 1;
+					unsigned const uPattern = _bzhi_u32(~0, uLength); // (1 << uLength) - 1;
 
 					unsigned uReturnIndex = u32x * 32;
 					{
@@ -337,7 +337,7 @@ namespace jrmwng
 		{
 			unsigned const uIndex32 = uIndex / 32;
 			unsigned const uIndex1 = uIndex % 32;
-			unsigned const uPattern = (1 << uLength) - 1;
+			unsigned const uPattern = _bzhi_u32(~0, uLength); // (1 << uLength) - 1;
 
 			unsigned const uMask = uPattern << uIndex1;
 
