@@ -294,55 +294,44 @@ namespace jrmwng
 			{
 				unsigned const uAlignMask = internals::g_auAlignMask[uLength];
 
-				//if (0 < uLength)
+				bitmap_type const OldBitmap0(m_auBitmap);
+				// case A: avg(0011, 0101) = 0100
+				// case B: avg(0111, 0101) = 0110
+				bitmap_type const AddBitmap1 = avg16(OldBitmap0, uAlignMask);
+				// case A: 0011 ^ 0101 = 0110
+				// case B: 0111 ^ 0101 = 0010
+				bitmap_type const XorBitmap1 = OldBitmap0 ^ uAlignMask;
+				// case A: avg(0110, 0000) = 0011
+				// case B: avg(0010, 0000) = 0001
+				bitmap_type const AvgBitmap2 = avg16(XorBitmap1, 0);
+				// case A: 1000 ^ 0110 = 1110
+				// case B: 1100 ^ 0010 = 1110
+				bitmap_type const XorBitmap3 = AddBitmap1 ^ AvgBitmap2;
+				// case A: 1110 & 0101 = 0100
+				// case B: 1110 & 0101 = 0100
+				bitmap_type const AndBitmap4 = XorBitmap3 & (uAlignMask << (uLength - 1));
+
+				unsigned uReturnIndex = end();
 				{
-					bitmap_type const OldBitmap0(m_auBitmap);
-					// case A: avg(0011, 0101) = 0100
-					// case B: avg(0111, 0101) = 0110
-					bitmap_type const AddBitmap1 = avg16(OldBitmap0, uAlignMask);
-					// case A: 0011 ^ 0101 = 0110
-					// case B: 0111 ^ 0101 = 0010
-					bitmap_type const XorBitmap1 = OldBitmap0 ^ uAlignMask;
-					// case A: avg(0110, 0000) = 0011
-					// case B: avg(0010, 0000) = 0001
-					bitmap_type const AvgBitmap2 = avg16(XorBitmap1, 0);
-					// case A: 1000 ^ 0110 = 1110
-					// case B: 1100 ^ 0010 = 1110
-					bitmap_type const XorBitmap3 = AddBitmap1 ^ AvgBitmap2;
-					// case A: 1110 & 0101 = 0100
-					// case B: 1110 & 0101 = 0100
-					bitmap_type const AndBitmap4 = XorBitmap3 & (uAlignMask << (uLength - 1));
-
-					//unsigned const uPattern = _bzhi_u32(~0, uLength); // (1 << uLength) - 1;
-
-					unsigned uReturnIndex = end();
+					AndBitmap4.find_bits(uLength, [=, &uReturnIndex](unsigned uIndex32, unsigned uMask)->bool
 					{
-						AndBitmap4.find_bits(uLength, [=, &uReturnIndex](unsigned uIndex32, unsigned uMask)->bool
+						unsigned uOldBitmap = m_auBitmap[uIndex32];
+						unsigned uNewBitmap = uOldBitmap ^ uMask;
+						if ((uOldBitmap & uMask) != uMask)
 						{
-							unsigned uOldBitmap = m_auBitmap[uIndex32];
-							//if (_bextr_u32(uOldBitmap, uIndex1 - uLength, uLength) == uPattern)
-							{
-								//unsigned uMask = uPattern << (uIndex1 - (uLength - 1));
-
-								unsigned uNewBitmap = uOldBitmap ^ uMask;
-								if ((uOldBitmap & uMask) != uMask)
-								{
 #ifdef _DEBUG
-									__debugbreak();
+							__debugbreak();
 #endif
-								}
-								else if (std::atomic_compare_exchange_strong_explicit(&m_auBitmap[uIndex32], &uOldBitmap, uNewBitmap, std::memory_order_acquire, std::memory_order_relaxed))
-								//else if (_InterlockedCompareExchange(reinterpret_cast<long volatile*>(&m_auBitmap[uIndex32]), uNewBitmap, uOldBitmap) == uOldBitmap)
-								{
-									uReturnIndex = uIndex32 * 32 + _tzcnt_u32(uMask);// (uIndex1 - (uLength - 1));
-									return true;
-								}
-							}
-							return false;
-						});
-					}
-					return uReturnIndex;
+						}
+						else if (std::atomic_compare_exchange_strong_explicit(&m_auBitmap[uIndex32], &uOldBitmap, uNewBitmap, std::memory_order_acquire, std::memory_order_relaxed))
+						{
+							uReturnIndex = uIndex32 * 32 + _tzcnt_u32(uMask);
+							return true;
+						}
+						return false;
+					});
 				}
+				return uReturnIndex;
 			}
 			return end();
 		}
@@ -350,12 +339,11 @@ namespace jrmwng
 		{
 			unsigned const uIndex32 = uIndex / 32;
 			unsigned const uIndex1 = uIndex % 32;
-			unsigned const uPattern = _bzhi_u32(~0, uLength); // (1 << uLength) - 1;
+			unsigned const uPattern = _bzhi_u32(~0, uLength);
 
 			unsigned const uMask = uPattern << uIndex1;
 
 			std::atomic_fetch_or_explicit(&m_auBitmap[uIndex32], uMask, std::memory_order_release);
-			//_InterlockedOr(reinterpret_cast<long volatile*>(&m_auBitmap[uIndex32]), uMask);
 		}
 	};
 }
