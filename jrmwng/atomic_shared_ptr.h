@@ -95,101 +95,103 @@ namespace jrmwng
 		}
 	};
 
-	template <typename TR, bool bLock, typename TLockFunc, typename TFunc>
-	std::enable_if_t<std::is_void<TR>::value, void> shared_ptr_tm(TLockFunc const & tLockFunc, TFunc const & tFunc)
+	namespace
 	{
-		if (bLock)
+		template <typename TR, bool bLock, typename TLockFunc, typename TFunc>
+		std::enable_if_t<std::is_void<TR>::value, void> shared_ptr_tm(TLockFunc const & tLockFunc, TFunc const & tFunc)
 		{
+			if (bLock)
+			{
 #ifdef RTM
-			unsigned const uXBEGIN = _xbegin();
+				unsigned const uXBEGIN = _xbegin();
 
-			if (uXBEGIN == _XBEGIN_STARTED)
+				if (uXBEGIN == _XBEGIN_STARTED)
+				{
+					tFunc();
+					_xend();
+				}
+				else
+#endif
+				{
+					tLockFunc();
+				}
+			}
+			else
 			{
 				tFunc();
-				_xend();
 			}
-			else
-#endif
+		}
+		template <typename TR, bool bLock, typename TLockFunc, typename TFunc>
+		std::enable_if_t<!std::is_void<TR>::value, TR> shared_ptr_tm(TLockFunc const & tLockFunc, TFunc const & tFunc)
+		{
+			if (bLock)
 			{
-				tLockFunc();
-			}
-		}
-		else
-		{
-			tFunc();
-		}
-	}
-	template <typename TR, bool bLock, typename TLockFunc, typename TFunc>
-	std::enable_if_t<!std::is_void<TR>::value, TR> shared_ptr_tm(TLockFunc const & tLockFunc, TFunc const & tFunc)
-	{
-		if (bLock)
-		{
 #ifdef RTM
-			unsigned const uXBEGIN = _xbegin();
+				unsigned const uXBEGIN = _xbegin();
 
-			if (uXBEGIN == _XBEGIN_STARTED)
-			{
-				TR tR(std::move(tFunc()));
-				_xend();
-				return std::move(tR);
+				if (uXBEGIN == _XBEGIN_STARTED)
+				{
+					TR tR(std::move(tFunc()));
+					_xend();
+					return std::move(tR);
+				}
+				else
+#endif
+				{
+					return std::move(tLockFunc());
+				}
 			}
 			else
-#endif
 			{
-				return std::move(tLockFunc());
+				return std::move(tFunc());
 			}
 		}
-		else
-		{
-			return std::move(tFunc());
-		}
-	}
 
-	template <bool bLock>
-	struct shared_ptr_count
-	{
-		typedef intptr_t count_type;
-		std::atomic<count_type> lRefCount;
-
-		enum
+		template <bool bLock>
+		struct shared_ptr_count
 		{
-			SHARED_PTR_COUNT_BASE = 1,
-			SHARED_PTR_COUNT_THIS = SHARED_PTR_COUNT_BASE,
-			SHARED_PTR_COUNT_THAT_SHIFT = 12 + sizeof(count_type), // 16 for long, 20 for long long
-			SHARED_PTR_COUNT_THAT = (1 << SHARED_PTR_COUNT_THAT_SHIFT),
-			SHARED_PTR_COUNT_BOTH = SHARED_PTR_COUNT_THIS + SHARED_PTR_COUNT_THAT,
-			SHARED_PTR_COUNT_INIT = SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_BOTH,
-		};
+			typedef intptr_t count_type;
+			std::atomic<count_type> lRefCount;
 
-		shared_ptr_count(void)
-			: lRefCount(SHARED_PTR_COUNT_INIT)
-		{}
+			enum
+			{
+				SHARED_PTR_COUNT_BASE = 1,
+				SHARED_PTR_COUNT_THIS = SHARED_PTR_COUNT_BASE,
+				SHARED_PTR_COUNT_THAT_SHIFT = 12 + sizeof(count_type), // 16 for long, 20 for long long
+				SHARED_PTR_COUNT_THAT = (1 << SHARED_PTR_COUNT_THAT_SHIFT),
+				SHARED_PTR_COUNT_BOTH = SHARED_PTR_COUNT_THIS + SHARED_PTR_COUNT_THAT,
+				SHARED_PTR_COUNT_INIT = SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_BOTH,
+			};
 
-		virtual void delete_this(void) { __debugbreak(); }
-		virtual void delete_that(void) { __debugbreak(); }
+			shared_ptr_count(void)
+				: lRefCount(SHARED_PTR_COUNT_INIT)
+			{}
 
-		long use_count(void) const
-		{
-			return static_cast<long>(lRefCount.load(std::memory_order_relaxed) >> SHARED_PTR_COUNT_THAT_SHIFT);
-		}
-		bool unique(void) const
-		{
-			return lRefCount.load(std::memory_order_relaxed) == SHARED_PTR_COUNT_INIT; // unique without weak_ptr
-		}
-		bool expired(void) const
-		{
-			return lRefCount.load(std::memory_order_relaxed) < SHARED_PTR_COUNT_THAT;
-		}
+			virtual void delete_this(void) { __debugbreak(); }
+			virtual void delete_that(void) { __debugbreak(); }
 
-		void release_shared(void)
-		{
-			count_type const lRefCount0 = shared_ptr_tm<count_type, bLock>(
-				[this](void)->count_type
+			long use_count(void) const
+			{
+				return static_cast<long>(lRefCount.load(std::memory_order_relaxed) >> SHARED_PTR_COUNT_THAT_SHIFT);
+			}
+			bool unique(void) const
+			{
+				return lRefCount.load(std::memory_order_relaxed) == SHARED_PTR_COUNT_INIT; // unique without weak_ptr
+			}
+			bool expired(void) const
+			{
+				return lRefCount.load(std::memory_order_relaxed) < SHARED_PTR_COUNT_THAT;
+			}
+
+			void release_shared(void)
+			{
+				count_type const lRefCount0 = shared_ptr_tm<count_type, bLock>(
+					[this](void)->count_type
 				{
 					return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH, std::memory_order_release);
 				}
-				,
-				[this](void)->count_type
+					,
+					[this](void)->count_type
 				{
 					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
 					count_type const lRefCount1 = lRefCount0 - SHARED_PTR_COUNT_BOTH;
@@ -198,41 +200,41 @@ namespace jrmwng
 				}
 				);
 
-			if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_THAT)
-			{
-				delete_that(); // assume nothrow for simplicity
-
-				if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
-					||
-					shared_ptr_tm<count_type, bLock>(
-						[this](void)->count_type
-						{
-							return lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE, std::memory_order_release);
-						}
-						,
-						[this](void)->count_type
-						{
-							count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
-							count_type const lRefCount1 = lRefCount0 - SHARED_PTR_COUNT_BASE;
-							lRefCount.store(lRefCount1, std::memory_order_relaxed);
-							return lRefCount0;
-						}
-						) < SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
-					)
+				if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_THAT)
 				{
-					delete_this();
+					delete_that(); // assume nothrow for simplicity
+
+					if (lRefCount0 < SHARED_PTR_COUNT_BOTH + SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
+						||
+						shared_ptr_tm<count_type, bLock>(
+							[this](void)->count_type
+					{
+						return lRefCount.fetch_sub(SHARED_PTR_COUNT_BASE, std::memory_order_release);
+					}
+							,
+						[this](void)->count_type
+					{
+						count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
+						count_type const lRefCount1 = lRefCount0 - SHARED_PTR_COUNT_BASE;
+						lRefCount.store(lRefCount1, std::memory_order_relaxed);
+						return lRefCount0;
+					}
+						) < SHARED_PTR_COUNT_BASE + SHARED_PTR_COUNT_THIS
+						)
+					{
+						delete_this();
+					}
 				}
 			}
-		}
-		void release_weak(void)
-		{
-			count_type const lRefCount0 = shared_ptr_tm<count_type, bLock>(
-				[this](void)->count_type
+			void release_weak(void)
+			{
+				count_type const lRefCount0 = shared_ptr_tm<count_type, bLock>(
+					[this](void)->count_type
 				{
 					return lRefCount.fetch_sub(SHARED_PTR_COUNT_THIS, std::memory_order_release);
 				}
-				,
-				[this](void)->count_type
+					,
+					[this](void)->count_type
 				{
 					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
 					count_type const lRefCount1 = lRefCount0 - SHARED_PTR_COUNT_THIS;
@@ -241,45 +243,45 @@ namespace jrmwng
 				}
 				);
 
-			if (lRefCount0 < SHARED_PTR_COUNT_THIS + SHARED_PTR_COUNT_BASE)
-				delete_this();
-		}
-		void acquire_weak(void)
-		{
-			shared_ptr_tm<void, bLock>(
-				[this](void)
+				if (lRefCount0 < SHARED_PTR_COUNT_THIS + SHARED_PTR_COUNT_BASE)
+					delete_this();
+			}
+			void acquire_weak(void)
+			{
+				shared_ptr_tm<void, bLock>(
+					[this](void)
 				{
 					lRefCount.fetch_add(SHARED_PTR_COUNT_THIS, std::memory_order_acquire);
 				}
-				,
-				[this](void)
+					,
+					[this](void)
 				{
 					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
 					count_type const lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_THIS;
 					lRefCount.store(lRefCount1, std::memory_order_relaxed);
 				}
 				);
-		}
-		void acquire_shared(void)
-		{
-			shared_ptr_tm<void, bLock>(
-				[this](void)
+			}
+			void acquire_shared(void)
+			{
+				shared_ptr_tm<void, bLock>(
+					[this](void)
 				{
 					lRefCount.fetch_add(SHARED_PTR_COUNT_BOTH, std::memory_order_acquire);
 				}
-				,
-				[this](void)
+					,
+					[this](void)
 				{
 					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
 					count_type const lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH;
 					lRefCount.store(lRefCount1, std::memory_order_relaxed);
 				}
 				);
-		}
-		bool try_shared(void)
-		{
-			return shared_ptr_tm<count_type, bLock>(
-				[this](void)->count_type
+			}
+			bool try_shared(void)
+			{
+				return shared_ptr_tm<count_type, bLock>(
+					[this](void)->count_type
 				{
 					count_type lRefCount0;
 					count_type lRefCount1;
@@ -291,8 +293,8 @@ namespace jrmwng
 					}
 					return lRefCount0;
 				}
-				,
-				[this](void)->count_type
+					,
+					[this](void)->count_type
 				{
 					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
 					count_type const lRefCount1 = lRefCount0 + SHARED_PTR_COUNT_BOTH;
@@ -303,16 +305,16 @@ namespace jrmwng
 					return lRefCount0;
 				}
 				) >= SHARED_PTR_COUNT_THAT;
-		}
-		void convert_shared_into_weak(void)
-		{
-			count_type const lRefCount0 = shared_ptr_tm<count_type, bLock>(
-				[this](void)->count_type
+			}
+			void convert_shared_into_weak(void)
+			{
+				count_type const lRefCount0 = shared_ptr_tm<count_type, bLock>(
+					[this](void)->count_type
 				{
 					return lRefCount.fetch_sub(SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS, std::memory_order_release);
 				}
-				,
-				[this](void)->count_type
+					,
+					[this](void)->count_type
 				{
 					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
 					count_type const lRefCount1 = lRefCount0 - (SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS);
@@ -321,13 +323,13 @@ namespace jrmwng
 				}
 				);
 
-			if (lRefCount0 < (SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS) + SHARED_PTR_COUNT_THAT)
-				delete_that();
-		}
-		bool convert_weak_into_shared(void)
-		{
-			if (shared_ptr_tm<count_type, bLock>(
-				[this](void)->count_type
+				if (lRefCount0 < (SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS) + SHARED_PTR_COUNT_THAT)
+					delete_that();
+			}
+			bool convert_weak_into_shared(void)
+			{
+				if (shared_ptr_tm<count_type, bLock>(
+					[this](void)->count_type
 				{
 					count_type lRefCount0;
 					count_type lRefCount1;
@@ -339,8 +341,8 @@ namespace jrmwng
 					}
 					return lRefCount0;
 				}
-				,
-				[this](void)->count_type
+					,
+					[this](void)->count_type
 				{
 					count_type const lRefCount0 = lRefCount.load(std::memory_order_relaxed);
 					count_type const lRefCount1 = lRefCount0 + (SHARED_PTR_COUNT_BOTH - SHARED_PTR_COUNT_THIS);
@@ -350,24 +352,24 @@ namespace jrmwng
 					}
 					return lRefCount0;
 				}
-				) >= SHARED_PTR_COUNT_THAT)
-			{
-				return true;
+					) >= SHARED_PTR_COUNT_THAT)
+				{
+					return true;
+				}
+				else
+				{
+					release_weak();
+					return false;
+				}
 			}
-			else
-			{
-				release_weak();
-				return false;
-			}
-		}
-	};
+		};
 
-	template <typename T, typename TLock, typename TDeleter = void>
-	struct shared_ptr_count_t
-		: std::array<char, sizeof(TDeleter)>
-		, TLock
-	{
-		void * operator new (size_t uByteCount)
+		template <typename T, typename TLock, typename TDeleter = void>
+		struct shared_ptr_count_t
+			: std::array<char, sizeof(TDeleter)>
+			, TLock
+		{
+			void * operator new (size_t uByteCount)
 		{
 			return _aligned_malloc(uByteCount, std::max<size_t>(alignof(TDeleter), alignof(TLock)));
 		}
@@ -406,41 +408,41 @@ namespace jrmwng
 		{
 			(*get_deleter())(m_pt);
 		}
-	};
-	template <typename T, typename TLock>
-	struct shared_ptr_count_t<T, TLock, void>
-		: TLock
-	{
-		void * operator new (size_t uByteCount)
+		};
+		template <typename T, typename TLock>
+		struct shared_ptr_count_t<T, TLock, void>
+			: TLock
 		{
-			return _aligned_malloc(uByteCount, alignof(TLock));
-		}
+			void * operator new (size_t uByteCount)
+			{
+				return _aligned_malloc(uByteCount, alignof(TLock));
+			}
 			void operator delete (void *p)
-		{
-			_aligned_free(p);
-		}
+			{
+				_aligned_free(p);
+			}
 
-		T * const m_pt;
+			T * const m_pt;
 
-		shared_ptr_count_t(T *pt)
-			: m_pt(pt)
-		{}
+			shared_ptr_count_t(T *pt)
+				: m_pt(pt)
+			{}
 
-		virtual void delete_this(void)
+			virtual void delete_this(void)
+			{
+				delete this;
+			}
+			virtual void delete_that(void)
+			{
+				delete m_pt;
+			}
+		};
+		template <typename T, typename TLock>
+		struct make_shared_ptr_count_t
+			: std::array<char, sizeof(T)>
+			, TLock
 		{
-			delete this;
-		}
-		virtual void delete_that(void)
-		{
-			delete m_pt;
-		}
-	};
-	template <typename T, typename TLock>
-	struct make_shared_ptr_count_t
-		: std::array<char, sizeof(T)>
-		, TLock
-	{
-		void * operator new (size_t uByteCount)
+			void * operator new (size_t uByteCount)
 		{
 			return _aligned_malloc(uByteCount, std::max<size_t>(alignof(T), alignof(TLock)));
 		}
@@ -465,54 +467,55 @@ namespace jrmwng
 		{
 			get_that()->~T();
 		}
-	};
+		};
 
-	template <typename T, typename TLock>
-	class shared_ptr_base
-	{
-		friend class shared_ptr<T, TLock>;
-		friend class weak_ptr<T, TLock>;
-	protected:
-		T *m_pt;
-		TLock *m_pLock;
-
-		shared_ptr_base(T *pt, TLock *pLock)
-			: m_pt(pt)
-			, m_pLock(pLock)
-		{}
-	};
-	template <typename T, typename TLock>
-	class weak_ptr_base
-		: public shared_ptr_base<T, TLock>
-	{
-		typedef shared_ptr_base<T, TLock> base_type;
-	protected:
-		template<class... TArgs>
-		weak_ptr_base(TArgs &&... _Args)
-			: base_type(std::forward<TArgs>(_Args)...)
-		{}
-	};
-	template <typename T, typename TLock>
-	class enable_shared_from_this_base
-		: public weak_ptr_base<T, TLock>
-	{
-		typedef weak_ptr_base<T, TLock> base_type;
-
-		friend class shared_ptr<T, TLock>;
-	protected:
-		template<class... TArgs>
-		enable_shared_from_this_base(TArgs &&... _Args)
-			: base_type(std::forward<TArgs>(_Args)...)
-		{}
-
-		void enable_shared(T *pt, TLock *pLock)
+		template <typename T, typename TLock>
+		class shared_ptr_base
 		{
-			m_pt = pt;
-			m_pLock = pLock;
+			friend class shared_ptr<T, TLock>;
+			friend class weak_ptr<T, TLock>;
+		protected:
+			T *m_pt;
+			TLock *m_pLock;
 
-			pLock->acquire_weak();
-		}
-	};
+			shared_ptr_base(T *pt, TLock *pLock)
+				: m_pt(pt)
+				, m_pLock(pLock)
+			{}
+		};
+		template <typename T, typename TLock>
+		class weak_ptr_base
+			: public shared_ptr_base<T, TLock>
+		{
+			typedef shared_ptr_base<T, TLock> base_type;
+		protected:
+			template<class... TArgs>
+			weak_ptr_base(TArgs &&... _Args)
+				: base_type(std::forward<TArgs>(_Args)...)
+			{}
+		};
+		template <typename T, typename TLock>
+		class enable_shared_from_this_base
+			: public weak_ptr_base<T, TLock>
+		{
+			typedef weak_ptr_base<T, TLock> base_type;
+
+			friend class shared_ptr<T, TLock>;
+		protected:
+			template<class... TArgs>
+			enable_shared_from_this_base(TArgs &&... _Args)
+				: base_type(std::forward<TArgs>(_Args)...)
+			{}
+
+			void enable_shared(T *pt, TLock *pLock)
+			{
+				m_pt = pt;
+				m_pLock = pLock;
+
+				pLock->acquire_weak();
+			}
+		};
+	}
 
 	template <typename T, typename TLock = shared_ptr_count<true> >
 	class shared_ptr
