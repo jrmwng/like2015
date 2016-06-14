@@ -329,21 +329,21 @@ namespace jrmwng
 			0x00010001U, // 0x0F
 			0x00010001U, // 0x10
 		};
-	}
-	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<allocator32x_base, T1>::value || std::is_base_of<allocator32x_base, T2>::value)> >
-	auto operator ^ (T1 const & t1, T2 const & t2)
-	{
-		return allocator32x_op<std::bit_xor, allocator32x_op_t<T1>, allocator32x_op_t<T2> >(t1, t2);
-	}
-	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<allocator32x_base, T1>::value || std::is_base_of<allocator32x_base, T2>::value)> >
-	auto operator & (T1 const & t1, T2 const & t2)
-	{
-		return allocator32x_op<std::bit_and, allocator32x_op_t<T1>, allocator32x_op_t<T2> >(t1, t2);
-	}
-	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<allocator32x_base, T1>::value || std::is_base_of<allocator32x_base, T2>::value)> >
-	auto avg16(T1 const & t1, T2 const & t2)
-	{
-		return allocator32x_op<allocator32x_avg16, allocator32x_op_t<T1>, allocator32x_op_t<T2> >(t1, t2);
+		template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<allocator32x_base, T1>::value || std::is_base_of<allocator32x_base, T2>::value)> >
+		auto operator ^ (T1 const & t1, T2 const & t2)
+		{
+			return allocator32x_op<std::bit_xor, allocator32x_op_t<T1>, allocator32x_op_t<T2> >(t1, t2);
+		}
+		template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<allocator32x_base, T1>::value || std::is_base_of<allocator32x_base, T2>::value)> >
+		auto operator & (T1 const & t1, T2 const & t2)
+		{
+			return allocator32x_op<std::bit_and, allocator32x_op_t<T1>, allocator32x_op_t<T2> >(t1, t2);
+		}
+		template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<allocator32x_base, T1>::value || std::is_base_of<allocator32x_base, T2>::value)> >
+		auto avg16(T1 const & t1, T2 const & t2)
+		{
+			return allocator32x_op<allocator32x_avg16, allocator32x_op_t<T1>, allocator32x_op_t<T2> >(t1, t2);
+		}
 	}
 	template <size_t u32x>
 	struct allocator32x
