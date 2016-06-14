@@ -22,6 +22,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)allocator32x.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)int32_tuple.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)integer_sequence.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)latency.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)q.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)r.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)tuple.h" />
