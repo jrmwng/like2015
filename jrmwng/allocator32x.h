@@ -11,7 +11,7 @@
 
 namespace jrmwng
 {
-	namespace internals
+	namespace
 	{
 		template <typename T = void>
 		struct allocator32x_avg16;
@@ -173,7 +173,7 @@ namespace jrmwng
 			{}
 
 			template <typename Tfunc>
-			static bool find_bits(Tmm const & u4Bitmap0, unsigned uLength, Tfunc const & tFunc)
+			static bool find_mask(Tmm const & u4Bitmap0, unsigned uLength, Tfunc const & tFunc)
 			{
 				Tmm u4BitmapH = u4Bitmap0;
 				Tmm u4BitmapL = TT::srli16(u4Bitmap0, uLength - 1);
@@ -193,9 +193,9 @@ namespace jrmwng
 				return false;
 			}
 			template <typename Tfunc>
-			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
+			bool find_mask(unsigned uLength, Tfunc const & tFunc) const
 			{
-				return base_type::find_bits(uLength, tFunc) || find_bits(m_u4Bitmap, uLength, tFunc);
+				return base_type::find_mask(uLength, tFunc) || find_mask(m_u4Bitmap, uLength, tFunc);
 			}
 		};
 		template <typename Tmm>
@@ -206,7 +206,7 @@ namespace jrmwng
 			allocator32x4_bitmap(Targs const &... tArgs)
 			{}
 			template <typename Tfunc>
-			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
+			bool find_mask(unsigned uLength, Tfunc const & tFunc) const
 			{
 				return false;
 			}
@@ -261,7 +261,7 @@ namespace jrmwng
 			{}
 
 			template <typename Tfunc>
-			static bool find_bits(unsigned uBitmap, unsigned uLength, Tfunc const & tFunc)
+			static bool find_mask(unsigned uBitmap, unsigned uLength, Tfunc const & tFunc)
 			{
 				for (unsigned uBitmapH = uBitmap, uBitmapL = uBitmap >> (uLength - 1); uBitmapH; uBitmapH = _blsr_u32(uBitmapH), uBitmapL = _blsr_u32(uBitmapL))
 				{
@@ -274,9 +274,9 @@ namespace jrmwng
 				return false;
 			}
 			template <typename Tfunc>
-			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
+			bool find_mask(unsigned uLength, Tfunc const & tFunc) const
 			{
-				return base_type::find_bits(uLength, tFunc) || find_bits(m_uBitmap, uLength, tFunc);
+				return base_type::find_mask(uLength, tFunc) || find_mask(m_uBitmap, uLength, tFunc);
 			}
 		};
 		template <>
@@ -287,7 +287,7 @@ namespace jrmwng
 			allocator32x_bitmap(Targs const &...)
 			{}
 			template <typename Tfunc>
-			bool find_bits(unsigned uLength, Tfunc const & tFunc) const
+			bool find_mask(unsigned uLength, Tfunc const & tFunc) const
 			{
 				return false;
 			}
@@ -330,27 +330,27 @@ namespace jrmwng
 			0x00010001U, // 0x10
 		};
 	}
-	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<internals::allocator32x_base, T1>::value || std::is_base_of<internals::allocator32x_base, T2>::value)> >
+	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<allocator32x_base, T1>::value || std::is_base_of<allocator32x_base, T2>::value)> >
 	auto operator ^ (T1 const & t1, T2 const & t2)
 	{
-		return internals::allocator32x_op<std::bit_xor, internals::allocator32x_op_t<T1>, internals::allocator32x_op_t<T2> >(t1, t2);
+		return allocator32x_op<std::bit_xor, allocator32x_op_t<T1>, allocator32x_op_t<T2> >(t1, t2);
 	}
-	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<internals::allocator32x_base, T1>::value || std::is_base_of<internals::allocator32x_base, T2>::value)> >
+	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<allocator32x_base, T1>::value || std::is_base_of<allocator32x_base, T2>::value)> >
 	auto operator & (T1 const & t1, T2 const & t2)
 	{
-		return internals::allocator32x_op<std::bit_and, internals::allocator32x_op_t<T1>, internals::allocator32x_op_t<T2> >(t1, t2);
+		return allocator32x_op<std::bit_and, allocator32x_op_t<T1>, allocator32x_op_t<T2> >(t1, t2);
 	}
-	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<internals::allocator32x_base, T1>::value || std::is_base_of<internals::allocator32x_base, T2>::value)> >
+	template <typename T1, typename T2, typename TenableIf = std::enable_if_t<(std::is_base_of<allocator32x_base, T1>::value || std::is_base_of<allocator32x_base, T2>::value)> >
 	auto avg16(T1 const & t1, T2 const & t2)
 	{
-		return internals::allocator32x_op<internals::allocator32x_avg16, internals::allocator32x_op_t<T1>, internals::allocator32x_op_t<T2> >(t1, t2);
+		return allocator32x_op<allocator32x_avg16, allocator32x_op_t<T1>, allocator32x_op_t<T2> >(t1, t2);
 	}
 	template <size_t u32x>
 	struct allocator32x
 	{
-		using bitmap32x_type = internals::allocator32x_bitmap<u32x>;
-		using bitmap32x4_type = internals::allocator32x4_bitmap<__m128i, ((u32x + 3) / 4)>;
-		using bitmap32x8_type = internals::allocator32x4_bitmap<__m256i, ((u32x + 7) / 8)>;
+		using bitmap32x_type = allocator32x_bitmap<u32x>;
+		using bitmap32x4_type = allocator32x4_bitmap<__m128i, ((u32x + 3) / 4)>;
+		using bitmap32x8_type = allocator32x4_bitmap<__m256i, ((u32x + 7) / 8)>;
 
 		using bitmap_type = std::conditional_t<(u32x == 1), bitmap32x_type, std::conditional_t<(u32x <= 4), bitmap32x4_type, bitmap32x8_type> >;
 
@@ -364,7 +364,7 @@ namespace jrmwng
 		{
 			std::transform(std::begin(that.m_auBitmap), std::end(that.m_auBitmap), m_auBitmap, [=](std::atomic<unsigned> & uBitmap)->unsigned
 			{
-				return uBitmap.exchange(std::memory_order_relaxed);
+				return uBitmap.exchange(0, std::memory_order_relaxed);
 			});
 		}
 
@@ -375,9 +375,9 @@ namespace jrmwng
 
 		unsigned allocate(unsigned uLength)
 		{
-			if (uLength < std::size(internals::g_auAlignMask))
+			if (uLength < std::size(g_auAlignMask))
 			{
-				unsigned const uAlignMask = internals::g_auAlignMask[uLength];
+				unsigned const uAlignMask = g_auAlignMask[uLength];
 
 				bitmap_type const OldBitmap0(m_auBitmap);
 				// case A: avg(0011, 0101) = 0100
@@ -398,7 +398,7 @@ namespace jrmwng
 
 				unsigned uReturnIndex = end();
 				{
-					AndBitmap4.find_bits(uLength, [=, &uReturnIndex](unsigned uIndex32, unsigned uMask)->bool
+					AndBitmap4.find_mask(uLength, [=, &uReturnIndex](unsigned uIndex32, unsigned uMask)->bool
 					{
 						unsigned uOldBitmap = m_auBitmap[uIndex32];
 						unsigned uNewBitmap = uOldBitmap ^ uMask;
