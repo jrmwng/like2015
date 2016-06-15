@@ -3,6 +3,7 @@
 /* Author: jrmwng @ 2016 */
 
 #include <intrin.h>
+#include <array>
 #include <atomic>
 #include <utility>
 #include <algorithm>
@@ -144,6 +145,13 @@ namespace jrmwng
 			{
 				static_assert((sizeof(Tmm) * uX <= sizeof(T) * uSize), "Bounds exception");
 			}
+			template <typename T, size_t uSize>
+			allocator32x4_bitmap(std::array<T, uSize> const & that)
+				: base_type(that)
+				, m_u4Bitmap(TT::load(that.data()))
+			{
+				static_assert((sizeof(Tmm) * uX <= sizeof(T) * uSize), "Bounds exception");
+			}
 			template <typename T1, typename T2>
 			allocator32x4_bitmap(std::bit_xor<unsigned> const & tOp, T1 const & t1, T2 const & t2)
 				: base_type(tOp, t1, t2)
@@ -231,6 +239,13 @@ namespace jrmwng
 			allocator32x_bitmap(T (&auThat)[uSize])
 				: base_type(auThat)
 				, m_uBitmap(auThat[u32x - 1])
+			{
+				static_assert(u32x <= uSize, "Bounds exception");
+			}
+			template <typename T, size_t uSize>
+			allocator32x_bitmap(std::array<T, uSize> const & that)
+				: base_type(that)
+				, m_uBitmap(that[u32x - 1])
 			{
 				static_assert(u32x <= uSize, "Bounds exception");
 			}
